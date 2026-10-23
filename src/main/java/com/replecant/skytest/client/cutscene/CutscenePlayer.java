@@ -75,8 +75,8 @@ public final class CutscenePlayer {
         return new Scene(RegulatorCutscene.LENGTH,
                 List.of(
                         // Снизу у помоста: он встаёт, камера медленно подъезжает и задирается вверх, к цепям.
-                        new Shot(0, 100, new Vec3(35.0, 58.6, 110.0), regulator.add(0, 6.0, 0),
-                                new Vec3(36.5, 58.4, 115.5), regulator.add(0, 11.0, 0)),
+                        new Shot(0, 100, new Vec3(35.5, 58.6, 113.0), regulator.add(0, 5.0, 0),
+                                new Vec3(37.0, 58.5, 118.0), regulator.add(0, 9.5, 0)),
                         // Снаружи: общий план руин и Верхнего яруса, мост растёт ступенями вверх.
                         new Shot(105, 225, new Vec3(64.0, 71.0, 41.0), new Vec3(61.0, 64.0, 71.0),
                                 new Vec3(57.0, 68.0, 44.0), new Vec3(64.0, 66.0, 71.0))),
