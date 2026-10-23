@@ -21,6 +21,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.ComputeFovModifierEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
@@ -60,6 +61,11 @@ public class SkyTestClient {
         if (mc.level != null && HIDDEN_HUD.contains(event.getName()) && AdventureWorld.isAdventure(mc.level)) {
             event.setCanceled(true);
         }
+    }
+
+    @SubscribeEvent
+    static void onComputeFov(ComputeFovModifierEvent event) {
+        event.setNewFovModifier(event.getNewFovModifier() * DialogueScreen.fovModifier());
     }
 
     @SubscribeEvent

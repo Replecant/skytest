@@ -30,7 +30,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
  */
 public final class Prologue {
     private static final int TITLE_DELAY = 70;
-    private static final int GREETING_DELAY = 130;
+    private static final int GREETING_DELAY = 170;
 
     /** Игроки, проснувшиеся недавно: сколько тиков прошло после пробуждения. */
     private static final Map<UUID, Integer> AWAKENING = new HashMap<>();
@@ -90,7 +90,7 @@ public final class Prologue {
             } else if (ticks >= GREETING_DELAY) {
                 player.level().getEntitiesOfClass(LamplighterEntity.class, player.getBoundingBox().inflate(16.0))
                         .stream().findFirst()
-                        .ifPresent(keeper -> keeper.say(player, LamplighterEntity.GREETING));
+                        .ifPresent(keeper -> keeper.talkTo(player));
                 it.remove();
             }
         }
@@ -98,6 +98,7 @@ public final class Prologue {
 
     public static void reset(ServerPlayer player) {
         player.setData(ModAttachments.PROLOGUE_SEEN, false);
+        player.setData(ModAttachments.LAMPLIGHTER_STAGE, 0);
     }
 
     private Prologue() {}

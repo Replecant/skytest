@@ -72,13 +72,19 @@ jobs:
           ls -la run/screenshots || true
           grep -q "SKYTEST CLIENT SMOKE DONE" client.log
 
-      - name: Report client log
+      - name: Report client log and profile
         if: always() && (startsWith(github.ref, 'refs/heads/claude/') || github.event_name == 'workflow_dispatch')
         run: |
           [ -f client.log ] || exit 0
-          grep -v "/DEBUG" client.log | grep -v "^\s*at " | cut -c1-300 | tail -n 700 | gzip -9 | base64 -w0 > clog.b64
-          split -b 4000 -d -a 2 clog.b64 /tmp/clog.
-          for f in /tmp/clog.*; do n=${f##*.}; echo "::notice title=probe-$n::$(cat $f)"; done | head -40
+          {
+            echo "=== perf"; grep -E "SKYTEST (PERF|JFR|CLIENT)" client.log || true
+            if [ -f run/perf.jfr ]; then python3 .github/scripts/jfr_report.py run/perf.jfr || echo "jfr report failed"; fi
+            echo "=== client log tail"
+            grep -v "/DEBUG" client.log | grep -v "^\s*at " | cut -c1-300 | tail -n 400
+          } > report.txt
+          gzip -9c report.txt | base64 -w0 > report.b64
+          split -b 4000 -d -a 2 report.b64 /tmp/report.
+          for f in /tmp/report.*; do n=${f##*.}; echo "::notice title=probe-$n::$(cat $f)"; done | head -40
 
       - name: Publish screenshots to branch claude/screenshots
         if: always() && (startsWith(github.ref, 'refs/heads/claude/') || github.event_name == 'workflow_dispatch')

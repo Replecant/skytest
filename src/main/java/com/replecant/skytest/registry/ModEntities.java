@@ -30,6 +30,7 @@ public final class ModEntities {
             ENTITY_TYPES.register("lamplighter", id -> EntityType.Builder
                     .<LamplighterEntity>of(LamplighterEntity::new, MobCategory.MISC)
                     .sized(0.8F, 2.3F)
+                    .eyeHeight(2.15F)
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
 

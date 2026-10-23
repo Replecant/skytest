@@ -19,12 +19,16 @@ public final class SmokeTour {
     private record Stop(int tick, Vec3 pos, float yaw, float pitch) {}
 
     private static final Stop[] STOPS = {
-            new Stop(200, new Vec3(2.0, 64, 1.2), -40.0F, -12.0F),   // Фонарщик анфас
-            new Stop(260, new Vec3(0.6, 64, 3.2), -90.0F, -8.0F),    // Фонарщик сбоку
-            new Stop(290, new Vec3(0.6, 64, 3.2), -90.0F, -8.0F),    // он же под ночным зрением
-            new Stop(350, new Vec3(-3.5, 64, 7.5), -90.0F, 0.0F),    // коридор
-            new Stop(410, new Vec3(46.0, 66, 13.0), 135.0F, -12.0F), // зал с уступа
-            new Stop(470, new Vec3(34.5, 74, -6.0), 180.0F, -20.0F), // конечная комната
+            new Stop(600, new Vec3(2.0, 64, 1.2), -40.0F, -12.0F),   // Фонарщик анфас
+            new Stop(660, new Vec3(0.6, 64, 3.2), -90.0F, -8.0F),    // Фонарщик сбоку
+            new Stop(690, new Vec3(0.6, 64, 3.2), -90.0F, -8.0F),    // он же под ночным зрением
+            new Stop(750, new Vec3(-3.5, 64, 7.5), -90.0F, 0.0F),    // коридор
+            new Stop(810, new Vec3(46.0, 66, 13.0), 135.0F, -12.0F), // зал с уступа
+            new Stop(870, new Vec3(34.5, 74, -6.0), 180.0F, -20.0F), // конечная комната
+            // Замеры производительности.
+            new Stop(930, new Vec3(1.5, 64, 1.5), -53.0F, 10.0F),    // камера
+            new Stop(1150, new Vec3(-3.5, 64, 7.5), -90.0F, 0.0F),   // коридор
+            new Stop(1350, new Vec3(46.0, 66, 13.0), 135.0F, -12.0F), // зал
     };
 
     private static final Map<UUID, Integer> TOURS = new HashMap<>();

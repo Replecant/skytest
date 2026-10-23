@@ -28,6 +28,8 @@ public final class ModNetwork {
                 });
         registrar.playToClient(StartProloguePayload.TYPE, StartProloguePayload.STREAM_CODEC,
                 (payload, context) -> ClientPayloadHandlers.startPrologue());
+        registrar.playToClient(OpenDialoguePayload.TYPE, OpenDialoguePayload.STREAM_CODEC,
+                (payload, context) -> ClientPayloadHandlers.openDialogue(payload));
     }
 
     private static void handleDoubleJump(DoubleJumpPayload payload, IPayloadContext context) {

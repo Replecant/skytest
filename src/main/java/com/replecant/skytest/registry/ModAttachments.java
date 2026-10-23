@@ -20,5 +20,12 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .build());
 
+    /** Сколько разговоров с Фонарщиком уже состоялось. */
+    public static final Supplier<AttachmentType<Integer>> LAMPLIGHTER_STAGE = ATTACHMENT_TYPES.register("lamplighter_stage",
+            () -> AttachmentType.builder(() -> 0)
+                    .serialize(Codec.INT.fieldOf("stage"))
+                    .copyOnDeath()
+                    .build());
+
     private ModAttachments() {}
 }
