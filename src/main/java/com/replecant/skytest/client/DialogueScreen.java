@@ -29,7 +29,7 @@ import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 public class DialogueScreen extends Screen {
     private static final float CHARS_PER_TICK = 1.6F;
     private static final float ZOOM = 0.82F;
-    private static final double MAX_DISTANCE = 12.0;
+    private static final double MAX_DISTANCE = 32.0;
     private static final int PANEL_COLOR = 0xE00D0B09;
     private static final int BORDER_COLOR = 0xFF5E4C33;
     private static final int NAME_COLOR = 0xFFE8B04A;

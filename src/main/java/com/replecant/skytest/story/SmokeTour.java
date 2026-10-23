@@ -40,11 +40,12 @@ public final class SmokeTour {
         if (!ENABLED) {
             return;
         }
-        Vec3 from = player.getEyePosition();
-        Vec3 d = skeleton.position().add(0, 1.0, 0).subtract(from);
+        // Встать у края спуска и смотреть вниз по лестнице.
+        Vec3 viewpoint = new Vec3(38.5, 64, 11.0);
+        Vec3 d = skeleton.position().add(0, 1.0, 0).subtract(viewpoint.add(0, player.getEyeHeight(), 0));
         float yaw = (float) (Mth.atan2(d.z, d.x) * Mth.RAD_TO_DEG) - 90.0F;
         float pitch = (float) -(Mth.atan2(d.y, Math.sqrt(d.x * d.x + d.z * d.z)) * Mth.RAD_TO_DEG);
-        player.teleport(new TeleportTransition(player.level().getServer().overworld(), player.position(), Vec3.ZERO,
+        player.teleport(new TeleportTransition(player.level().getServer().overworld(), viewpoint, Vec3.ZERO,
                 yaw, pitch, TeleportTransition.DO_NOTHING));
     }
 
