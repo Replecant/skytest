@@ -22,9 +22,9 @@ public final class SmokeTour {
     private record Stop(int tick, Vec3 pos, float yaw, float pitch) {}
 
     private static final Stop[] STOPS = {
-            new Stop(600, new Vec3(-3.5, 64, 7.5), -90.0F, 0.0F),   // коридор с воротами
-            new Stop(660, new Vec3(8.5, 64, 7.0), 180.0F, 5.0F),    // закрытые ворота камеры N2
-            new Stop(720, new Vec3(31.5, 64, 7.5), -90.0F, -5.0F),  // вход в зал → встреча
+            new Stop(600, new Vec3(-3.5, 64, 7.5), -90.0F, 0.0F),   // коридор с воротами; разгон/торможение
+            new Stop(720, new Vec3(8.5, 64, 7.0), 180.0F, 5.0F),    // закрытые ворота камеры N2
+            new Stop(780, new Vec3(31.5, 64, 7.5), -90.0F, -5.0F),  // вход в зал → встреча
     };
 
     private static final Map<UUID, Integer> TOURS = new HashMap<>();

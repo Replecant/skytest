@@ -15,7 +15,7 @@ import net.minecraft.world.effect.MobEffects;
 public final class ClientSmoke {
     public static final boolean ENABLED = "true".equals(System.getenv("SKYTEST_CLIENT_SMOKE"));
 
-    private static final int[] WAKE_SHOTS = {25, 120, 630, 690};
+    private static final int[] WAKE_SHOTS = {25, 120, 630, 750};
     private static final String[] WAKE_NAMES = {"04_waking", "05_cell_awake", "07_corridor_gates", "08_gate_closed"};
 
     private static int clientTicks;
@@ -79,6 +79,7 @@ public final class ClientSmoke {
             if (wakeTicks == 200) {
                 shot("06_lamplighter_dialogue");
             }
+            movementTest(mc);
         }
         if (strangerOpened >= 0) {
             int t = clientTicks - strangerOpened;
@@ -101,12 +102,68 @@ public final class ClientSmoke {
                 case 6 -> shot("10_sword_thrown");
                 case 25 -> shot("11_stranger_leaving");
                 case 75 -> shot("12_skeleton");
-                case 115 -> shot("13_skeleton_closer");
-                case 135 -> {
+                case 230 -> {
                     SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE DONE");
                     mc.stop();
                 }
                 default -> { }
+            }
+            if (t >= 80) {
+                fightTest(mc);
+            }
+        }
+    }
+
+    /** Разгон с места бегом и торможение: скорость по тикам в лог. */
+    private static void movementTest(Minecraft mc) {
+        if (mc.player == null || wakeTicks < 640 || wakeTicks > 690) {
+            return;
+        }
+        if (wakeTicks == 640) {
+            mc.options.keyUp.setDown(true);
+            mc.options.keySprint.setDown(true);
+        } else if (wakeTicks == 665) {
+            mc.options.keyUp.setDown(false);
+            mc.options.keySprint.setDown(false);
+        }
+        var v = mc.player.getDeltaMovement();
+        SkyTest.LOGGER.info("SKYTEST MOVE t={} keys={} speed={}", wakeTicks - 640, wakeTicks < 665 ? "W+sprint" : "none",
+                String.format("%.3f", Math.sqrt(v.x * v.x + v.z * v.z)));
+    }
+
+    private static net.minecraft.world.entity.LivingEntity lastHit;
+    private static int hitTicks;
+    private static int hits;
+
+    /** Бьём поднимающегося скелета мечом и логируем отброс. */
+    private static void fightTest(Minecraft mc) {
+        var player = mc.player;
+        if (player == null || mc.level == null || mc.screen != null) {
+            return;
+        }
+        if (lastHit != null && ++hitTicks <= 2) {
+            var v = lastHit.getDeltaMovement();
+            SkyTest.LOGGER.info("SKYTEST HIT +{} target={} health={} knockback={}", hitTicks,
+                    lastHit.getType().toShortString(), String.format("%.1f", lastHit.getHealth()),
+                    String.format("%.3f", Math.sqrt(v.x * v.x + v.z * v.z)));
+        }
+        var target = mc.level.getEntitiesOfClass(net.minecraft.world.entity.monster.skeleton.Skeleton.class,
+                player.getBoundingBox().inflate(3.0)).stream().findFirst().orElse(null);
+        if (target == null || !target.isAlive()) {
+            return;
+        }
+        var d = target.getEyePosition().subtract(player.getEyePosition());
+        player.setYRot((float) (Math.atan2(d.z, d.x) * 180.0 / Math.PI) - 90.0F);
+        player.setXRot((float) -(Math.atan2(d.y, Math.sqrt(d.x * d.x + d.z * d.z)) * 180.0 / Math.PI));
+        if (player.getAttackStrengthScale(0.0F) >= 0.95F && player.distanceTo(target) < 2.8F) {
+            mc.gameMode.attack(player, target);
+            player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+            lastHit = target;
+            hitTicks = 0;
+            hits++;
+            SkyTest.LOGGER.info("SKYTEST HIT #{} at distance {}", hits, String.format("%.2f", player.distanceTo(target)));
+            if (hits == 1) {
+                shot("14_hit");
             }
         }
     }
