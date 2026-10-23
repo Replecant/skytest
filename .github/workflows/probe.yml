@@ -1,0 +1,30 @@
+name: API probe
+on:
+  push:
+    branches: [claude/api-probe]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with: { java-version: '21', distribution: 'temurin' }
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew createMinecraftArtifacts
+      - name: Unpack
+        run: |
+          find build/moddev ~/.gradle -name '*.jar' -path '*neoforge*' 2>/dev/null | grep -v gradle-plugin | head -20 > jars.txt
+          mkdir -p /tmp/src /tmp/res
+          for j in $(grep -E 'sources\.jar$' jars.txt); do unzip -qo "$j" -d /tmp/src; done
+          for j in $(grep -E '(merged|client-extra|client-resources)[^/]*\.jar$' jars.txt); do unzip -qo "$j" 'data/*' 'assets/minecraft/shaders/*' -d /tmp/res 2>/dev/null || true; done
+      - name: Probe
+        run: |
+          { echo "== jars"; cat jars.txt; bash probe.sh; } > out.txt 2>&1 || true
+          python3 - <<'PY'
+          s = open('out.txt', encoding='utf-8', errors='replace').read()
+          chunks = [s[i:i+60000] for i in range(0, len(s), 60000)][:30]
+          kinds = ['notice'] * 10 + ['warning'] * 10 + ['error'] * 10
+          for n, (c, k) in enumerate(zip(chunks, kinds)):
+              c = c.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+              print(f'::{k} title=probe-{n:02d}::{c}')
+          PY
