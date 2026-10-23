@@ -13,10 +13,12 @@ jobs:
       - run: ./gradlew createMinecraftArtifacts
       - name: Unpack
         run: |
-          find build/moddev ~/.gradle -name '*.jar' -path '*neoforge*' 2>/dev/null | grep -v gradle-plugin | head -20 > jars.txt
-          mkdir -p /tmp/src /tmp/res
-          for j in $(grep -E 'sources\.jar$' jars.txt); do unzip -qo "$j" -d /tmp/src; done
-          for j in $(grep -E '(merged|client-extra|client-resources)[^/]*\.jar$' jars.txt); do unzip -qo "$j" 'data/*' 'assets/minecraft/shaders/*' -d /tmp/res 2>/dev/null || true; done
+          A=build/moddev/artifacts
+          mkdir -p /tmp/cls /tmp/res /tmp/vf
+          unzip -qo $A/neoforge-21.11.48.jar -d /tmp/cls
+          unzip -qo $A/neoforge-21.11.48-client-extra-aka-minecraft-resources.jar -d /tmp/res || true
+          cp -r /tmp/cls/data /tmp/res/ 2>/dev/null || true
+          curl -sSL -o /tmp/vf/vf.jar https://repo1.maven.org/maven2/org/vineflower/vineflower/1.11.1/vineflower-1.11.1.jar
       - name: Probe
         run: |
           { echo "== jars"; cat jars.txt; bash probe.sh; } > out.txt 2>&1 || true
