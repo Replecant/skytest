@@ -3,6 +3,7 @@ package com.replecant.skytest.registry;
 import com.replecant.skytest.SkyTest;
 import com.replecant.skytest.item.DullSwordItem;
 import com.replecant.skytest.item.GrapplingHookItem;
+import com.replecant.skytest.item.LarpiItem;
 import com.replecant.skytest.item.LightningSphereItem;
 import com.replecant.skytest.item.PrimordialSerpentItem;
 
@@ -41,6 +42,19 @@ public final class ModItems {
     /** Первородный змей: за заряд душ бросает ядовитого змея. */
     public static final DeferredItem<PrimordialSerpentItem> PRIMORDIAL_SERPENT = ITEMS.register("primordial_serpent",
             id -> new PrimordialSerpentItem(new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, id))
+                    .stacksTo(1)
+                    .rarity(Rarity.RARE)));
+
+    /** Приманка Крысолова: с ней в руке крысы сами идут к игроку. */
+    public static final DeferredItem<Item> RAT_BAIT = ITEMS.register("rat_bait",
+            id -> new Item(new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, id))
+                    .stacksTo(16)));
+
+    /** Ларпи — крыса Регулятора с белым пятнышком на ухе. */
+    public static final DeferredItem<LarpiItem> LARPI = ITEMS.register("larpi",
+            id -> new LarpiItem(new Item.Properties()
                     .setId(ResourceKey.create(Registries.ITEM, id))
                     .stacksTo(1)
                     .rarity(Rarity.RARE)));

@@ -1,5 +1,7 @@
 package com.replecant.skytest.entity;
 
+import com.replecant.skytest.story.Quests;
+
 import com.replecant.skytest.dialogue.Dialogues;
 
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -99,8 +101,48 @@ public class RegulatorEntity extends PathfinderMob {
     /** Разговор окончен: после знакомства начинается задание «Найти Ларпи». */
     public void onDialogueClosed(ServerPlayer player) {
         talkTicks = Math.min(talkTicks, 30);
-        if (!com.replecant.skytest.story.Quests.isStarted(player, com.replecant.skytest.story.Quests.FIND_LARPI)) {
-            com.replecant.skytest.story.Quests.start(player, com.replecant.skytest.story.Quests.FIND_LARPI);
+        if (!Quests.isStarted(player, Quests.FIND_LARPI)) {
+            Quests.start(player, Quests.FIND_LARPI);
+        } else if (!Quests.isDone(player, Quests.FIND_LARPI) && takeLarpi(player)) {
+            returnLarpi(player);
+        }
+    }
+
+    private static boolean takeLarpi(ServerPlayer player) {
+        var inventory = player.getInventory();
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            if (inventory.getItem(i).is(com.replecant.skytest.registry.ModItems.LARPI.get())) {
+                inventory.removeItem(i, 1);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Ларпи дома: она устраивается на помосте у Регулятора, а он рычагами
+     * перекидывает мост к Верхнему ярусу. Задание выполнено.
+     */
+    private void returnLarpi(ServerPlayer player) {
+        ServerLevel level = (ServerLevel) level();
+        RatEntity larpi = com.replecant.skytest.registry.ModEntities.RAT.get().create(level, net.minecraft.world.entity.EntitySpawnReason.EVENT);
+        if (larpi != null) {
+            larpi.setLarpi(true);
+            larpi.setNest(true);
+            larpi.snapTo(getX() + 2.0, getY(), getZ() - 2.5, getYRot(), 0.0F);
+            level.addFreshEntity(larpi);
+        }
+        boolean built = com.replecant.skytest.world.LowerPrison.buildUpperBridge(level);
+        for (net.minecraft.sounds.SoundEvent sound : new net.minecraft.sounds.SoundEvent[] {
+                SoundEvents.LEVER_CLICK, SoundEvents.PISTON_EXTEND, SoundEvents.ANVIL_LAND}) {
+            level.playSound(null, player.getX(), player.getY(), player.getZ(), sound,
+                    net.minecraft.sounds.SoundSource.BLOCKS, 0.8F, 0.5F);
+        }
+        player.displayClientMessage(net.minecraft.network.chat.Component.translatable("story.skytest.bridge_moved")
+                .withStyle(net.minecraft.ChatFormatting.GRAY), true);
+        Quests.complete(player, Quests.FIND_LARPI);
+        if (com.replecant.skytest.story.SmokeTour.ENABLED) {
+            com.replecant.skytest.SkyTest.LOGGER.info("SKYTEST LARPI returned, upper bridge built={}", built);
         }
     }
 

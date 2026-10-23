@@ -58,6 +58,19 @@ public final class HallEvent {
                 });
     }
 
+    /** Крысолов сам окликает игрока, когда тот впервые подходит к крысятнику. */
+    static void checkRatCatcher(ServerPlayer player) {
+        if (hasFlag(player, "met_rat_catcher") || !LowerPrison.RAT_ROOM.inflate(3.0).contains(player.position())) {
+            return;
+        }
+        player.level().getEntitiesOfClass(com.replecant.skytest.entity.RatCatcherEntity.class,
+                        player.getBoundingBox().inflate(9.0)).stream().findFirst()
+                .ifPresent(catcher -> {
+                    setFlag(player, "met_rat_catcher");
+                    catcher.talkTo(player);
+                });
+    }
+
     public static void meet(ServerPlayer player, StrangerEntity stranger) {
         setFlag(player, MET_STRANGER);
         stranger.talkTo(player);
@@ -106,7 +119,7 @@ public final class HallEvent {
         return player.getData(ModAttachments.STORY_FLAGS).contains(flag);
     }
 
-    private static void setFlag(ServerPlayer player, String flag) {
+    public static void setFlag(ServerPlayer player, String flag) {
         java.util.Set<String> flags = new java.util.HashSet<>(player.getData(ModAttachments.STORY_FLAGS));
         flags.add(flag);
         player.setData(ModAttachments.STORY_FLAGS, flags);

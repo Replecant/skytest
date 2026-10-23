@@ -6,6 +6,7 @@ import com.replecant.skytest.entity.LamplighterEntity;
 import com.replecant.skytest.entity.LightningArcEntity;
 import com.replecant.skytest.entity.SerpentEntity;
 import com.replecant.skytest.entity.PrisonWardenEntity;
+import com.replecant.skytest.entity.RatCatcherEntity;
 import com.replecant.skytest.entity.RatEntity;
 import com.replecant.skytest.entity.RegulatorEntity;
 import com.replecant.skytest.entity.SoulOrbEntity;
@@ -105,7 +106,17 @@ public final class ModEntities {
                     .noSave()
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
 
+    /** Крысолов — старик с крысами в камере под тюрьмой. */
+    public static final DeferredHolder<EntityType<?>, EntityType<RatCatcherEntity>> RAT_CATCHER =
+            ENTITY_TYPES.register("rat_catcher", id -> EntityType.Builder
+                    .<RatCatcherEntity>of(RatCatcherEntity::new, MobCategory.MISC)
+                    .sized(0.8F, 1.4F)
+                    .eyeHeight(1.15F)
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
+
     public static void registerAttributes(EntityAttributeCreationEvent event) {
+        event.put(RAT_CATCHER.get(), RatCatcherEntity.createAttributes().build());
         event.put(REGULATOR.get(), RegulatorEntity.createAttributes().build());
         event.put(RAT.get(), RatEntity.createAttributes().build());
         event.put(PRISON_WARDEN.get(), PrisonWardenEntity.createAttributes().build());

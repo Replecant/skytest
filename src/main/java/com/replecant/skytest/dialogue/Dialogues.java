@@ -1,5 +1,8 @@
 package com.replecant.skytest.dialogue;
 
+import com.replecant.skytest.registry.ModItems;
+import com.replecant.skytest.story.Quests;
+
 import java.util.List;
 
 import com.replecant.skytest.network.OpenDialoguePayload;
@@ -26,11 +29,38 @@ public final class Dialogues {
     public static final Conversation REGULATOR_WAITING = new Conversation("regulator", "waiting", 4);
 
     /** Регулятор: первая встреча — знакомство и задание, потом — подсказки. */
+    public static final Conversation REGULATOR_LARPI = new Conversation("regulator", "larpi", 6);
+    public static final Conversation REGULATOR_AFTER = new Conversation("regulator", "after", 2);
+
+    public static final Conversation RAT_CATCHER_IDLE = new Conversation("rat_catcher", "idle", 3);
+    public static final Conversation RAT_CATCHER_MEETING = new Conversation("rat_catcher", "meeting", 8);
+    public static final Conversation RAT_CATCHER_WAITING = new Conversation("rat_catcher", "waiting", 3);
+    public static final Conversation RAT_CATCHER_THANKS = new Conversation("rat_catcher", "thanks", 3);
+    public static final Conversation RAT_CATCHER_AFTER = new Conversation("rat_catcher", "after", 2);
+
     public static void talkToRegulator(ServerPlayer player, Entity regulator) {
-        if (com.replecant.skytest.story.Quests.isStarted(player, com.replecant.skytest.story.Quests.FIND_LARPI)) {
+        if (Quests.isDone(player, Quests.FIND_LARPI)) {
+            open(player, regulator, REGULATOR_AFTER);
+        } else if (player.getInventory().contains(stack -> stack.is(ModItems.LARPI.get()))) {
+            open(player, regulator, REGULATOR_LARPI);
+        } else if (Quests.isStarted(player, Quests.FIND_LARPI)) {
             open(player, regulator, REGULATOR_WAITING);
         } else {
             open(player, regulator, REGULATOR_MEETING);
+        }
+    }
+
+    public static void talkToRatCatcher(ServerPlayer player, Entity catcher) {
+        if (Quests.isDone(player, Quests.FIND_LARPI)) {
+            open(player, catcher, RAT_CATCHER_AFTER);
+        } else if (!Quests.isActive(player, Quests.FIND_LARPI)) {
+            open(player, catcher, RAT_CATCHER_IDLE);
+        } else {
+            switch (Quests.stage(player)) {
+                case Quests.LARPI_SEARCH -> open(player, catcher, RAT_CATCHER_MEETING);
+                case Quests.LARPI_CATCH -> open(player, catcher, RAT_CATCHER_WAITING);
+                default -> open(player, catcher, RAT_CATCHER_THANKS);
+            }
         }
     }
 

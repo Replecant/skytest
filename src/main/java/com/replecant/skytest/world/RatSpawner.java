@@ -42,7 +42,7 @@ public final class RatSpawner {
         if (level.getGameTime() % INTERVAL_TICKS != 0) {
             return;
         }
-        int alive = level.getEntitiesOfClass(RatEntity.class, PRISON).size();
+        int alive = level.getEntitiesOfClass(RatEntity.class, PRISON, rat -> !rat.isNest()).size();
         if (alive >= MAX_RATS) {
             return;
         }

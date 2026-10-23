@@ -26,6 +26,8 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.PRISON_GATE.get());
                         output.accept(ModItems.LIGHTNING_SPHERE.get());
                         output.accept(ModItems.PRIMORDIAL_SERPENT.get());
+                        output.accept(ModItems.RAT_BAIT.get());
+                        output.accept(ModItems.LARPI.get());
                     })
                     .build());
 

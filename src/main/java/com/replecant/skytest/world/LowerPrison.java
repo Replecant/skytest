@@ -84,6 +84,13 @@ public final class LowerPrison {
     private static final double ISLAND_HANG = 44.0;
     /** Верхний ярус: пол зала и ось входа (z), куда позже придёт мост. */
     public static final int UPPER_FLOOR = 74;
+    /** Нижние камеры и крысятник Крысолова. */
+    public static final int LOWER_FLOOR = 55;
+    public static final AABB RAT_ROOM = new AABB(20, 54, 4, 32, 60, 20);
+    public static final Vec3 RAT_CATCHER_POS = new Vec3(28.5, LOWER_FLOOR, 15.5);
+    private static final int NEST_RATS = 11;
+    /** Основной блок камер — здесь показывается название уровня. */
+    public static final AABB CELL_BLOCK = new AABB(-8, 62, -2, 30, 70, 16);
     public static final int UPPER_LANE = 71;
     private static final int UPPER_HALL_X0 = 88;
     private static final int UPPER_HALL_X1 = 104;
@@ -93,7 +100,7 @@ public final class LowerPrison {
     private static final int GAP_END = 62;
     private static final AABB WHOLE_AREA = new AABB(-40, -10, -40, 132, 130, 160);
     /** Всё, что внутри этой коробки, — биом тюрьмы (тёмный туман); снаружи — небо над бездной. */
-    private static final AABB PRISON_BIOME = new AABB(-16, 48, -20, 60, 99, 26);
+    private static final AABB PRISON_BIOME = new AABB(-22, 48, -20, 60, 99, 26);
     private static final AABB REGULATOR_BIOME = new AABB(10, 40, 96, 66, 95, 146);
 
     private static final BlockPos MARKER = new BlockPos(-12, 56, -16);
@@ -155,6 +162,7 @@ public final class LowerPrison {
         decorateHall();
 
         buildDescent();
+        buildLowerCells();
         buildStrangerExit();
         buildBridge();
         buildRegulatorHall();
@@ -278,9 +286,10 @@ public final class LowerPrison {
         for (int x = -3; x <= 27; x += 5) {
             hangingLantern(x, FLOOR + 4, 7, 0);
         }
-        // Завал в западном тупике.
-        fill(-6, FLOOR, 6, -5, FLOOR + 2, 8, Blocks.COBBLED_DEEPSLATE.defaultBlockState());
-        fill(-4, FLOOR, 6, -4, FLOOR, 8, Blocks.COBBLED_DEEPSLATE_SLAB.defaultBlockState());
+        // Остатки разобранного завала у спуска в нижние камеры.
+        set(new BlockPos(-5, FLOOR, 6), Blocks.COBBLED_DEEPSLATE.defaultBlockState());
+        set(new BlockPos(-6, FLOOR, 8), Blocks.COBBLED_DEEPSLATE_SLAB.defaultBlockState());
+        set(new BlockPos(-4, FLOOR, 8), Blocks.COBBLED_DEEPSLATE_SLAB.defaultBlockState());
         cobweb(-4, FLOOR + 4, 6);
         cobweb(29, FLOOR + 4, 8);
     }
@@ -318,6 +327,127 @@ public final class LowerPrison {
         }
         fill(31, FLOOR, 13, 33, FLOOR, 14, Blocks.COBBLED_DEEPSLATE.defaultBlockState());
         remains(32, 10);
+    }
+
+    // ---------------------------------------------------------------- нижние камеры
+
+    /**
+     * Нижние камеры под основным блоком: из западного тупика коридора лестница
+     * уходит вниз, к ещё одному ряду камер. В дальней, самой большой, живёт
+     * Крысолов со своими крысами (и, похоже, с Ларпи).
+     */
+    private void buildLowerCells() {
+        int y = LOWER_FLOOR;
+        // Лестница на запад, вниз на 9 ступеней.
+        for (int i = 1; i <= 8; i++) {
+            int x = -6 - i;
+            int step = FLOOR - 1 - i;
+            room(x, step + 1, 6, x, step + 4, 8);
+            fill(x, step, 6, x, step, 8, Blocks.DEEPSLATE_BRICK_STAIRS.defaultBlockState()
+                    .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));
+        }
+        hangingLantern(-10, FLOOR + 1, 7, 1);
+        // Площадка внизу и коридор под южными камерами.
+        room(-18, y, 5, -15, y + 4, 13);
+        room(-14, y, 11, 19, y + 3, 13);
+        cobweb(-18, y + 4, 5);
+        for (int x = -10; x <= 16; x += 8) {
+            hangingLantern(x, y + 3, 12, 0);
+        }
+        int[] cellX = {-4, 2, 8, 14};
+        for (int i = 0; i < cellX.length; i++) {
+            int x0 = cellX[i];
+            room(x0, y, 6, x0 + 4, y + 3, 9);
+            room(x0, y, 15, x0 + 4, y + 3, 18);
+            lowerBars(x0, 10, Direction.NORTH, i == 1);
+            lowerBars(x0, 14, Direction.SOUTH, i == 2);
+            cobweb(x0 + random.nextInt(5), y + 3, 6);
+            cobweb(x0 + random.nextInt(5), y + 3, 18);
+        }
+        // Обжитые и заброшенные камеры.
+        set(new BlockPos(-3, y, 7), Blocks.SKELETON_SKULL.defaultBlockState().setValue(BlockStateProperties.ROTATION_16, 3));
+        fill(2, y, 6, 3, y, 7, Blocks.HAY_BLOCK.defaultBlockState());
+        set(new BlockPos(5, y, 6), Blocks.BONE_BLOCK.defaultBlockState());
+        chain(10, y + 3, 7, 2);
+        set(new BlockPos(10, y, 7), Blocks.SKELETON_SKULL.defaultBlockState().setValue(BlockStateProperties.ROTATION_16, 8));
+        fill(14, y, 6, 16, y + 1, 8, Blocks.COBBLED_DEEPSLATE.defaultBlockState());
+        set(new BlockPos(17, y, 6), Blocks.COBBLED_DEEPSLATE_SLAB.defaultBlockState());
+        chest(9, y, 17, Direction.NORTH, new ItemStack(ModItems.RAW_RAT_MEAT.get(), 3));
+        set(new BlockPos(3, y, 16), Blocks.SKELETON_SKULL.defaultBlockState().setValue(BlockStateProperties.ROTATION_16, 12));
+
+        buildRatRoom();
+    }
+
+    /** Решётка нижней камеры по линии z с воротами посередине. */
+    private void lowerBars(int cellX, int z, Direction facing, boolean open) {
+        int gateX = cellX + 2;
+        for (int x = cellX; x <= cellX + 4; x++) {
+            for (int yy = LOWER_FLOOR; yy <= LOWER_FLOOR + 2; yy++) {
+                if (x == gateX && yy <= LOWER_FLOOR + 1) {
+                    continue;
+                }
+                connectable(new BlockPos(x, yy, z), Blocks.IRON_BARS.defaultBlockState());
+            }
+        }
+        gate(new BlockPos(gateX, LOWER_FLOOR, z), facing, open);
+    }
+
+    /** Крысятник: большая камера в конце коридора. Сено, бочки, клетки, лежанка старика. */
+    private void buildRatRoom() {
+        int y = LOWER_FLOOR;
+        room(21, y, 5, 31, y + 4, 19);
+        // Вход из коридора — распахнутые ворота в решётке.
+        fill(20, y, 11, 20, y + 2, 13, Blocks.AIR.defaultBlockState());
+        for (int z : new int[] {11, 13}) {
+            for (int yy = y; yy <= y + 2; yy++) {
+                connectable(new BlockPos(20, yy, z), Blocks.IRON_BARS.defaultBlockState());
+            }
+        }
+        gate(new BlockPos(20, y, 12), Direction.EAST, true);
+        fill(21, y - 1, 5, 31, y - 1, 19, pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.3F));
+        // Сено и подстилки, где спят крысы.
+        for (int[] h : new int[][] {{29, 5}, {29, 6}, {30, 7}, {21, 18}, {22, 19}, {21, 19}, {25, 5}}) {
+            set(new BlockPos(h[0], y, h[1]), Blocks.HAY_BLOCK.defaultBlockState());
+        }
+        set(new BlockPos(21, y + 1, 19), Blocks.HAY_BLOCK.defaultBlockState());
+        // Бочки и клетки-ловушки.
+        for (int[] b : new int[][] {{31, 10}, {31, 11}, {22, 5}, {23, 5}}) {
+            set(new BlockPos(b[0], y, b[1]), Blocks.BARREL.defaultBlockState()
+                    .setValue(BlockStateProperties.FACING, Direction.UP));
+        }
+        set(new BlockPos(31, y + 1, 10), Blocks.BARREL.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.UP));
+        for (int[] c : new int[][] {{21, 7}, {21, 8}, {31, 14}}) {
+            connectable(new BlockPos(c[0], y, c[1]), Blocks.IRON_BARS.defaultBlockState());
+        }
+        set(new BlockPos(24, y, 19), Blocks.CAULDRON.defaultBlockState());
+        // Лежанка старика.
+        fill(29, y, 16, 31, y, 18, Blocks.BROWN_CARPET.defaultBlockState());
+        set(new BlockPos(31, y, 19), Blocks.SOUL_LANTERN.defaultBlockState());
+        hangingLantern(26, y + 4, 12, 1);
+        hangingLantern(23, y + 4, 16, 2);
+        chain(29, y + 4, 9, 2);
+        for (int[] w : new int[][] {{21, 5}, {31, 5}, {31, 19}, {26, 19}}) {
+            cobweb(w[0], y + 4, w[1]);
+        }
+        set(new BlockPos(27, y, 7), Blocks.BONE_BLOCK.defaultBlockState().setValue(BlockStateProperties.AXIS, Direction.Axis.Z));
+    }
+
+    /** Крысолов и его крысы; где-то среди них — Ларпи. */
+    private void spawnRatRoom() {
+        spawn(ModEntities.RAT_CATCHER.get().create(level, EntitySpawnReason.STRUCTURE), RAT_CATCHER_POS, 135.0F);
+        for (int i = 0; i < NEST_RATS; i++) {
+            RatEntity rat = ModEntities.RAT.get().create(level, EntitySpawnReason.STRUCTURE);
+            if (rat != null) {
+                rat.setNest(true);
+                spawn(rat, new Vec3(22.5 + random.nextInt(8), LOWER_FLOOR, 8.5 + random.nextInt(10)), random.nextFloat() * 360.0F);
+            }
+        }
+        RatEntity larpi = ModEntities.RAT.get().create(level, EntitySpawnReason.STRUCTURE);
+        if (larpi != null) {
+            larpi.setLarpi(true);
+            larpi.setNest(true);
+            spawn(larpi, new Vec3(30.5, LOWER_FLOOR, 5.5), 200.0F);
+        }
     }
 
     /** Спуск вниз в южной стене зала: лестница во тьму, внизу завал. */
@@ -1014,7 +1144,10 @@ public final class LowerPrison {
         spawn(ModEntities.STRANGER.get().create(level, EntitySpawnReason.STRUCTURE), STRANGER_POS, STRANGER_YAW);
         spawn(ModEntities.PRISON_WARDEN.get().create(level, EntitySpawnReason.STRUCTURE), WARDEN_POS, 180.0F);
         spawn(ModEntities.REGULATOR.get().create(level, EntitySpawnReason.STRUCTURE), REGULATOR_POS, 180.0F);
+        level.getEntitiesOfClass(com.replecant.skytest.entity.RatCatcherEntity.class, WHOLE_AREA)
+                .forEach(com.replecant.skytest.entity.RatCatcherEntity::discard);
         RatSpawner.populate(level);
+        spawnRatRoom();
     }
 
     private void spawn(Mob mob, Vec3 pos, float yaw) {

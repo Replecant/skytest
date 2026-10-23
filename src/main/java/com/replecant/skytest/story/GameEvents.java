@@ -35,10 +35,6 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 @EventBusSubscriber(modid = SkyTest.MODID)
 public final class GameEvents {
-    private static final Set<UUID> REACHED_END = new HashSet<>();
-    private static final Set<UUID> REACHED_BRIDGE = new HashSet<>();
-    private static final Set<UUID> REACHED_REGULATOR = new HashSet<>();
-    private static final Set<UUID> REACHED_UPPER = new HashSet<>();
 
     @SubscribeEvent
     static void onServerStarted(ServerStartedEvent event) {
@@ -80,7 +76,7 @@ public final class GameEvents {
         }
         // Падение в бездну: возврат на начало моста (или в камеру) с уроном.
         if (player.getY() < LowerPrison.ABYSS_Y && !player.isSpectator() && !player.getAbilities().flying) {
-            Vec3 back = REACHED_BRIDGE.contains(player.getUUID()) ? LowerPrison.BRIDGE_START : LowerPrison.PLAYER_SPAWN;
+            Vec3 back = HallEvent.hasFlag(player, "reached_bridge") ? LowerPrison.BRIDGE_START : LowerPrison.PLAYER_SPAWN;
             player.teleport(new TeleportTransition(player.level().getServer().overworld(), back, Vec3.ZERO,
                     0.0F, 0.0F, TeleportTransition.DO_NOTHING));
             player.resetFallDistance();
@@ -91,22 +87,29 @@ public final class GameEvents {
         if (player.tickCount % 5 == 0) {
             HallEvent.checkTrigger(player);
             HallEvent.checkRegulator(player);
+            HallEvent.checkRatCatcher(player);
         }
         if (player.tickCount % 10 != 0) {
             return;
         }
+        // Надписи — только для основных уровней тюрьмы, по разу на игрока.
         Vec3 pos = player.position();
-        if (LowerPrison.BRIDGE.contains(pos) && REACHED_BRIDGE.add(player.getUUID())) {
-            showTitle(player, "area.skytest.sky_bridge", 30, 90, 40);
+        if (LowerPrison.BRIDGE.contains(pos) && !HallEvent.hasFlag(player, "reached_bridge")) {
+            HallEvent.setFlag(player, "reached_bridge");
         }
-        if (LowerPrison.UPPER_HALL.contains(pos) && REACHED_UPPER.add(player.getUUID())) {
-            showTitle(player, "area.skytest.upper_tier", 25, 80, 35);
+        if (!com.replecant.skytest.Config.PROLOGUE_ENABLED.get() && LowerPrison.CELL_BLOCK.contains(pos)) {
+            showAreaOnce(player, "lower_prison");
         }
-        if (LowerPrison.REGULATOR_HALL.contains(pos) && REACHED_REGULATOR.add(player.getUUID())) {
-            showTitle(player, "area.skytest.regulator_hall", 25, 80, 35);
+        if (LowerPrison.UPPER_HALL.contains(pos)) {
+            showAreaOnce(player, "upper_tier");
         }
-        if (LowerPrison.END_ROOM.contains(pos) && REACHED_END.add(player.getUUID())) {
-            showTitle(player, "area.skytest.test_end", 20, 80, 40);
+    }
+
+    private static void showAreaOnce(ServerPlayer player, String area) {
+        String flag = "seen_area_" + area;
+        if (!HallEvent.hasFlag(player, flag)) {
+            HallEvent.setFlag(player, flag);
+            showTitle(player, "area.skytest." + area, 25, 80, 35);
         }
     }
 
@@ -143,7 +146,6 @@ public final class GameEvents {
                 .then(Commands.literal("prologue").executes(ctx -> {
                     ServerPlayer player = ctx.getSource().getPlayerOrException();
                     Prologue.reset(player);
-                    REACHED_END.remove(player.getUUID());
                     Prologue.start(player);
                     return 1;
                 }))
@@ -158,10 +160,6 @@ public final class GameEvents {
                     ServerPlayer player = ctx.getSource().getPlayerOrException();
                     Prologue.reset(player);
                     player.setData(com.replecant.skytest.registry.ModAttachments.STORY_FLAGS, new java.util.HashSet<>());
-                    REACHED_END.remove(player.getUUID());
-                    REACHED_BRIDGE.remove(player.getUUID());
-                    REACHED_REGULATOR.remove(player.getUUID());
-                    REACHED_UPPER.remove(player.getUUID());
                     com.replecant.skytest.story.Quests.reset(player);
                     ctx.getSource().sendSuccess(() -> Component.literal("Story progress reset (use /skytest rebuild to respawn NPCs)"), false);
                     return 1;

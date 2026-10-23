@@ -86,7 +86,7 @@ public final class ClientSmoke {
             if (t >= 100) {
                 magicTest(mc, t - 100);
             }
-            if (t == 310) {
+            if (t == 500) {
                 SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE DONE");
                 mc.stop();
             }
@@ -172,14 +172,78 @@ public final class ClientSmoke {
             case 120 -> shot("27_upper_tier_from_ruins");
             case 125 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 46.5), -50.0F, -12.0F);
             case 135 -> shot("27b_upper_tier_far");
-            case 140 -> server.execute(() -> SkyTest.LOGGER.info("SKYTEST UPPER bridge built={}",
-                    com.replecant.skytest.world.LowerPrison.buildUpperBridge(server.overworld())));
-            case 150 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 72.5), -70.0F, -14.0F);
-            case 162 -> shot("28_upper_bridge");
-            case 166 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 46.5), -50.0F, -10.0F);
-            case 178 -> shot("28b_upper_bridge_far");
-            case 182 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(89.5, 74, 71.5), -90.0F, 0.0F);
-            case 196 -> shot("29_upper_hall");
+            // Задание «Найти Ларпи» целиком: Крысолов → приманка → Ларпи → Регулятор.
+            case 140 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(22.5, 55, 12.5), -90.0F, 5.0F);
+            case 165 -> shot("30_rat_catcher_dialogue");
+            case 172, 300 -> {
+                if (mc.screen instanceof com.replecant.skytest.client.DialogueScreen dialogue) {
+                    dialogue.onClose();
+                }
+            }
+            case 185 -> server.execute(() -> {
+                var player = server.getPlayerList().getPlayer(uuid);
+                if (player != null) {
+                    SkyTest.LOGGER.info("SKYTEST LARPI quest {}", player.getData(com.replecant.skytest.registry.ModAttachments.ACTIVE_QUEST));
+                    player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,
+                            new net.minecraft.world.item.ItemStack(com.replecant.skytest.registry.ModItems.RAT_BAIT.get(), 6));
+                    player.setXRot(30.0F);
+                }
+            });
+            case 186 -> mc.player.setXRot(30.0F);
+            case 232 -> shot("31_bait_swarm");
+            case 236 -> server.execute(() -> {
+                var player = server.getPlayerList().getPlayer(uuid);
+                if (player == null) {
+                    return;
+                }
+                player.level().getEntitiesOfClass(com.replecant.skytest.entity.RatEntity.class, player.getBoundingBox().inflate(12.0),
+                                r -> !r.isLarpi()).stream().min(java.util.Comparator.comparingDouble(r -> r.distanceToSqr(player)))
+                        .ifPresent(r -> r.interact(player, net.minecraft.world.InteractionHand.MAIN_HAND));
+            });
+            case 246 -> server.execute(() -> {
+                var player = server.getPlayerList().getPlayer(uuid);
+                if (player == null) {
+                    return;
+                }
+                player.level().getEntitiesOfClass(com.replecant.skytest.entity.RatEntity.class, player.getBoundingBox().inflate(40.0),
+                        com.replecant.skytest.entity.RatEntity::isLarpi).stream().findFirst().ifPresent(larpi -> {
+                            larpi.setNoAi(true);
+                            var eye = larpi.position().add(1.6, 0.0, 1.0);
+                            var d = larpi.position().subtract(eye.add(0, player.getEyeHeight(), 0));
+                            float yaw = (float) (Math.atan2(d.z, d.x) * 180.0 / Math.PI) - 90.0F;
+                            float pitch = (float) -(Math.atan2(d.y, Math.sqrt(d.x * d.x + d.z * d.z)) * 180.0 / Math.PI);
+                            player.teleport(new net.minecraft.world.level.portal.TeleportTransition(server.overworld(), eye,
+                                    net.minecraft.world.phys.Vec3.ZERO, yaw, pitch,
+                                    net.minecraft.world.level.portal.TeleportTransition.DO_NOTHING));
+                            magicTarget = larpi.getUUID();
+                        });
+            });
+            case 256 -> shot("32_larpi");
+            case 260 -> server.execute(() -> {
+                var player = server.getPlayerList().getPlayer(uuid);
+                var level = server.overworld();
+                if (player != null && magicTarget != null && level.getEntity(magicTarget) instanceof com.replecant.skytest.entity.RatEntity larpi) {
+                    larpi.interact(player, net.minecraft.world.InteractionHand.MAIN_HAND);
+                }
+            });
+            case 270 -> {
+                tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 114.5), 0.0F, -12.0F);
+                server.execute(() -> {
+                    var player = server.getPlayerList().getPlayer(uuid);
+                    if (player != null) {
+                        player.level().getEntitiesOfClass(com.replecant.skytest.entity.RegulatorEntity.class,
+                                player.getBoundingBox().inflate(30.0)).stream().findFirst().ifPresent(r -> r.talkTo(player));
+                    }
+                });
+            }
+            case 292 -> shot("33_regulator_larpi");
+            case 318 -> shot("34_quest_done");
+            case 326 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 72.5), -70.0F, -14.0F);
+            case 338 -> shot("28_upper_bridge");
+            case 342 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 46.5), -50.0F, -10.0F);
+            case 354 -> shot("28b_upper_bridge_far");
+            case 358 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(89.5, 74, 71.5), -90.0F, 0.0F);
+            case 372 -> shot("29_upper_hall");
             default -> { }
         }
     }

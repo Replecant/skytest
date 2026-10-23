@@ -20,14 +20,17 @@ public final class QuestHud {
         if (mc.player == null || mc.options.hideGui || mc.screen != null) {
             return;
         }
-        String quest = mc.player.getData(ModAttachments.ACTIVE_QUEST);
-        if (quest.isEmpty()) {
+        String value = mc.player.getData(ModAttachments.ACTIVE_QUEST);
+        if (value.isEmpty()) {
             return;
         }
+        int slash = value.indexOf('/');
+        String quest = slash < 0 ? value : value.substring(0, slash);
+        String stage = slash < 0 ? "" : "." + value.substring(slash + 1);
         GuiGraphics g = event.getGuiGraphics();
         Component header = Component.translatable("quest.skytest.header");
         Component name = Component.translatable("quest.skytest." + quest);
-        Component objective = Component.translatable("quest.skytest." + quest + ".objective");
+        Component objective = Component.translatable("quest.skytest." + quest + ".objective" + stage);
         int width = Math.max(mc.font.width(name), mc.font.width(objective)) + 16;
         int x = 6;
         int y = 6;

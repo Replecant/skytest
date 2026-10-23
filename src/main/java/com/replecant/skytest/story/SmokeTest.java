@@ -89,6 +89,13 @@ final class SmokeTest {
             barred |= level.getBlockState(new BlockPos(x, LowerPrison.UPPER_FLOOR + 2, LowerPrison.UPPER_LANE)).is(Blocks.IRON_BARS);
         }
         check(failures, barred, "upper tier entrance is barred until the bridge is moved");
+        check(failures, level.getBlockState(new BlockPos(-8, 61, 7)).is(Blocks.DEEPSLATE_BRICK_STAIRS), "stairs to the lower cells");
+        check(failures, level.getBlockState(new BlockPos(0, LowerPrison.LOWER_FLOOR + 1, 12)).isAir(), "lower cells corridor");
+        int catchers = level.getEntitiesOfClass(com.replecant.skytest.entity.RatCatcherEntity.class, area).size();
+        check(failures, catchers == 1, "exactly one rat catcher (found " + catchers + ")");
+        var nest = level.getEntitiesOfClass(com.replecant.skytest.entity.RatEntity.class, LowerPrison.RAT_ROOM.inflate(2.0));
+        long larpis = nest.stream().filter(com.replecant.skytest.entity.RatEntity::isLarpi).count();
+        check(failures, larpis == 1 && nest.size() >= 10, "rat room: " + nest.size() + " rats, larpi " + larpis);
         int strangers = level.getEntitiesOfClass(StrangerEntity.class, area).size();
         check(failures, strangers == 1, "exactly one stranger (found " + strangers + ")");
 
