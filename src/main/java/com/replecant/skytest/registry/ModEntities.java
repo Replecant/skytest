@@ -6,6 +6,7 @@ import com.replecant.skytest.entity.LamplighterEntity;
 import com.replecant.skytest.entity.PrisonWardenEntity;
 import com.replecant.skytest.entity.RatEntity;
 import com.replecant.skytest.entity.RegulatorEntity;
+import com.replecant.skytest.entity.SoulOrbEntity;
 import com.replecant.skytest.entity.StrangerEntity;
 
 import net.minecraft.core.registries.Registries;
@@ -68,9 +69,18 @@ public final class ModEntities {
     public static final DeferredHolder<EntityType<?>, EntityType<RegulatorEntity>> REGULATOR =
             ENTITY_TYPES.register("regulator", id -> EntityType.Builder
                     .<RegulatorEntity>of(RegulatorEntity::new, MobCategory.MISC)
-                    .sized(3.0F, 4.1F)
-                    .eyeHeight(3.4F)
+                    .sized(4.4F, 6.2F)
+                    .eyeHeight(5.1F)
                     .clientTrackingRange(12)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
+
+    /** Сгусток души: вылетает из поверженного врага и летит к игроку (вместо опыта). */
+    public static final DeferredHolder<EntityType<?>, EntityType<SoulOrbEntity>> SOUL_ORB =
+            ENTITY_TYPES.register("soul_orb", id -> EntityType.Builder
+                    .<SoulOrbEntity>of(SoulOrbEntity::new, MobCategory.MISC)
+                    .sized(0.25F, 0.25F)
+                    .clientTrackingRange(8)
+                    .updateInterval(1)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
 
     public static void registerAttributes(EntityAttributeCreationEvent event) {

@@ -267,9 +267,9 @@ public class PrisonWardenModel extends EntityModel<PrisonWardenRenderState> {
             }
             case BASH -> {
                 guard = 1.0F;
-                if (t < 7.0F) {
+                if (t < 5.0F) {
                     // Замах щитом: корпус уходит назад.
-                    float p = ease(t / 7.0F);
+                    float p = ease(t / 5.0F);
                     crouch(1.0F);
                     body.yRot = -0.35F * p;
                     shieldPose(1.0F, 3.0F * p);
@@ -277,7 +277,7 @@ public class PrisonWardenModel extends EntityModel<PrisonWardenRenderState> {
                     sword.xRot = 0.6F;
                 } else {
                     // Толчок: щит выбрасывается вперёд всем весом.
-                    float p = easeIn((t - 7.0F) / 3.0F);
+                    float p = easeIn((t - 5.0F) / 3.0F);
                     crouch(1.0F - p * 0.5F);
                     body.yRot = Mth.lerp(p, -0.35F, 0.25F);
                     body.xRot = 0.3F * p;

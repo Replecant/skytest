@@ -66,5 +66,6 @@
   "quest.skytest.header": "QUEST",
   "quest.skytest.new": "New quest",
   "quest.skytest.find_larpi": "Find Larpi",
-  "quest.skytest.find_larpi.objective": "Find the Regulator's rat with a white spot on her ear"
+  "quest.skytest.find_larpi.objective": "Find the Regulator's rat with a white spot on her ear",
+  "entity.skytest.soul_orb": "Soul"
 }

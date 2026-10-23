@@ -66,6 +66,7 @@ public class SkyTestClient {
         event.registerEntityRenderer(ModEntities.PRISON_WARDEN.get(), PrisonWardenRenderer::new);
         event.registerEntityRenderer(ModEntities.RAT.get(), RatRenderer::new);
         event.registerEntityRenderer(ModEntities.REGULATOR.get(), com.replecant.skytest.client.renderer.RegulatorRenderer::new);
+        event.registerEntityRenderer(ModEntities.SOUL_ORB.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
     }
 
     @SubscribeEvent

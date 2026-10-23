@@ -14,14 +14,14 @@ import net.minecraft.resources.Identifier;
 
 public class RegulatorRenderer extends MobRenderer<RegulatorEntity, RegulatorRenderState, RegulatorModel> {
     /** Масштаб модели (подбирается под её размеры, см. RegulatorModel). */
-    static final float SCALE = 1.6F;
+    static final float SCALE = 2.4F;
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath(SkyTest.MODID, "textures/entity/regulator.png");
     private static final RenderType EYES =
             RenderTypes.eyes(Identifier.fromNamespaceAndPath(SkyTest.MODID, "textures/entity/regulator_eyes.png"));
 
     public RegulatorRenderer(EntityRendererProvider.Context context) {
-        super(context, new RegulatorModel(context.bakeLayer(RegulatorModel.LAYER)), 1.4F);
+        super(context, new RegulatorModel(context.bakeLayer(RegulatorModel.LAYER)), 2.1F);
         addLayer(new EyesLayer<>(this) {
             @Override
             public RenderType renderType() {

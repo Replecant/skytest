@@ -111,6 +111,12 @@ public final class ClientSmoke {
             }
             if (wakeTicks == 706) {
                 shot("08c_rat");
+            } else if (wakeTicks == 724) {
+                shot("08d_soul_orbs");
+            } else if (wakeTicks == 765) {
+                shot("08e_soul_hud");
+                SkyTest.LOGGER.info("SKYTEST SOUL client charge={}", mc.player == null ? -1
+                        : mc.player.getData(com.replecant.skytest.registry.ModAttachments.SOUL_CHARGE));
             }
             if (wakeTicks == 200) {
                 shot("06_lamplighter_dialogue");
@@ -140,7 +146,8 @@ public final class ClientSmoke {
                 case 25 -> shot("11_stranger_leaving");
                 case 75 -> shot("12_skeleton");
                 case 265 -> shot("15_bridge");
-                case 305 -> shot("16_prison_from_bridge");
+                case 300 -> shot("16_prison_from_bridge");
+                case 322 -> shot("16b_regulator_rock");
                 case 345 -> shot("17_abyss");
                 case 362 -> shot("18_warden_a");
                 case 378 -> shot("18_warden_b");

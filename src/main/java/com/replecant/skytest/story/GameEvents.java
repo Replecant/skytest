@@ -28,7 +28,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
-import net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
@@ -133,13 +132,6 @@ public final class GameEvents {
     }
 
     @SubscribeEvent
-    static void onExperienceDrop(LivingExperienceDropEvent event) {
-        if (event.getEntity().getTags().contains(HallEvent.PRISONER_TAG)) {
-            event.setCanceled(true);
-        }
-    }
-
-    @SubscribeEvent
     static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         dispatcher.register(Commands.literal("skytest")
@@ -153,7 +145,7 @@ public final class GameEvents {
                 }))
                 .then(Commands.literal("rebuild").executes(ctx -> {
                     ServerLevel level = ctx.getSource().getServer().overworld();
-                    level.setBlock(new net.minecraft.core.BlockPos(-12, 56, -16), Blocks.AIR.defaultBlockState(), 2);
+                    LowerPrison.clear(level);
                     LowerPrison.build(level);
                     ctx.getSource().sendSuccess(() -> Component.literal("Lower Prison rebuilt"), true);
                     return 1;

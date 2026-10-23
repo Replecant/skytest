@@ -1,8 +1,73 @@
 {
-  "parent": "minecraft:block/door_bottom_left",
   "render_type": "minecraft:cutout",
+  "ambientocclusion": false,
   "textures": {
-    "bottom": "skytest:block/prison_gate_bottom",
-    "top": "skytest:block/prison_gate_top"
-  }
+    "particle": "skytest:block/prison_gate_bottom",
+    "gate": "skytest:block/prison_gate_bottom"
+  },
+  "elements": [
+    {
+      "from": [
+        6.5,
+        0,
+        0
+      ],
+      "to": [
+        9.5,
+        16,
+        16
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            0,
+            13,
+            16,
+            16
+          ],
+          "texture": "#gate",
+          "cullface": "down",
+          "rotation": 90
+        },
+        "north": {
+          "uv": [
+            3,
+            0,
+            0,
+            16
+          ],
+          "texture": "#gate",
+          "cullface": "north"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            3,
+            16
+          ],
+          "texture": "#gate",
+          "cullface": "south"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#gate"
+        },
+        "east": {
+          "uv": [
+            16,
+            0,
+            0,
+            16
+          ],
+          "texture": "#gate"
+        }
+      }
+    }
+  ]
 }

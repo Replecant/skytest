@@ -80,7 +80,11 @@ public final class LowerPrison {
     /** Ниже этой высоты игрок считается упавшим в пропасть. */
     public static final double ABYSS_Y = 10.0;
     private static final int BRIDGE_Y = 56;
-    private static final AABB WHOLE_AREA = new AABB(-20, -10, -24, 70, 100, 148);
+    /** Насколько глубоко (в среднем) свисает скала под островом. */
+    private static final double ISLAND_HANG = 44.0;
+    private static final int GAP_START = 60;
+    private static final int GAP_END = 62;
+    private static final AABB WHOLE_AREA = new AABB(-40, -10, -40, 86, 106, 160);
     /** Всё, что внутри этой коробки, — биом тюрьмы (тёмный туман); снаружи — небо над бездной. */
     private static final AABB PRISON_BIOME = new AABB(-16, 48, -20, 60, 99, 26);
     private static final AABB REGULATOR_BIOME = new AABB(10, 40, 96, 66, 95, 146);
@@ -100,6 +104,18 @@ public final class LowerPrison {
         return level.getBlockState(MARKER).is(Blocks.BARRIER);
     }
 
+    /** Стереть всё построенное (для /skytest rebuild): старая скала не должна остаться под новой. */
+    public static void clear(ServerLevel level) {
+        BlockState air = Blocks.AIR.defaultBlockState();
+        for (BlockPos pos : BlockPos.betweenClosed((int) WHOLE_AREA.minX, (int) WHOLE_AREA.minY, (int) WHOLE_AREA.minZ,
+                (int) WHOLE_AREA.maxX, (int) WHOLE_AREA.maxY, (int) WHOLE_AREA.maxZ)) {
+            if (!level.getBlockState(pos).isAir()) {
+                level.removeBlockEntity(pos);
+                level.setBlock(pos, air, Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+            }
+        }
+    }
+
     public static void build(ServerLevel level) {
         long start = System.currentTimeMillis();
         new LowerPrison(level).buildAll();
@@ -110,6 +126,7 @@ public final class LowerPrison {
     private void buildAll() {
         // Парящая скала, в которой вырублено всё остальное.
         buildIsland(-12, 56, -16, 27, 52, 94, 0);
+        buildIsland(14, 62, 92, 140, 50, 88, 10);
         set(MARKER, Blocks.BARRIER.defaultBlockState());
 
         // Камеры и коридор.
@@ -296,7 +313,7 @@ public final class LowerPrison {
 
     /** Спуск вниз в южной стене зала: лестница во тьму, внизу завал. */
     private void buildDescent() {
-        fill(36, 55, 15, 40, 68, 26, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        fill(36, 56, 15, 40, 68, 25, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
         for (int i = 0; i <= 6; i++) {
             int z = 15 + i;
             int y = 63 - i;
@@ -308,7 +325,6 @@ public final class LowerPrison {
         fill(37, 57, 22, 39, 60, 24, Blocks.AIR.defaultBlockState());
         fill(37, 56, 22, 39, 56, 24, pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.4F));
         set(new BlockPos(37, 57, 24), Blocks.SOUL_LANTERN.defaultBlockState());
-        fill(37, 57, 25, 39, 59, 40, Blocks.AIR.defaultBlockState());
         cobweb(39, 60, 22);
         cobweb(37, 60, 23);
     }
@@ -316,61 +332,137 @@ public final class LowerPrison {
     // ---------------------------------------------------------------- остров и мост
 
     /**
-     * Скальная глыба вокруг тюрьмы: неровный верх, скруглённые края
-     * и свисающий книзу «корень», как у парящего острова.
+     * Парящая скала вокруг прямоугольника {@code minX..maxX × minZ..maxZ}: в плане —
+     * скруглённый «суперэллипс» с неровным краем, стены изрезаны объёмным шумом
+     * (уступы, навесы), книзу скала сужается в свисающий конус с сосульками.
      */
     private void buildIsland(int minX, int maxX, int minZ, int maxZ, int coreBottom, int coreTop, int seed) {
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         double cx = (minX + maxX) / 2.0;
         double cz = (minZ + maxZ) / 2.0;
-        double rx = (maxX - minX) / 2.0 + 8.0;
-        double rz = (maxZ - minZ) / 2.0 + 8.5;
-        for (int x = minX - 8; x <= maxX + 8; x++) {
-            for (int z = minZ - 8; z <= maxZ + 8; z++) {
-                double ox = Math.max(Math.max(minX - x, 0), x - maxX);
-                double oz = Math.max(Math.max(minZ - z, 0), z - maxZ);
-                double outside = Math.sqrt(ox * ox + oz * oz);
-                double margin = 2.0 + 4.0 * noise(x, z, 7.0, seed + 1);
-                if (outside > margin) {
+        double rx = (maxX - minX) / 2.0 * 1.26 + 4.0;
+        double rz = (maxZ - minZ) / 2.0 * 1.26 + 4.0;
+        for (int x = (int) (cx - rx - 6); x <= (int) (cx + rx + 6); x++) {
+            for (int z = (int) (cz - rz - 6); z <= (int) (cz + rz + 6); z++) {
+                double nx = Math.abs(x - cx) / rx;
+                double nz = Math.abs(z - cz) / rz;
+                double d = Math.cbrt(nx * nx * nx + nz * nz * nz) / (1.0 + 0.24 * (noise(x, z, 11.0, seed + 1) - 0.5));
+                if (d > 1.15) {
                     continue;
                 }
-                double nx = (x - cx) / rx;
-                double nz = (z - cz) / rz;
-                double hang = Math.max(0.0, 1.0 - Math.sqrt(nx * nx + nz * nz));
-                int top = coreTop + (int) (4.0 * noise(x, z, 6.0, seed + 2)) - (int) (outside * 1.2);
-                int bottom = coreBottom - (int) (Math.pow(hang, 1.4) * 42.0 + 6.0 * noise(x, z, 4.0, seed + 3))
-                        + (int) (outside * 1.5);
-                // Редкие сосульки-сталактиты снизу.
-                if (noise(x, z, 2.0, seed + 4) > 0.82) {
-                    bottom -= 4 + random.nextInt(8);
-                }
-                for (int y = bottom; y <= top; y++) {
-                    set(pos.set(x, y, z), rock());
+                int top = coreTop + (int) (4.0 * noise(x, z, 6.0, seed + 2)) - (int) (Math.max(0.0, d - 0.7) * 40.0);
+                double hang = ISLAND_HANG * (0.75 + 0.5 * noise(x, z, 9.0, seed + 3));
+                boolean spike = noise(x, z, 2.0, seed + 4) > 0.84;
+                for (int y = (int) (coreBottom - hang - 14); y <= top; y++) {
+                    double limit;
+                    double t = (coreBottom - y) / hang;
+                    if (y >= coreBottom) {
+                        limit = 1.0;
+                    } else if (t < 1.0) {
+                        limit = Math.pow(1.0 - t, 0.75);
+                    } else {
+                        limit = -1.0;
+                    }
+                    double wobble = 0.22 * (noise3(x, y, z, 5.0, seed + 5) - 0.5);
+                    boolean icicle = spike && y < coreBottom && t < 1.25 && d < Math.max(limit, 0.0) + 0.12 + wobble;
+                    if (d < limit + wobble || icicle) {
+                        set(pos.set(x, y, z), rock());
+                    }
                 }
             }
         }
     }
 
-    /** Мост над бездной: перила, цепи и фонари, провал посередине и руины в конце. */
+    /**
+     * Портал тоннеля в скальной стене: кирпичная рамка ровно там, где кончается камень,
+     * а за ней — несколько слоёв скалы, чтобы рамка не висела в воздухе.
+     */
+    private void portal(int z, int inward) {
+        int y = BRIDGE_Y;
+        for (int i = 1; i <= 6; i++) {
+            for (int x = 34; x <= 42; x++) {
+                for (int dy = -3; dy <= 7; dy++) {
+                    BlockPos pos = new BlockPos(x, y + dy, z + i * inward);
+                    if (level.getBlockState(pos).isAir()) {
+                        set(pos, rock());
+                    }
+                }
+            }
+        }
+        fill(36, y - 1, z, 40, y + 5, z, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        set(new BlockPos(38, y + 5, z), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
+    }
+
+    /** Есть ли камень в проёме тоннеля на данном z. */
+    private boolean rockAcross(int z) {
+        for (int x = 36; x <= 40; x++) {
+            for (int y = BRIDGE_Y + 1; y <= BRIDGE_Y + 5; y++) {
+                if (!level.getBlockState(new BlockPos(x, y, z)).isAir()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** Объёмный шум: двумерный, плавно смешанный по слоям y. */
+    private static double noise3(int x, int y, int z, double scale, int seed) {
+        double fy = y / scale;
+        int iy = (int) Math.floor(fy);
+        double ty = fy - iy;
+        ty = ty * ty * (3 - 2 * ty);
+        double a = noise(x, z + iy * 1031, scale, seed);
+        double b = noise(x, z + (iy + 1) * 1031, scale, seed);
+        return a + (b - a) * ty;
+    }
+
+    /**
+     * Мост над бездной: тоннели из обеих скал выходят порталами ровно в каменной
+     * стене; между ними — перила, цепи и фонари, провал посередине и руины ближе к залу.
+     */
     private void buildBridge() {
         int y = BRIDGE_Y;
-        // Устье тоннеля — арка из кирпича.
-        fill(36, y + 1, 34, 40, y + 4, 34, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
-        fill(37, y + 1, 34, 39, y + 3, 34, Blocks.AIR.defaultBlockState());
-        for (int z = 25; z <= 97; z++) {
-            boolean gap = z >= 60 && z <= 62;
-            boolean ruins = z >= 78 && z <= 86;
+        int exitZ = 26;
+        for (int z = 26; z < GAP_START; z++) {
+            if (rockAcross(z)) {
+                exitZ = z;
+            }
+        }
+        int entryZ = 97;
+        for (int z = 96; z > GAP_END; z--) {
+            if (rockAcross(z)) {
+                entryZ = z;
+            }
+        }
+        SkyTest.LOGGER.debug("Bridge portals at z={} and z={}", exitZ, entryZ);
+        portal(exitZ, -1);
+        portal(entryZ, 1);
+        // Тоннели сквозь скалу: от спуска к мосту и от моста к залу Регулятора.
+        fill(37, y + 1, 25, 39, y + 3, exitZ, Blocks.AIR.defaultBlockState());
+        fill(37, y + 1, entryZ, 39, y + 4, 96, Blocks.AIR.defaultBlockState());
+        set(new BlockPos(38, y + 4, exitZ), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+
+        int ruinsStart = GAP_END + 6;
+        int ruinsEnd = Math.min(ruinsStart + 7, entryZ - 4);
+        for (int z = 25; z <= 96; z++) {
+            boolean gap = z >= GAP_START && z <= GAP_END;
+            boolean ruins = z >= ruinsStart && z <= ruinsEnd;
             if (gap) {
                 continue;
             }
             for (int x = 37; x <= 39; x++) {
                 set(new BlockPos(x, y, z), pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.25F));
             }
-            if (z < 35 || ruins) {
+            if (z <= exitZ || z >= entryZ) {
+                continue;
+            }
+            // Над открытым мостом — ничего лишнего (наплывы скалы, сосульки).
+            fill(35, y + 1, z, 41, y + 5, z, Blocks.AIR.defaultBlockState());
+            if (ruins) {
                 continue;
             }
             // Перила с разрушенными участками рядом с провалом.
-            boolean brokenRail = (z >= 57 && z <= 65) && random.nextFloat() < 0.6F;
+            boolean brokenRail = (z >= GAP_START - 3 && z <= GAP_END + 3) && random.nextFloat() < 0.6F;
             if (!brokenRail) {
                 connectable(new BlockPos(36, y + 1, z), Blocks.DEEPSLATE_TILE_WALL.defaultBlockState());
                 connectable(new BlockPos(40, y + 1, z), Blocks.DEEPSLATE_TILE_WALL.defaultBlockState());
@@ -378,7 +470,7 @@ public final class LowerPrison {
             set(new BlockPos(36, y, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
             set(new BlockPos(40, y, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
             // Опоры: балка снизу и свисающие в пропасть цепи; фонари на столбах.
-            if (z % 8 == 0) {
+            if (z % 8 == 0 && z > exitZ + 2 && z < entryZ - 2) {
                 fill(35, y - 1, z, 41, y - 1, z, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
                 for (int x : new int[] {35, 41}) {
                     chain(x, y - 2, z, 4 + random.nextInt(6));
@@ -389,11 +481,12 @@ public final class LowerPrison {
                 }
             }
         }
-        // Полуразрушенная площадка на полпути ко второй скале: обломки стен и арки.
+        // Полуразрушенная площадка на полпути ко второй скале: обломки стен по краям
+        // и остов арки; середина свободна для прохода.
         for (int x = 33; x <= 43; x++) {
-            for (int z = 78; z <= 86; z++) {
+            for (int z = ruinsStart; z <= ruinsEnd; z++) {
                 boolean edge = x == 33 || x == 43;
-                if (random.nextFloat() < (edge ? 0.55F : 0.9F)) {
+                if (random.nextFloat() < (edge ? 0.55F : 0.9F) || (x >= 37 && x <= 39)) {
                     set(new BlockPos(x, y, z), pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.4F));
                 }
                 if (edge && random.nextFloat() < 0.45F) {
@@ -402,10 +495,12 @@ public final class LowerPrison {
                 }
             }
         }
-        fill(35, y + 1, 82, 35, y + 5, 82, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
-        fill(41, y + 1, 82, 41, y + 3, 82, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
-        fill(35, y + 6, 82, 38, y + 6, 82, Blocks.DEEPSLATE_BRICK_SLAB.defaultBlockState());
-        set(new BlockPos(38, y + 1, 84), Blocks.SOUL_LANTERN.defaultBlockState());
+        int arch = (ruinsStart + ruinsEnd) / 2;
+        fill(35, y + 1, arch, 35, y + 5, arch, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+        fill(41, y + 1, arch, 41, y + 3, arch, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+        fill(35, y + 6, arch, 38, y + 6, arch, Blocks.DEEPSLATE_BRICK_SLAB.defaultBlockState());
+        set(new BlockPos(42, y + 1, arch + 2), Blocks.SOUL_LANTERN.defaultBlockState());
+        set(new BlockPos(34, y + 1, arch - 2), Blocks.SOUL_LANTERN.defaultBlockState());
     }
 
     // ---------------------------------------------------------------- зал Регулятора
@@ -416,13 +511,11 @@ public final class LowerPrison {
      */
     private void buildRegulatorHall() {
         int floor = 57;
-        buildIsland(14, 62, 92, 140, 50, 88, 10);
         room(22, floor, 98, 54, 81, 132);
 
-        // Вход: арка и проход сквозь скалу к мосту.
+        // Вход: арка в стене зала (проход сквозь скалу пробит в buildBridge).
         fill(35, floor, 97, 41, floor + 5, 97, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
-        fill(37, floor, 86, 39, floor + 3, 97, Blocks.AIR.defaultBlockState());
-        fill(37, floor - 1, 86, 39, floor - 1, 97, Blocks.DEEPSLATE_TILES.defaultBlockState());
+        fill(37, floor, 97, 39, floor + 3, 97, Blocks.AIR.defaultBlockState());
         set(new BlockPos(38, floor + 4, 97), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
 
         // Пол: полированный глубинный сланец, ковровая дорожка плиткой к помосту.

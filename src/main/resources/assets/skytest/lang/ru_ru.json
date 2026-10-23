@@ -66,5 +66,6 @@
   "quest.skytest.header": "ЗАДАНИЕ",
   "quest.skytest.new": "Новое задание",
   "quest.skytest.find_larpi": "Найти Ларпи",
-  "quest.skytest.find_larpi.objective": "Найди крысу Регулятора с белым пятнышком на ухе"
+  "quest.skytest.find_larpi.objective": "Найди крысу Регулятора с белым пятнышком на ухе",
+  "entity.skytest.soul_orb": "Душа"
 }

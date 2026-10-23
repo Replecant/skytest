@@ -47,5 +47,16 @@ public final class ModAttachments {
                     .copyOnDeath()
                     .build());
 
+    /**
+     * Заряд душ — то, что осталось от опыта: собирается с поверженных врагов
+     * фиолетовыми искрами, позже тратится на магию и артефакты. Переживает смерть.
+     */
+    public static final Supplier<AttachmentType<Integer>> SOUL_CHARGE = ATTACHMENT_TYPES.register("soul_charge",
+            () -> AttachmentType.builder(() -> 0)
+                    .serialize(Codec.INT.fieldOf("charge"))
+                    .sync(ByteBufCodecs.VAR_INT)
+                    .copyOnDeath()
+                    .build());
+
     private ModAttachments() {}
 }

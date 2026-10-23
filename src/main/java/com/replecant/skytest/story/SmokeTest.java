@@ -54,6 +54,17 @@ final class SmokeTest {
         check(failures, level.getBlockState(new BlockPos(38, 66, 110)).isAir(), "regulator hall is hollow");
         check(failures, level.getBlockState(new BlockPos(22, 59, 100)).is(Blocks.LEVER), "levers on the hall wall");
         check(failures, level.getBlockState(new BlockPos(38, 58, 90)).isAir(), "entrance from the bridge");
+        check(failures, level.getBlockState(new BlockPos(7, LowerPrison.FLOOR, 5))
+                .getValue(net.minecraft.world.level.block.CrossCollisionBlock.EAST), "cell bars join the closed gate");
+        // Души вместо опыта: смерть крысы выпускает сгусток души.
+        var rat = com.replecant.skytest.registry.ModEntities.RAT.get().create(level, net.minecraft.world.entity.EntitySpawnReason.COMMAND);
+        if (rat != null) {
+            rat.snapTo(38.5, 57.0, 50.5, 0.0F, 0.0F);
+            level.addFreshEntity(rat);
+            rat.hurtServer(level, level.damageSources().generic(), 100.0F);
+            int orbs = level.getEntitiesOfClass(com.replecant.skytest.entity.SoulOrbEntity.class, rat.getBoundingBox().inflate(4.0)).size();
+            check(failures, orbs == 1, "rat releases one soul orb (found " + orbs + ")");
+        }
         int strangers = level.getEntitiesOfClass(StrangerEntity.class, area).size();
         check(failures, strangers == 1, "exactly one stranger (found " + strangers + ")");
 

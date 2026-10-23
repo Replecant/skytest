@@ -55,7 +55,7 @@ import net.minecraft.world.phys.Vec3;
  */
 public class PrisonWardenEntity extends PathfinderMob implements ParryReactive {
     public enum State {
-        PATROL(0), GUARD(0), WINDUP(16), STRIKE(7), RECOVERY(26), BASH(12), STAGGER(32), PARRIED(44);
+        PATROL(0), GUARD(0), WINDUP(13), STRIKE(6), RECOVERY(18), BASH(10), STAGGER(24), PARRIED(40);
 
         /** Длительность в тиках (0 — без ограничения). */
         public final int duration;
@@ -78,10 +78,18 @@ public class PrisonWardenEntity extends PathfinderMob implements ParryReactive {
     private static final int PATROL_REACH = 7;
     /** За сколько тиков до конца замаха вспыхивает клинок (сигнал к парированию). */
     private static final int PARRY_CUE = 5;
-    private static final int WHIFF_RECOVERY_BONUS = 14;
+    private static final int WHIFF_RECOVERY_BONUS = 12;
+    /** Скорость разворота корпуса, градусов за тик: в стойке он вертится быстро, в замахе — уже нет. */
+    private static final float TURN_GUARD = 32.0F;
+    private static final float TURN_WINDUP = 20.0F;
+    private static final float TURN_COMMITTED = 3.0F;
+    /** Ближе этого он не прёт напролом, а кружит вокруг игрока. */
+    private static final double CIRCLE_RANGE = 4.5;
     private static final int BLOCKS_BEFORE_COUNTER = 3;
 
     private int stateTicks;
+    private int strafeDir = 1;
+    private int strafeTicks;
     private int attackCooldown;
     private int patrolPause;
     private boolean strikeLanded;
@@ -102,7 +110,7 @@ public class PrisonWardenEntity extends PathfinderMob implements ParryReactive {
         return Mob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 30.0)
                 .add(Attributes.ARMOR, 6.0)
-                .add(Attributes.MOVEMENT_SPEED, 0.24)
+                .add(Attributes.MOVEMENT_SPEED, 0.3)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.55)
                 .add(Attributes.ATTACK_DAMAGE, STRIKE_DAMAGE)
                 .add(Attributes.FOLLOW_RANGE, 24.0);
@@ -176,7 +184,8 @@ public class PrisonWardenEntity extends PathfinderMob implements ParryReactive {
             case PATROL -> patrol();
             case GUARD -> guard(target);
             case WINDUP -> {
-                stop(target);
+                // До вспышки ещё доворачивается за игроком, после — удар уже не изменить.
+                stop(target, stateTicks < State.WINDUP.duration - PARRY_CUE ? TURN_WINDUP : TURN_COMMITTED);
                 if (stateTicks == State.WINDUP.duration - PARRY_CUE) {
                     parryCue(level);
                 }
@@ -187,8 +196,8 @@ public class PrisonWardenEntity extends PathfinderMob implements ParryReactive {
                 }
             }
             case STRIKE -> {
-                stop(target);
-                if (stateTicks == 3) {
+                stop(target, 0.0F);
+                if (stateTicks == 2) {
                     strike(level, target);
                 }
                 if (stateTicks >= State.STRIKE.duration) {
@@ -196,21 +205,21 @@ public class PrisonWardenEntity extends PathfinderMob implements ParryReactive {
                 }
             }
             case RECOVERY -> {
-                getNavigation().stop();
+                stop(target, 8.0F);
                 int recovery = State.RECOVERY.duration + (strikeLanded ? 0 : WHIFF_RECOVERY_BONUS);
                 if (stateTicks >= recovery) {
-                    attackCooldown = 15 + random.nextInt(20);
+                    attackCooldown = 6 + random.nextInt(14);
                     setState(engaged ? State.GUARD : State.PATROL);
                 }
             }
             case BASH -> {
-                stop(target);
-                if (stateTicks == 7) {
+                stop(target, stateTicks < 5 ? TURN_GUARD : 0.0F);
+                if (stateTicks == 5) {
                     lunge(0.35);
                     bash(level, target);
                 }
                 if (stateTicks >= State.BASH.duration) {
-                    attackCooldown = 20;
+                    attackCooldown = 12;
                     setState(State.GUARD);
                 }
             }
@@ -246,16 +255,27 @@ public class PrisonWardenEntity extends PathfinderMob implements ParryReactive {
         }
     }
 
-    /** Стойка со щитом: медленно наступает и выбирает атаку. */
+    /**
+     * Стойка со щитом: держится к игроку лицом (разворачивается быстро — обойти
+     * щит непросто), издалека сближается, вблизи кружит боком, выбирая момент.
+     */
     private void guard(LivingEntity target) {
-        getLookControl().setLookAt(target, 30.0F, 30.0F);
+        turnTowards(target, TURN_GUARD);
+        getLookControl().setLookAt(target, 60.0F, 30.0F);
         double distance = distanceTo(target);
-        if (distance > 2.2) {
-            getNavigation().moveTo(target, 0.7);
+        boolean ready = attackCooldown <= 0 && stateTicks >= 5;
+        if (distance > CIRCLE_RANGE || (ready && distance > STRIKE_RANGE - 0.4)) {
+            getNavigation().moveTo(target, 1.0);
         } else {
             getNavigation().stop();
+            if (--strafeTicks <= 0) {
+                strafeTicks = 20 + random.nextInt(25);
+                strafeDir = random.nextBoolean() ? 1 : -1;
+            }
+            float forward = distance < 2.0 ? -0.5F : distance > 3.5 ? 0.3F : 0.0F;
+            getMoveControl().strafe(forward, strafeDir * 0.7F);
         }
-        if (attackCooldown > 0 || stateTicks < 10 || !hasLineOfSight(target)) {
+        if (!ready || !hasLineOfSight(target)) {
             return;
         }
         if (distance < BASH_RANGE && random.nextFloat() < 0.45F) {
@@ -267,11 +287,24 @@ public class PrisonWardenEntity extends PathfinderMob implements ParryReactive {
         }
     }
 
-    private void stop(LivingEntity target) {
+    private void stop(LivingEntity target, float turn) {
         getNavigation().stop();
         if (target != null) {
-            getLookControl().setLookAt(target, 10.0F, 30.0F);
+            turnTowards(target, turn);
+            getLookControl().setLookAt(target, Math.max(turn, 10.0F), 30.0F);
         }
+    }
+
+    /** Разворачивает корпус (не только голову) к цели, но не быстрее {@code maxStep} градусов за тик. */
+    private void turnTowards(LivingEntity target, float maxStep) {
+        if (maxStep <= 0.0F) {
+            return;
+        }
+        float wanted = (float) (Mth.atan2(target.getZ() - getZ(), target.getX() - getX()) * Mth.RAD_TO_DEG) - 90.0F;
+        float yaw = Mth.approachDegrees(getYRot(), wanted, maxStep);
+        setYRot(yaw);
+        setYBodyRot(yaw);
+        setYHeadRot(Mth.approachDegrees(getYHeadRot(), wanted, maxStep + 10.0F));
     }
 
     private void lunge(double strength) {

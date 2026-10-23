@@ -1,10 +1,10 @@
 package com.replecant.skytest.registry;
 
 import com.replecant.skytest.SkyTest;
+import com.replecant.skytest.block.PrisonGateBlock;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.properties.BlockSetType;
@@ -20,8 +20,8 @@ public final class ModBlocks {
      * Тюремные ворота: решётчатая дверь в два блока. Как железную дверь, рукой
      * их не открыть — только сигналом или сценарием. Неразрушимы.
      */
-    public static final DeferredBlock<DoorBlock> PRISON_GATE = BLOCKS.register("prison_gate",
-            id -> new DoorBlock(BlockSetType.IRON, BlockBehaviour.Properties.of()
+    public static final DeferredBlock<PrisonGateBlock> PRISON_GATE = BLOCKS.register("prison_gate",
+            id -> new PrisonGateBlock(BlockSetType.IRON, BlockBehaviour.Properties.of()
                     .setId(ResourceKey.create(Registries.BLOCK, id))
                     .mapColor(MapColor.METAL)
                     .sound(SoundType.METAL)
