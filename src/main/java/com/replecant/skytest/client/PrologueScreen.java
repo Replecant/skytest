@@ -124,26 +124,25 @@ public class PrologueScreen extends Screen {
             return;
         }
         int cx = width / 2;
+        int fadeTop = (int) (height * 0.38F);
         int bottom = (int) (height * 0.62F);
         float pulse = 1.0F + 0.06F * Mth.sin(time * 0.12F);
         float baseWidth = (10.0F + 30.0F * strength + flare * width) * pulse;
 
-        // Ореол: несколько полупрозрачных слоёв, к центру всё ярче.
-        int layers = 12;
+        // Ореол из множества полупрозрачных слоёв: к центру всё ярче.
+        // Каждый слой ровный сверху и плавно растворяется к низу столба.
+        int layers = 28;
         for (int i = 0; i < layers; i++) {
             float k = 1.0F - i / (float) layers;
-            int half = Math.max(1, (int) (baseWidth * k * k * 1.6F));
-            graphics.fill(cx - half, 0, cx + half, bottom, argb(0.10F * strength, 0xFFF2C8));
+            int half = Math.max(1, (int) (baseWidth * k * k * 1.8F));
+            int color = argb(0.055F * strength, 0xFFF0C8);
+            graphics.fill(cx - half, 0, cx + half, fadeTop, color);
+            graphics.fillGradient(cx - half, fadeTop, cx + half, bottom, color, color & 0x00FFFFFF);
         }
-        int core = Math.max(1, (int) (baseWidth * 0.12F));
-        graphics.fill(cx - core, 0, cx + core, bottom, argb(0.85F * strength, 0xFFFFF4));
-
-        // Низ столба растворяется во тьме, чтобы под ним читался текст.
-        int fadeTop = (int) (height * 0.42F);
-        graphics.fillGradient(0, fadeTop, width, bottom, 0x00000000, argb(1.0F - flare, 0x000000));
-        // Свечение у основания.
-        graphics.fillGradient(cx - (int) baseWidth * 3, fadeTop, cx + (int) baseWidth * 3, bottom,
-                0x00000000, argb(0.12F * strength, 0xFFE9A8));
+        int core = Math.max(1, (int) (baseWidth * 0.1F));
+        int coreColor = argb(0.8F * strength, 0xFFFFF6);
+        graphics.fill(cx - core, 0, cx + core, fadeTop, coreColor);
+        graphics.fillGradient(cx - core, fadeTop, cx + core, bottom, coreColor, coreColor & 0x00FFFFFF);
     }
 
     private void renderMotes(GuiGraphics graphics, float alpha) {

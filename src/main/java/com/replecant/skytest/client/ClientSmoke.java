@@ -13,11 +13,11 @@ import net.minecraft.client.Screenshot;
 public final class ClientSmoke {
     public static final boolean ENABLED = "true".equals(System.getenv("SKYTEST_CLIENT_SMOKE"));
     /** Тик после пробуждения → имя скриншота. Совпадает с остановками SmokeTour + ~30 тиков. */
-    private static final int[] WAKE_SHOTS = {25, 120, 230, 290, 350, 410, 470};
+    private static final int[] WAKE_SHOTS = {25, 120, 230, 285, 315, 380, 440, 500};
     private static final String[] WAKE_NAMES = {
-            "04_waking", "05_cell_awake", "06_lamplighter_front", "07_lamplighter_side",
+            "04_waking", "05_cell_awake", "06_lamplighter_front", "07_lamplighter_side", "07b_lamplighter_nightvision",
             "08_corridor", "09_hall", "10_end_room"};
-    private static final int QUIT_AT = 500;
+    private static final int QUIT_AT = 530;
 
     private static int wakeTicks = -1;
     private static int clientTicks;

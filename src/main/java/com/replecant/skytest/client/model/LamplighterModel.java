@@ -65,13 +65,13 @@ public class LamplighterModel extends EntityModel<LivingEntityRenderState> {
                 PartPose.offsetAndRotation(0.0F, 10.0F, 0.0F, BODY_LEAN, 0.0F, 0.0F));
 
         PartDefinition neck = body.addOrReplaceChild("neck", CubeListBuilder.create()
-                        .texOffs(32, 0).addBox(-1.5F, -12.0F, -1.5F, 3.0F, 12.0F, 3.0F),
+                        .texOffs(36, 32).addBox(-1.5F, -12.0F, -1.5F, 3.0F, 12.0F, 3.0F),
                 PartPose.offsetAndRotation(0.0F, -10.5F, -0.5F, NECK_LEAN, 0.0F, 0.0F));
 
         neck.addOrReplaceChild("head", CubeListBuilder.create()
-                        .texOffs(44, 0).addBox(-2.0F, -4.0F, -4.0F, 4.0F, 4.0F, 5.0F)
+                        .texOffs(40, 0).addBox(-3.0F, -5.0F, -5.0F, 6.0F, 5.0F, 6.0F)
                         // Капюшон закрывает верх головы, оставляя щель для глаза.
-                        .texOffs(36, 16).addBox(-2.5F, -4.5F, -4.5F, 5.0F, 2.0F, 6.0F),
+                        .texOffs(36, 16).addBox(-3.5F, -5.5F, -5.5F, 7.0F, 2.0F, 7.0F),
                 PartPose.offsetAndRotation(0.0F, -12.0F, 0.0F, HEAD_LEVEL, 0.0F, 0.0F));
 
         body.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(28, 16)

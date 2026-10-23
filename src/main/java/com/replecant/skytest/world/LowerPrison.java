@@ -180,7 +180,7 @@ public final class LowerPrison {
         cobweb(4, FLOOR + 3, 0);
         chain(2, FLOOR + 3, 0, 2);
         // Свет «глаза» Фонарщика.
-        set(new BlockPos(3, FLOOR + 2, 3), Blocks.LIGHT.defaultBlockState().setValue(BlockStateProperties.LEVEL, 9));
+        set(new BlockPos(3, FLOOR + 2, 3), Blocks.LIGHT.defaultBlockState().setValue(BlockStateProperties.LEVEL, 12));
     }
 
     private void decorateCells() {
@@ -210,7 +210,7 @@ public final class LowerPrison {
     }
 
     private void decorateCorridor() {
-        for (int x = -2; x <= 26; x += 6) {
+        for (int x = -3; x <= 27; x += 5) {
             hangingLantern(x, FLOOR + 4, 7, 0);
         }
         // Завал в западном тупике.
@@ -243,6 +243,12 @@ public final class LowerPrison {
         }
         hangingLantern(35, 79, 8, 5);
         hangingLantern(39, 79, 10, 3);
+        hangingLantern(33, 79, 12, 6);
+        hangingLantern(44, 79, 4, 4);
+        hangingLantern(44, 79, 11, 7);
+        for (int z : new int[] {4, 10}) {
+            set(new BlockPos(31, FLOOR, z), Blocks.SOUL_CAMPFIRE.defaultBlockState());
+        }
         fill(31, FLOOR, 13, 33, FLOOR, 14, Blocks.COBBLED_DEEPSLATE.defaultBlockState());
         remains(32, 10);
     }
