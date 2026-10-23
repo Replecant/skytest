@@ -8,7 +8,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -39,7 +39,8 @@ public class GrapplingHookItem extends Item {
                 level.addFreshEntity(hook);
                 level.playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.SKELETON_SHOOT, SoundSource.PLAYERS, 0.8F, 0.6F);
-                stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(hand));
+                stack.hurtAndBreak(1, player,
+                        hand == InteractionHand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
             }
         }
         player.getCooldowns().addCooldown(stack, 5);
