@@ -339,11 +339,13 @@ public final class LowerPrison {
     private void buildLowerCells() {
         int y = LOWER_FLOOR;
         // Лестница на запад, вниз на 9 ступеней.
+        // Сначала пробиваем все пролёты, потом кладём ступени (иначе стены соседнего пролёта их затрут).
+        for (int i = 1; i <= 8; i++) {
+            room(-6 - i, FLOOR - i, 6, -6 - i, FLOOR + 3 - i, 8);
+        }
         for (int i = 1; i <= 8; i++) {
             int x = -6 - i;
-            int step = FLOOR - 1 - i;
-            room(x, step + 1, 6, x, step + 4, 8);
-            fill(x, step, 6, x, step, 8, Blocks.DEEPSLATE_BRICK_STAIRS.defaultBlockState()
+            fill(x, FLOOR - 1 - i, 6, x, FLOOR - 1 - i, 8, Blocks.DEEPSLATE_BRICK_STAIRS.defaultBlockState()
                     .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));
         }
         hangingLantern(-10, FLOOR + 1, 7, 1);
