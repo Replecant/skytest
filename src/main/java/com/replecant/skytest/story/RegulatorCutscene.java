@@ -45,6 +45,9 @@ public final class RegulatorCutscene {
     public static final int QUEST_DONE = 232;
     public static final int LENGTH = 240;
 
+    /** Пока идёт сцена, игрок стоит у входа в зал — вне кадра. */
+    private static final Vec3 STAGE = new Vec3(38.5, 57.0, 101.5);
+
     private static final Map<UUID, Run> RUNS = new HashMap<>();
 
     private static final class Run {
@@ -71,6 +74,7 @@ public final class RegulatorCutscene {
         }
         LowerPrison.UpperBridge bridge = LowerPrison.startUpperBridge(player.level());
         RUNS.put(player.getUUID(), new Run(regulator, player.position(), bridge));
+        player.setInvisible(true);
         PacketDistributor.sendToPlayer(player, new CutscenePayload(ID));
         log("start, bridge spans {}", bridge == null ? -1 : bridge.length());
     }
@@ -98,8 +102,9 @@ public final class RegulatorCutscene {
     private static boolean tick(ServerPlayer player, Run run) {
         ServerLevel level = player.level();
         int t = ++run.t;
-        if (player.position().distanceToSqr(run.anchor) > 0.25) {
-            player.teleport(new TeleportTransition(level, run.anchor, Vec3.ZERO, player.getYRot(), player.getXRot(),
+        Vec3 hold = t < LENGTH - 16 ? STAGE : run.anchor;
+        if (player.position().distanceToSqr(hold) > 0.25) {
+            player.teleport(new TeleportTransition(level, hold, Vec3.ZERO, player.getYRot(), player.getXRot(),
                     TeleportTransition.DO_NOTHING));
         }
         RegulatorEntity regulator = run.regulator;
@@ -155,6 +160,7 @@ public final class RegulatorCutscene {
             Quests.complete(player, Quests.FIND_LARPI);
         }
         if (t >= LENGTH) {
+            player.setInvisible(false);
             log("done");
             return true;
         }

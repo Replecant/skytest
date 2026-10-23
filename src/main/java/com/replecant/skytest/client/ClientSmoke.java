@@ -324,7 +324,7 @@ public final class ClientSmoke {
                 case 410 -> shot("18_warden_d");
                 case 426 -> shot("18_warden_e");
                 case 555 -> shot("20_regulator_hall");
-                case 1800 -> {
+                case 3000 -> {
                     SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE DONE");
                     mc.stop();
                 }

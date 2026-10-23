@@ -41,7 +41,8 @@ public final class MagicHands {
         ItemStack stack = event.getItemStack();
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
-        if (!MagicVisuals.isMagic(stack) || player == null) {
+        if (!MagicVisuals.isMagic(stack) || player == null
+                || com.replecant.skytest.client.cutscene.CutscenePlayer.isActive()) {
             return;
         }
         event.setCanceled(true);
@@ -109,7 +110,7 @@ public final class MagicHands {
 
         private void submitArm(PoseStack pose, SubmitNodeCollector collector, int light, AvatarRenderState state,
                 HumanoidArm arm, ItemStack stack) {
-            if (stack == null || !MagicVisuals.isMagic(stack)) {
+            if (stack == null || !MagicVisuals.isMagic(stack) || state.isInvisible) {
                 return;
             }
             float lunge = 0.0F;

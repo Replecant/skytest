@@ -50,6 +50,9 @@ public final class SoulHud {
     @SubscribeEvent
     static void onHud(RenderGuiEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
+        if (com.replecant.skytest.client.cutscene.CutscenePlayer.isActive()) {
+            return;
+        }
         if (mc.player == null || mc.level == null || mc.options.hideGui || mc.player.isCreative()
                 || mc.player.isSpectator() || !AdventureWorld.isAdventure(mc.level)) {
             return;

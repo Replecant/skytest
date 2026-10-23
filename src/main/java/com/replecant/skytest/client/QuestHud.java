@@ -17,6 +17,9 @@ public final class QuestHud {
     @SubscribeEvent
     static void onHud(RenderGuiEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
+        if (com.replecant.skytest.client.cutscene.CutscenePlayer.isActive()) {
+            return;
+        }
         if (mc.player == null || mc.options.hideGui || mc.screen != null) {
             return;
         }
