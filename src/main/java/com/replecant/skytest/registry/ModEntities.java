@@ -68,8 +68,8 @@ public final class ModEntities {
     public static final DeferredHolder<EntityType<?>, EntityType<RegulatorEntity>> REGULATOR =
             ENTITY_TYPES.register("regulator", id -> EntityType.Builder
                     .<RegulatorEntity>of(RegulatorEntity::new, MobCategory.MISC)
-                    .sized(2.6F, 4.4F)
-                    .eyeHeight(3.7F)
+                    .sized(3.0F, 4.1F)
+                    .eyeHeight(3.4F)
                     .clientTrackingRange(12)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
 

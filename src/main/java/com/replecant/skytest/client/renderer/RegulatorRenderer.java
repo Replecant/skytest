@@ -14,7 +14,7 @@ import net.minecraft.resources.Identifier;
 
 public class RegulatorRenderer extends MobRenderer<RegulatorEntity, RegulatorRenderState, RegulatorModel> {
     /** Масштаб модели (подбирается под её размеры, см. RegulatorModel). */
-    static final float SCALE = 1.0F;
+    static final float SCALE = 1.6F;
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath(SkyTest.MODID, "textures/entity/regulator.png");
     private static final RenderType EYES =
