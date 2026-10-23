@@ -1,0 +1,28 @@
+package com.replecant.skytest.registry;
+
+import com.replecant.skytest.SkyTest;
+
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
+
+public final class ModCreativeTabs {
+    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
+            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, SkyTest.MODID);
+
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> SKYTEST_TAB = CREATIVE_MODE_TABS.register("skytest",
+            () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.skytest"))
+                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .icon(() -> ModItems.GRAPPLING_HOOK.get().getDefaultInstance())
+                    .displayItems((parameters, output) -> {
+                        output.accept(ModItems.GRAPPLING_HOOK.get());
+                        output.accept(ModItems.CIRCUS_BOOTS.get());
+                    })
+                    .build());
+
+    private ModCreativeTabs() {}
+}

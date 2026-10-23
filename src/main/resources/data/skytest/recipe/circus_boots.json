@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "minecraft:leather_boots",
+    "minecraft:slime_ball",
+    "minecraft:feather",
+    "minecraft:red_dye",
+    "minecraft:yellow_dye"
+  ],
+  "result": {
+    "id": "skytest:circus_boots",
+    "count": 1
+  }
+}
