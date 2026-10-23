@@ -1,24 +1,25 @@
 package com.replecant.skytest.world;
 
-import com.replecant.skytest.SkyTest;
-
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.gamerules.GameRule;
 import net.minecraft.world.level.gamerules.GameRules;
 
 /**
- * Мир приключения: верхний мир на типе измерения skytest:depths
+ * Мир приключения: верхний мир на типе измерения «глубины»
  * (задаётся пресетом minecraft:normal, который мод переопределяет).
  */
 public final class AdventureWorld {
-    public static final ResourceKey<DimensionType> DEPTHS =
-            ResourceKey.create(Registries.DIMENSION_TYPE, Identifier.fromNamespaceAndPath(SkyTest.MODID, "depths"));
+    /**
+     * Тип измерения «глубины». Хранится под ванильным ключом minecraft:overworld_caves
+     * (обычные миры его не используют): с собственным ключом игра считает мир
+     * «экспериментальным» и показывает предупреждение при каждом входе.
+     */
+    public static final ResourceKey<DimensionType> DEPTHS = BuiltinDimensionTypes.OVERWORLD_CAVES;
 
     public static boolean isAdventure(Level level) {
         return level.dimensionTypeRegistration().is(DEPTHS);

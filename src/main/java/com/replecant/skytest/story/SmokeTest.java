@@ -21,7 +21,7 @@ final class SmokeTest {
     static void run(MinecraftServer server) {
         ServerLevel level = server.overworld();
         List<String> failures = new ArrayList<>();
-        check(failures, AdventureWorld.isAdventure(level), "overworld uses skytest:depths");
+        check(failures, AdventureWorld.isAdventure(level), "overworld uses the depths dimension type");
         check(failures, LowerPrison.isBuilt(level), "prison marker present");
         check(failures, level.getBlockState(BlockPos.containing(LowerPrison.PLAYER_SPAWN)).is(Blocks.BROWN_CARPET), "player mat in cell");
         check(failures, level.getBlockState(new BlockPos(2, LowerPrison.FLOOR, 5)).isAir(), "cell door open");

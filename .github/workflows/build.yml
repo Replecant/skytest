@@ -76,7 +76,7 @@ jobs:
         if: always() && (startsWith(github.ref, 'refs/heads/claude/') || github.event_name == 'workflow_dispatch')
         run: |
           [ -f client.log ] || exit 0
-          grep -v "DEBUG" client.log | grep -v "^\s*at " | cut -c1-300 | tail -n 700 | gzip -9 | base64 -w0 > clog.b64
+          grep -v "/DEBUG" client.log | grep -v "^\s*at " | cut -c1-300 | tail -n 700 | gzip -9 | base64 -w0 > clog.b64
           split -b 4000 -d -a 2 clog.b64 /tmp/clog.
           for f in /tmp/clog.*; do n=${f##*.}; echo "::notice title=probe-$n::$(cat $f)"; done | head -40
 
