@@ -20,6 +20,7 @@ public final class ClientSmoke {
     private static final int QUIT_AT = 500;
 
     private static int wakeTicks = -1;
+    private static int clientTicks;
 
     static void onPrologueTick(int ticks) {
         if (!ENABLED) {
@@ -40,7 +41,22 @@ public final class ClientSmoke {
     }
 
     static void tick(Minecraft mc) {
-        if (!ENABLED || wakeTicks < 0) {
+        if (!ENABLED) {
+            return;
+        }
+        clientTicks++;
+        if (clientTicks % 200 == 0) {
+            SkyTest.LOGGER.info("SKYTEST DEBUG t={} screen={} level={}", clientTicks,
+                    mc.screen == null ? "none" : mc.screen.getClass().getName(), mc.level != null);
+        }
+        if (clientTicks == 600 || clientTicks == 2400) {
+            shot("00_debug_" + clientTicks);
+        }
+        if (clientTicks == 6000) {
+            SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE TIMEOUT");
+            mc.stop();
+        }
+        if (wakeTicks < 0) {
             return;
         }
         wakeTicks++;
