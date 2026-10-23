@@ -1,19 +1,27 @@
 name: Build
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           fetch-tags: true
 
       - name: Setup JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -32,8 +40,36 @@ jobs:
           grep -E "error:|\\.java:[0-9]+|What went wrong|> " build.log | head -40 | while IFS= read -r line; do
             echo "::error::$line"
           done
+
       - name: Upload mod jar
         uses: actions/upload-artifact@v4
         with:
           name: skytest-jar
           path: build/libs/*.jar
+
+      # Every push to main refreshes the "latest" pre-release with a fresh jar.
+      - name: Move "latest" tag to this commit
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git tag -f latest
+          git push -f origin latest
+
+      - name: Publish "latest" release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest build (main)
+          prerelease: true
+          body: |
+            Автоматическая сборка последнего коммита в `main` (${{ github.sha }}).
+            Minecraft 1.21.11, NeoForge 21.11.x. Скачайте `.jar` ниже и положите в папку `mods`.
+          files: build/libs/*.jar
+
+      # Pushing a tag like v0.2.0 creates a proper versioned release.
+      - name: Publish versioned release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: build/libs/*.jar
