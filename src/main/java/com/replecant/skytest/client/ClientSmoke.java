@@ -149,6 +149,7 @@ public final class ClientSmoke {
             case 63 -> shot("25_serpent_lunge");
             case 66 -> shot("25b_serpent_flying");
             case 69 -> shot("25c_serpent_flying");
+            case 78 -> mc.player.setYRot(mc.player.getYRot() + 180.0F);
             case 80 -> mc.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT);
             case 86 -> shot("26_magic_third_person");
             case 88 -> mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);

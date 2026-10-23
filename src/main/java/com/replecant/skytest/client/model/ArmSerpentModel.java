@@ -28,7 +28,7 @@ public class ArmSerpentModel extends Model<ArmSerpentModel.State> {
     /** @param lunge 0..1 — бросок головы вперёд при выстреле */
     public record State(float time, float lunge) {}
 
-    private static final float[] RING_Y = {0.5F, 3.0F, 5.5F, 8.0F};
+    private static final float[] RING_Y = {1.0F, 4.5F, 8.0F};
 
     private final ModelPart[] rings = new ModelPart[RING_Y.length];
     private final ModelPart neck;
@@ -52,30 +52,30 @@ public class ArmSerpentModel extends Model<ArmSerpentModel.State> {
         PartDefinition root = mesh.getRoot();
         for (int i = 0; i < RING_Y.length; i++) {
             // Квадратная «петля» вокруг руки 4×4, наклонённая, — витки складываются в спираль.
-            float outer = 3.3F - i * 0.1F;
-            float thick = 1.3F - i * 0.05F;
+            float outer = 2.9F - i * 0.05F;
+            float thick = 0.9F;
             root.addOrReplaceChild("ring" + i, CubeListBuilder.create()
-                    .texOffs(0, 10).addBox(-outer, -1.0F, -outer, outer * 2, 2.0F, thick)
-                    .texOffs(20, 10).addBox(-outer, -1.0F, outer - thick, outer * 2, 2.0F, thick)
-                    .texOffs(40, 10).addBox(-outer, -1.0F, -outer + thick, thick, 2.0F, outer * 2 - thick * 2)
-                    .texOffs(0, 20).addBox(outer - thick, -1.0F, -outer + thick, thick, 2.0F, outer * 2 - thick * 2),
-                    PartPose.offsetAndRotation(0.0F, RING_Y[i], 0.0F, 0.28F, i * 0.4F, 0.0F));
+                    .texOffs(0, 10).addBox(-outer, -0.6F, -outer, outer * 2, 1.2F, thick)
+                    .texOffs(20, 10).addBox(-outer, -0.6F, outer - thick, outer * 2, 1.2F, thick)
+                    .texOffs(40, 10).addBox(-outer, -0.6F, -outer + thick, thick, 1.2F, outer * 2 - thick * 2)
+                    .texOffs(0, 20).addBox(outer - thick, -0.6F, -outer + thick, thick, 1.2F, outer * 2 - thick * 2),
+                    PartPose.offsetAndRotation(0.0F, RING_Y[i], 0.0F, 0.35F, i * 0.4F, 0.0F));
         }
         // Хвост свисает из нижнего витка.
         root.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(20, 20)
-                .addBox(-0.5F, -3.5F, -0.5F, 1.0F, 3.5F, 1.0F), PartPose.offsetAndRotation(2.6F, 0.5F, 2.6F, 0.4F, 0.0F, 0.5F));
+                .addBox(-0.4F, -3.0F, -0.4F, 0.8F, 3.0F, 0.8F), PartPose.offsetAndRotation(2.3F, 1.0F, 2.3F, 0.4F, 0.0F, 0.5F));
         PartDefinition neck = root.addOrReplaceChild("neck", CubeListBuilder.create().texOffs(40, 20)
-                .addBox(-1.1F, 0.0F, -0.8F, 2.2F, 3.0F, 1.6F), PartPose.offset(0.0F, 8.2F, -3.0F));
+                .addBox(-0.8F, 0.0F, -0.6F, 1.6F, 2.5F, 1.2F), PartPose.offset(0.0F, 8.4F, -2.6F));
         PartDefinition head = neck.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 0)
-                .addBox(-1.8F, 0.0F, -1.3F, 3.6F, 4.0F, 2.6F)
+                .addBox(-1.3F, 0.0F, -1.0F, 2.6F, 3.0F, 1.8F)
                 // глаза — по бокам головы
-                .texOffs(40, 0).addBox(-2.1F, 1.0F, -1.2F, 0.6F, 1.0F, 1.0F)
-                .texOffs(40, 0).addBox(1.5F, 1.0F, -1.2F, 0.6F, 1.0F, 1.0F),
-                PartPose.offset(0.0F, 2.6F, -0.4F));
+                .texOffs(40, 0).addBox(-1.55F, 0.8F, -0.9F, 0.4F, 0.8F, 0.8F)
+                .texOffs(40, 0).addBox(1.15F, 0.8F, -0.9F, 0.4F, 0.8F, 0.8F),
+                PartPose.offset(0.0F, 2.2F, -0.3F));
         PartDefinition jaw = head.addOrReplaceChild("jaw", CubeListBuilder.create().texOffs(24, 0)
-                .addBox(-1.5F, 0.0F, 0.0F, 3.0F, 3.5F, 1.0F), PartPose.offset(0.0F, 0.5F, 1.2F));
+                .addBox(-1.1F, 0.0F, 0.0F, 2.2F, 2.6F, 0.7F), PartPose.offset(0.0F, 0.4F, 0.8F));
         jaw.addOrReplaceChild("tongue", CubeListBuilder.create().texOffs(48, 0)
-                .addBox(-0.4F, 0.0F, -0.2F, 0.8F, 2.5F, 0.4F), PartPose.offset(0.0F, 3.3F, 0.0F));
+                .addBox(-0.3F, 0.0F, -0.15F, 0.6F, 2.0F, 0.3F), PartPose.offset(0.0F, 2.5F, 0.0F));
         return LayerDefinition.create(mesh, 64, 32);
     }
 
