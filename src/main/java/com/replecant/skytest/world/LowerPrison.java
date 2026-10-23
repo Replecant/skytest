@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.replecant.skytest.SkyTest;
 import com.replecant.skytest.entity.LamplighterEntity;
+import com.replecant.skytest.entity.PrisonWardenEntity;
 import com.replecant.skytest.entity.StrangerEntity;
 import com.replecant.skytest.registry.ModBlocks;
 import com.replecant.skytest.registry.ModEntities;
@@ -70,6 +71,8 @@ public final class LowerPrison {
     /** Начало моста над бездной — сюда возвращает падение в пропасть. */
     public static final Vec3 BRIDGE_START = new Vec3(38.5, 57, 33.5);
     public static final AABB BRIDGE = new AABB(32, 55, 34, 45, 62, 92);
+    /** Страж патрулирует мост между тоннелем и провалом. */
+    public static final Vec3 WARDEN_POS = new Vec3(38.5, 57, 47.5);
     /** Разрушенная площадка в конце моста. */
     public static final AABB BRIDGE_END = new AABB(32, 55, 78, 45, 62, 92);
     /** Ниже этой высоты игрок считается упавшим в пропасть. */
@@ -500,8 +503,10 @@ public final class LowerPrison {
     private void spawnNpcs() {
         level.getEntitiesOfClass(LamplighterEntity.class, WHOLE_AREA).forEach(LamplighterEntity::discard);
         level.getEntitiesOfClass(StrangerEntity.class, WHOLE_AREA).forEach(StrangerEntity::discard);
+        level.getEntitiesOfClass(PrisonWardenEntity.class, WHOLE_AREA).forEach(PrisonWardenEntity::discard);
         spawn(ModEntities.LAMPLIGHTER.get().create(level, EntitySpawnReason.STRUCTURE), LAMPLIGHTER_POS, LAMPLIGHTER_YAW);
         spawn(ModEntities.STRANGER.get().create(level, EntitySpawnReason.STRUCTURE), STRANGER_POS, STRANGER_YAW);
+        spawn(ModEntities.PRISON_WARDEN.get().create(level, EntitySpawnReason.STRUCTURE), WARDEN_POS, 180.0F);
     }
 
     private void spawn(Mob mob, Vec3 pos, float yaw) {

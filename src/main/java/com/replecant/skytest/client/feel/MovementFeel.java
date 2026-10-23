@@ -66,7 +66,9 @@ public final class MovementFeel {
             CAMERA.kick(-90.0F, (player.getRandom().nextBoolean() ? 1 : -1) * 110.0F);
         }
 
-        boolean externalMotion = player.hurtTime > 4
+        // Резкий рывок скорости (отброс щитом, толчок) — не сглаживаем.
+        boolean externalMotion = horizontal.length() - lastHorizontal.length() > 0.25
+                || player.hurtTime > 4
                 || player.tickCount - GrapplingHookEntity.lastClientPullTick < 3
                 || mc.screen instanceof DialogueScreen;
         boolean freeMovement = !player.getAbilities().flying && !player.isSpectator() && !player.isPassenger()

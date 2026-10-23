@@ -43,6 +43,9 @@ final class SmokeTest {
         AABB area = new AABB(-12, 52, -16, 56, 94, 27);
         int keepers = level.getEntitiesOfClass(LamplighterEntity.class, area).size();
         check(failures, keepers == 1, "exactly one lamplighter (found " + keepers + ")");
+        int wardens = level.getEntitiesOfClass(com.replecant.skytest.entity.PrisonWardenEntity.class,
+                new AABB(-20, -10, -24, 64, 100, 96)).size();
+        check(failures, wardens == 1, "exactly one prison warden on the bridge (found " + wardens + ")");
         int strangers = level.getEntitiesOfClass(StrangerEntity.class, area).size();
         check(failures, strangers == 1, "exactly one stranger (found " + strangers + ")");
 

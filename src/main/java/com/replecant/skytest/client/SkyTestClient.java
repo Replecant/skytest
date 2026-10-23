@@ -4,7 +4,9 @@ import java.util.Set;
 
 import com.replecant.skytest.SkyTest;
 import com.replecant.skytest.client.model.LamplighterModel;
+import com.replecant.skytest.client.model.PrisonWardenModel;
 import com.replecant.skytest.client.model.StrangerModel;
+import com.replecant.skytest.client.renderer.PrisonWardenRenderer;
 import com.replecant.skytest.client.renderer.LamplighterRenderer;
 import com.replecant.skytest.client.renderer.StrangerRenderer;
 import com.replecant.skytest.network.DoubleJumpPayload;
@@ -55,12 +57,14 @@ public class SkyTestClient {
         event.registerEntityRenderer(ModEntities.GRAPPLING_HOOK.get(), ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntities.LAMPLIGHTER.get(), LamplighterRenderer::new);
         event.registerEntityRenderer(ModEntities.STRANGER.get(), StrangerRenderer::new);
+        event.registerEntityRenderer(ModEntities.PRISON_WARDEN.get(), PrisonWardenRenderer::new);
     }
 
     @SubscribeEvent
     static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(LamplighterModel.LAYER, LamplighterModel::createBodyLayer);
         event.registerLayerDefinition(StrangerModel.LAYER, StrangerModel::createBodyLayer);
+        event.registerLayerDefinition(PrisonWardenModel.LAYER, PrisonWardenModel::createBodyLayer);
     }
 
     @SubscribeEvent

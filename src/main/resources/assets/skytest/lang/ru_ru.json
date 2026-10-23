@@ -41,5 +41,6 @@
   "dialogue.skytest.stranger.meeting.6": "Так что каждый ищет дорогу сам. Я — свою. Ты — свою.",
   "dialogue.skytest.stranger.meeting.7": "Лови! Им уже никого не зарубишь, но отмахнуться хватит. Удачи, счастливчик!",
   "area.skytest.sky_bridge": "Небесный мост",
-  "area.skytest.sky_bridge.subtitle": "Тюрьма — над облаками. Внизу только небо."
+  "area.skytest.sky_bridge.subtitle": "Тюрьма — над облаками. Внизу только небо.",
+  "entity.skytest.prison_warden": "Страж Тюрьмы"
 }

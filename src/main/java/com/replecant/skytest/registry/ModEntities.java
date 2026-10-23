@@ -3,6 +3,7 @@ package com.replecant.skytest.registry;
 import com.replecant.skytest.SkyTest;
 import com.replecant.skytest.entity.GrapplingHookEntity;
 import com.replecant.skytest.entity.LamplighterEntity;
+import com.replecant.skytest.entity.PrisonWardenEntity;
 import com.replecant.skytest.entity.StrangerEntity;
 
 import net.minecraft.core.registries.Registries;
@@ -43,7 +44,17 @@ public final class ModEntities {
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
 
+    /** Страж Тюрьмы — враг с щитом и мечом на Небесном мосту. */
+    public static final DeferredHolder<EntityType<?>, EntityType<PrisonWardenEntity>> PRISON_WARDEN =
+            ENTITY_TYPES.register("prison_warden", id -> EntityType.Builder
+                    .<PrisonWardenEntity>of(PrisonWardenEntity::new, MobCategory.MONSTER)
+                    .sized(0.95F, 2.2F)
+                    .eyeHeight(1.85F)
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
+
     public static void registerAttributes(EntityAttributeCreationEvent event) {
+        event.put(PRISON_WARDEN.get(), PrisonWardenEntity.createAttributes().build());
         event.put(LAMPLIGHTER.get(), LamplighterEntity.createAttributes().build());
         event.put(STRANGER.get(), StrangerEntity.createAttributes().build());
     }

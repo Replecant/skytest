@@ -105,7 +105,12 @@ public final class ClientSmoke {
                 case 265 -> shot("15_bridge");
                 case 305 -> shot("16_prison_from_bridge");
                 case 345 -> shot("17_abyss");
-                case 370 -> {
+                case 362 -> shot("18_warden_a");
+                case 378 -> shot("18_warden_b");
+                case 394 -> shot("18_warden_c");
+                case 410 -> shot("18_warden_d");
+                case 426 -> shot("18_warden_e");
+                case 460 -> {
                     SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE DONE");
                     mc.stop();
                 }
@@ -150,8 +155,9 @@ public final class ClientSmoke {
                     lastHit.getType().toShortString(), String.format("%.1f", lastHit.getHealth()),
                     String.format("%.3f", Math.sqrt(v.x * v.x + v.z * v.z)));
         }
-        var target = mc.level.getEntitiesOfClass(net.minecraft.world.entity.monster.skeleton.Skeleton.class,
-                player.getBoundingBox().inflate(3.0)).stream().findFirst().orElse(null);
+        var target = mc.level.getEntitiesOfClass(net.minecraft.world.entity.LivingEntity.class,
+                player.getBoundingBox().inflate(3.0), e -> e instanceof net.minecraft.world.entity.monster.skeleton.Skeleton
+                        || e instanceof com.replecant.skytest.entity.PrisonWardenEntity).stream().findFirst().orElse(null);
         if (target == null || !target.isAlive()) {
             return;
         }
