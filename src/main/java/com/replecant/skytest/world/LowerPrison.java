@@ -857,14 +857,25 @@ public final class LowerPrison {
 
     /**
      * Регулятор перекидывает мост: от руин на середине Небесного моста ступенями
-     * вверх к Верхнему ярусу; решётка на входе поднимается. Вызывается сюжетом
-     * (после задания с Ларпи) или командой {@code /skytest upperbridge}.
+     * вверх к Верхнему ярусу; решётка на входе поднимается. Сразу целиком —
+     * для команды {@code /skytest upperbridge}; в катсцене мост собирается
+     * по пролёту через {@link #startUpperBridge}.
      */
     public static boolean buildUpperBridge(ServerLevel level) {
-        return new LowerPrison(level).upperBridge();
+        UpperBridge bridge = startUpperBridge(level);
+        if (bridge == null) {
+            return false;
+        }
+        while (bridge.step()) {
+            // пролёт за пролётом
+        }
+        bridge.finish();
+        return true;
     }
 
-    private boolean upperBridge() {
+    /** Постройка моста к Верхнему ярусу по шагам; null — Верхний ярус не найден. */
+    public static UpperBridge startUpperBridge(ServerLevel level) {
+        LowerPrison prison = new LowerPrison(level);
         int lane = UPPER_LANE;
         int portalX = -1;
         for (int x = 50; x < UPPER_HALL_X0; x++) {
@@ -874,22 +885,57 @@ public final class LowerPrison {
             }
         }
         if (portalX < 0) {
-            return false;
+            return null;
         }
         int faceX = portalX;
         while (faceX > 50 && (level.getBlockState(new BlockPos(faceX - 1, UPPER_FLOOR, lane)).is(Blocks.DEEPSLATE_TILES)
-                || level.getBlockState(new BlockPos(faceX - 1, UPPER_FLOOR, lane)).is(Blocks.CRACKED_DEEPSLATE_TILES))) {
+                || level.getBlockState(new BlockPos(faceX - 1, UPPER_FLOOR, lane)).is(Blocks.CRACKED_DEEPSLATE_TILES)
+                || level.getBlockState(new BlockPos(faceX - 1, UPPER_FLOOR, lane)).is(Blocks.DEEPSLATE_TILE_STAIRS))) {
             faceX--;
         }
-        // Решётка поднята.
-        fill(portalX, UPPER_FLOOR + 1, lane - 1, portalX, UPPER_FLOOR + 3, lane + 1, Blocks.AIR.defaultBlockState());
-        int startX = 44;
-        int endX = faceX - 1;
-        int rise = UPPER_FLOOR - BRIDGE_Y;
-        int run = Math.max(1, endX - startX);
-        for (int x = startX; x <= endX; x++) {
-            int y = BRIDGE_Y + Math.round((float) (x - startX) / run * rise);
-            int prev = x == startX ? BRIDGE_Y : BRIDGE_Y + Math.round((float) (x - 1 - startX) / run * rise);
+        return prison.new UpperBridge(portalX, 44, faceX - 1);
+    }
+
+    /** Мост к Верхнему ярусу: каждый {@link #step()} кладёт один поперечный пролёт. */
+    public final class UpperBridge {
+        private final int portalX;
+        private final int startX;
+        private final int endX;
+        private int next;
+
+        private UpperBridge(int portalX, int startX, int endX) {
+            this.portalX = portalX;
+            this.startX = startX;
+            this.endX = endX;
+            this.next = startX;
+        }
+
+        public int length() {
+            return endX - startX + 1;
+        }
+
+        /** Высота настила на данном x. */
+        private int deckY(int x) {
+            int run = Math.max(1, endX - startX);
+            return BRIDGE_Y + Math.round((float) (x - startX) / run * (UPPER_FLOOR - BRIDGE_Y));
+        }
+
+        /** Середина последнего уложенного пролёта (для частиц и звука). */
+        public Vec3 lastColumn() {
+            int x = Math.max(startX, next - 1);
+            return new Vec3(x + 0.5, deckY(x) + 0.5, UPPER_LANE + 0.5);
+        }
+
+        /** Уложить следующий пролёт; false — мост уже готов. */
+        public boolean step() {
+            if (next > endX) {
+                return false;
+            }
+            int x = next++;
+            int lane = UPPER_LANE;
+            int y = deckY(x);
+            int prev = x == startX ? BRIDGE_Y : deckY(x - 1);
+            int mark = connectables.size();
             fill(x, y + 1, lane - 2, x, y + 5, lane + 2, Blocks.AIR.defaultBlockState());
             for (int z = lane - 1; z <= lane + 1; z++) {
                 BlockState step = y > prev
@@ -911,11 +957,24 @@ public final class LowerPrison {
                     set(new BlockPos(x, y + 2, z), Blocks.SOUL_LANTERN.defaultBlockState());
                 }
             }
+            // Стенки перил связываются и с только что уложенным пролётом, и с предыдущим.
+            for (BlockPos pos : connectables.subList(Math.max(0, mark - 6), connectables.size())) {
+                set(pos, Block.updateFromNeighbourShapes(level.getBlockState(pos), level, pos));
+            }
+            return next <= endX;
         }
-        for (BlockPos pos : connectables) {
-            set(pos, Block.updateFromNeighbourShapes(level.getBlockState(pos), level, pos));
+
+        /** Мост дошёл до скалы — решётка на входе поднимается. */
+        public void finish() {
+            fill(portalX, UPPER_FLOOR + 1, UPPER_LANE - 1, portalX, UPPER_FLOOR + 3, UPPER_LANE + 1, Blocks.AIR.defaultBlockState());
+            for (BlockPos pos : connectables) {
+                set(pos, Block.updateFromNeighbourShapes(level.getBlockState(pos), level, pos));
+            }
         }
-        return true;
+
+        public Vec3 portal() {
+            return new Vec3(portalX + 0.5, UPPER_FLOOR + 2, UPPER_LANE + 0.5);
+        }
     }
 
     // ---------------------------------------------------------------- зал Регулятора

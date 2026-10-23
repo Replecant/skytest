@@ -45,6 +45,8 @@ public class RegulatorRenderer extends MobRenderer<RegulatorEntity, RegulatorRen
         super.extractRenderState(entity, state, partialTick);
         state.talking = entity.isTalking();
         state.modeTime = entity.modeTime(partialTick);
+        state.pulling = entity.isPulling();
+        state.pullTime = entity.pullTime(partialTick);
     }
 
     @Override

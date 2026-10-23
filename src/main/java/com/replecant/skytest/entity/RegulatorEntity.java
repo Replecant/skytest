@@ -35,8 +35,12 @@ public class RegulatorEntity extends PathfinderMob {
     /** Сколько тиков держать «разговорную» позу после реплики. */
     private static final int TALK_TICKS = 400;
 
+    private static final EntityDataAccessor<Boolean> PULLING =
+            SynchedEntityData.defineId(RegulatorEntity.class, EntityDataSerializers.BOOLEAN);
+
     private int talkTicks;
     private int clientModeStart;
+    private int clientPullStart = -1000;
 
     public RegulatorEntity(EntityType<? extends RegulatorEntity> type, Level level) {
         super(type, level);
@@ -60,6 +64,7 @@ public class RegulatorEntity extends PathfinderMob {
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(TALKING, false);
+        builder.define(PULLING, false);
     }
 
     public boolean isTalking() {
@@ -72,6 +77,23 @@ public class RegulatorEntity extends PathfinderMob {
         if (TALKING.equals(accessor)) {
             clientModeStart = tickCount;
         }
+        if (PULLING.equals(accessor)) {
+            clientPullStart = tickCount;
+        }
+    }
+
+    /** Катсцена: встал и тянет цепи. */
+    public boolean isPulling() {
+        return entityData.get(PULLING);
+    }
+
+    public void setPulling(boolean pulling) {
+        entityData.set(PULLING, pulling);
+    }
+
+    /** Клиент: сколько тиков прошло с начала или конца рывков. */
+    public float pullTime(float partialTick) {
+        return tickCount - clientPullStart + partialTick;
     }
 
     /** Клиент: сколько тиков длится текущий режим (разговор/грусть). */
@@ -101,6 +123,9 @@ public class RegulatorEntity extends PathfinderMob {
     /** Разговор окончен: после знакомства начинается задание «Найти Ларпи». */
     public void onDialogueClosed(ServerPlayer player) {
         talkTicks = Math.min(talkTicks, 30);
+        if (com.replecant.skytest.story.RegulatorCutscene.isRunning(player)) {
+            return;
+        }
         if (!Quests.isStarted(player, Quests.FIND_LARPI)) {
             Quests.start(player, Quests.FIND_LARPI);
         } else if (!Quests.isDone(player, Quests.FIND_LARPI) && takeLarpi(player)) {
@@ -132,20 +157,8 @@ public class RegulatorEntity extends PathfinderMob {
             larpi.snapTo(getX() + 2.0, getY(), getZ() - 2.5, getYRot(), 0.0F);
             level.addFreshEntity(larpi);
         }
-        boolean built = com.replecant.skytest.world.LowerPrison.buildUpperBridge(level);
-        for (net.minecraft.sounds.SoundEvent sound : new net.minecraft.sounds.SoundEvent[] {
-                SoundEvents.LEVER_CLICK, SoundEvents.PISTON_EXTEND, SoundEvents.ANVIL_LAND}) {
-            level.playSound(null, player.getX(), player.getY(), player.getZ(), sound,
-                    net.minecraft.sounds.SoundSource.BLOCKS, 0.8F, 0.5F);
-        }
-        player.displayClientMessage(net.minecraft.network.chat.Component.translatable("story.skytest.bridge_moved")
-                .withStyle(net.minecraft.ChatFormatting.GRAY), true);
-        Quests.complete(player, Quests.FIND_LARPI);
-        if (com.replecant.skytest.story.SmokeTour.ENABLED) {
-            com.replecant.skytest.SkyTest.LOGGER.info("SKYTEST LARPI returned, upper bridge built={}", built);
-        }
+        com.replecant.skytest.story.RegulatorCutscene.start(player, this);
     }
-
     @Override
     public void tick() {
         super.tick();

@@ -125,6 +125,7 @@ public final class GameEvents {
     static void onServerTick(ServerTickEvent.Post event) {
         Prologue.tick(event.getServer());
         HallEvent.tick(event.getServer());
+        RegulatorCutscene.tick(event.getServer());
         if (AdventureWorld.isAdventure(event.getServer())) {
             RatSpawner.tick(event.getServer().overworld());
         }

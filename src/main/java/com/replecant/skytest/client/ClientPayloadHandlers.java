@@ -9,6 +9,10 @@ import net.minecraft.network.chat.Component;
 
 /** Точка входа для пакетов сервер → клиент. Вызывается только на клиенте. */
 public final class ClientPayloadHandlers {
+    public static void cutscene(com.replecant.skytest.network.CutscenePayload payload) {
+        com.replecant.skytest.client.cutscene.CutscenePlayer.play(payload.id());
+    }
+
     public static void startPrologue() {
         PrologueController.requestPrologue();
     }

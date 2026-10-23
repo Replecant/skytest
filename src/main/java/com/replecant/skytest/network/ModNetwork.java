@@ -52,6 +52,8 @@ public final class ModNetwork {
                 (payload, context) -> ClientPayloadHandlers.hitstop(payload));
         registrar.playToClient(StartProloguePayload.TYPE, StartProloguePayload.STREAM_CODEC,
                 (payload, context) -> ClientPayloadHandlers.startPrologue());
+        registrar.playToClient(CutscenePayload.TYPE, CutscenePayload.STREAM_CODEC,
+                (payload, context) -> ClientPayloadHandlers.cutscene(payload));
         registrar.playToClient(OpenDialoguePayload.TYPE, OpenDialoguePayload.STREAM_CODEC,
                 (payload, context) -> ClientPayloadHandlers.openDialogue(payload));
     }

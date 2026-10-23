@@ -86,7 +86,7 @@ public final class ClientSmoke {
             if (t >= 100) {
                 magicTest(mc, t - 100);
             }
-            if (t == 500) {
+            if (t == 730) {
                 SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE DONE");
                 mc.stop();
             }
@@ -238,13 +238,22 @@ public final class ClientSmoke {
                 });
             }
             case 292 -> shot("33_regulator_larpi");
-            case 318 -> shot("34_quest_done");
-            case 326 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 72.5), -70.0F, -14.0F);
-            case 338 -> shot("28_upper_bridge");
-            case 342 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 46.5), -50.0F, -10.0F);
-            case 354 -> shot("28b_upper_bridge_far");
-            case 358 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(89.5, 74, 71.5), -90.0F, 0.0F);
-            case 372 -> shot("29_upper_hall");
+            // Катсцена: Регулятор встаёт и тянет цепи, снаружи собирается мост.
+            case 298 -> mc.player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 700, 0, false, false));
+            case 325 -> shot("35_cutscene_rise");
+            case 336 -> shot("35a_cutscene_grab");
+            case 349 -> shot("35b_cutscene_pull");
+            case 371 -> shot("35c_cutscene_pull2");
+            case 420 -> shot("36_cutscene_bridge_a");
+            case 460 -> shot("36b_cutscene_bridge_b");
+            case 500 -> shot("36c_cutscene_bridge_done");
+            case 545 -> shot("34_quest_done");
+            case 560 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 72.5), -70.0F, -14.0F);
+            case 572 -> shot("28_upper_bridge");
+            case 576 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 46.5), -50.0F, -10.0F);
+            case 588 -> shot("28b_upper_bridge_far");
+            case 592 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(89.5, 74, 71.5), -90.0F, 0.0F);
+            case 606 -> shot("29_upper_hall");
             default -> { }
         }
     }
