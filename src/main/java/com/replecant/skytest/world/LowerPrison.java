@@ -865,11 +865,12 @@ public final class LowerPrison {
         set(new BlockPos(cx, top + 6, cz), Blocks.SOUL_FIRE.defaultBlockState());
     }
 
-    /** Есть ли камень в проёме входа Верхнего яруса на данном x. */
+    /** Есть ли скала (именно камень, не постройки) в проёме входа Верхнего яруса на данном x. */
     private boolean rockAcrossX(int x) {
         for (int z = UPPER_LANE - 2; z <= UPPER_LANE + 2; z++) {
             for (int y = UPPER_FLOOR + 1; y <= UPPER_FLOOR + 5; y++) {
-                if (!level.getBlockState(new BlockPos(x, y, z)).isAir()) {
+                BlockState state = level.getBlockState(new BlockPos(x, y, z));
+                if (state.is(Blocks.DEEPSLATE) || state.is(Blocks.COBBLED_DEEPSLATE) || state.is(Blocks.TUFF)) {
                     return true;
                 }
             }
