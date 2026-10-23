@@ -1,8 +1,11 @@
 package com.replecant.skytest.entity;
 
 import com.replecant.skytest.combat.CombatEvents;
+import com.replecant.skytest.combat.ParryReactive;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.core.Holder;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -34,16 +37,25 @@ import net.minecraft.world.phys.Vec3;
  *  PATROL ──видит игрока──▶ GUARD ──близко──▶ WINDUP ─▶ STRIKE ─▶ RECOVERY ─▶ GUARD
  *                             │  └─вплотную──▶ BASH ───────────────┘
  *                             └─удар с разгона / в спину──▶ STAGGER ─▶ GUARD
+ *   парирование удара или толчка ──▶ PARRIED (падает на колено) ─▶ GUARD
  * </pre>
+ * Под боевую систему игрока:
+ * <ul>
+ *   <li>на пике замаха клинок вспыхивает со звоном — это сигнал к парированию;</li>
+ *   <li>парированный, он падает на колено и надолго открыт (у игрока — рипост);</li>
+ *   <li>если удар ушёл в пустоту (игрок увернулся), отдышка дольше;</li>
+ *   <li>третий удар комбо пробивает стойку; три заблокированных удара подряд —
+ *       и он сам контратакует толчком щита.</li>
+ * </ul>
  * В стойке щит закрывает его спереди: такие удары блокируются и отталкивают
  * атакующего. Уязвим сбоку, сзади, во время замаха и «отдышки» после удара.
  * Удар с разгона пробивает стойку и оглушает.
  *
  * <p>Рядовой противник нижних уровней тюрьмы, не босс.
  */
-public class PrisonWardenEntity extends PathfinderMob {
+public class PrisonWardenEntity extends PathfinderMob implements ParryReactive {
     public enum State {
-        PATROL(0), GUARD(0), WINDUP(16), STRIKE(7), RECOVERY(26), BASH(12), STAGGER(32);
+        PATROL(0), GUARD(0), WINDUP(16), STRIKE(7), RECOVERY(26), BASH(12), STAGGER(32), PARRIED(44);
 
         /** Длительность в тиках (0 — без ограничения). */
         public final int duration;
@@ -64,10 +76,17 @@ public class PrisonWardenEntity extends PathfinderMob {
     private static final double SHIELD_COS = Math.cos(Math.toRadians(70));
     private static final float GUARD_BREAK_MOMENTUM = 0.7F;
     private static final int PATROL_REACH = 7;
+    /** За сколько тиков до конца замаха вспыхивает клинок (сигнал к парированию). */
+    private static final int PARRY_CUE = 4;
+    private static final int WHIFF_RECOVERY_BONUS = 14;
+    private static final int BLOCKS_BEFORE_COUNTER = 3;
 
     private int stateTicks;
     private int attackCooldown;
     private int patrolPause;
+    private boolean strikeLanded;
+    private int blockStreak;
+    private long lastBlockTick;
     private boolean patrolForward = true;
     private Vec3 patrolCenter;
     /** Клиент: тик, когда сменилось состояние, — для анимаций. */
@@ -158,6 +177,9 @@ public class PrisonWardenEntity extends PathfinderMob {
             case GUARD -> guard(target);
             case WINDUP -> {
                 stop(target);
+                if (stateTicks == State.WINDUP.duration - PARRY_CUE) {
+                    parryCue(level);
+                }
                 if (stateTicks >= State.WINDUP.duration) {
                     setState(State.STRIKE);
                     lunge(0.45);
@@ -175,7 +197,8 @@ public class PrisonWardenEntity extends PathfinderMob {
             }
             case RECOVERY -> {
                 getNavigation().stop();
-                if (stateTicks >= State.RECOVERY.duration) {
+                int recovery = State.RECOVERY.duration + (strikeLanded ? 0 : WHIFF_RECOVERY_BONUS);
+                if (stateTicks >= recovery) {
                     attackCooldown = 15 + random.nextInt(20);
                     setState(engaged ? State.GUARD : State.PATROL);
                 }
@@ -194,6 +217,13 @@ public class PrisonWardenEntity extends PathfinderMob {
             case STAGGER -> {
                 getNavigation().stop();
                 if (stateTicks >= State.STAGGER.duration) {
+                    setState(engaged ? State.GUARD : State.PATROL);
+                }
+            }
+            case PARRIED -> {
+                getNavigation().stop();
+                if (stateTicks >= State.PARRIED.duration) {
+                    attackCooldown = 10;
                     setState(engaged ? State.GUARD : State.PATROL);
                 }
             }
@@ -250,12 +280,34 @@ public class PrisonWardenEntity extends PathfinderMob {
         hurtMarked = true;
     }
 
+    /** Вспышка на клинке и звон — игрок понимает, что пора парировать. */
+    private void parryCue(ServerLevel level) {
+        Vec3 right = Vec3.directionFromRotation(0.0F, yBodyRot - 90.0F);
+        Vec3 blade = position().add(right.scale(0.4)).add(0.0, 2.9, 0.0);
+        level.sendParticles(ParticleTypes.END_ROD, blade.x, blade.y, blade.z, 6, 0.05, 0.25, 0.05, 0.01);
+        level.sendParticles(ParticleTypes.FLASH, blade.x, blade.y, blade.z, 1, 0.0, 0.0, 0.0, 0.0);
+        playSound(SoundEvents.NOTE_BLOCK_BELL.value(), 1.0F, 1.8F);
+    }
+
+    @Override
+    public void onParried(ServerPlayer player) {
+        setState(State.PARRIED);
+        getNavigation().stop();
+        Vec3 away = position().subtract(player.position());
+        knockback(0.6, -away.x, -away.z);
+        playSound(SoundEvents.SHIELD_BREAK.value(), 1.0F, 0.6F);
+        playSound(SoundEvents.IRON_GOLEM_DAMAGE, 0.8F, 0.8F);
+    }
+
     private void strike(ServerLevel level, LivingEntity target) {
         playSound(SoundEvents.ZOMBIE_ATTACK_IRON_DOOR, 0.6F, 1.4F);
+        strikeLanded = false;
         if (target == null || distanceTo(target) > STRIKE_RANGE || facing(target) < 0.2) {
-            return; // промах: игрок увернулся
+            return; // промах: игрок увернулся — отдышка будет дольше
         }
+        // Парирование отменяет урон (hurtServer вернёт false) и переводит в PARRIED.
         if (target.hurtServer(level, damageSources().mobAttack(this), STRIKE_DAMAGE)) {
+            strikeLanded = true;
             push(target, 0.7, 0.15);
             playSound(SoundEvents.PLAYER_ATTACK_STRONG, 1.0F, 0.7F);
         }
@@ -301,7 +353,8 @@ public class PrisonWardenEntity extends PathfinderMob {
         float momentum = attacker != null ? CombatEvents.momentum(attacker, this) : 0.0F;
 
         if (shieldUp && frontal && !source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
-            if (momentum >= GUARD_BREAK_MOMENTUM) {
+            boolean finisher = attacker != null && CombatEvents.comboStep(attacker) == 3;
+            if (momentum >= GUARD_BREAK_MOMENTUM || finisher) {
                 // Удар с разгона пробивает стойку.
                 setState(State.STAGGER);
                 playSound(SoundEvents.SHIELD_BREAK.value(), 1.0F, 0.8F);
@@ -317,6 +370,16 @@ public class PrisonWardenEntity extends PathfinderMob {
             }
             if (attacker != null && getTarget() == null) {
                 setTarget(attacker);
+            }
+            // Три заблокированных удара подряд — контратака толчком щита.
+            long now = level.getGameTime();
+            blockStreak = now - lastBlockTick > 60 ? 1 : blockStreak + 1;
+            lastBlockTick = now;
+            if (blockStreak >= BLOCKS_BEFORE_COUNTER && attacker != null && distanceTo(attacker) < BASH_RANGE + 0.8
+                    && state() == State.GUARD) {
+                blockStreak = 0;
+                setState(State.BASH);
+                playSound(SoundEvents.ARMOR_EQUIP_CHAIN.value(), 1.2F, 0.9F);
             }
             return false;
         }

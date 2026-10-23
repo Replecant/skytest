@@ -289,6 +289,25 @@ public class PrisonWardenModel extends EntityModel<PrisonWardenRenderState> {
                     capTop.xRot = 0.35F - 0.3F * p;
                 }
             }
+            case PARRIED -> {
+                // Парирован: падает на колено, опираясь на меч; щит повис. В конце — поднимается.
+                float duration = State.PARRIED.duration;
+                float k = ease(t / 4.0F) * (1.0F - ease((t - (duration - 10.0F)) / 10.0F));
+                body.y += 4.5F * k;
+                body.xRot = 0.35F * k + Mth.sin(age * 0.4F) * 0.03F * k;
+                rightLeg.y = 15.0F + 4.5F * k;
+                leftLeg.y = 15.0F + 4.5F * k;
+                rightLeg.xRot = -1.35F * k;   // колено вперёд
+                leftLeg.xRot = 0.95F * k;     // другое колено на полу
+                rightArm.xRot = Mth.lerp(k, rightArm.xRot, -0.55F);
+                rightArm.zRot = 0.1F;
+                sword.xRot = Mth.lerp(k, sword.xRot, 1.55F); // клинок воткнут в пол
+                leftArm.xRot = 0.35F * k;
+                leftArm.zRot = -0.35F * k;
+                head.xRot += 0.45F * k;
+                capTop.xRot = 0.35F + 0.45F * k;
+                capTip.xRot = 0.55F + 0.35F * k;
+            }
             case STAGGER -> {
                 float decay = 1.0F - Mth.clamp(t / State.STAGGER.duration, 0.0F, 1.0F);
                 // Пошатывается назад, руки разлетаются, щит повис, колпак мотается.

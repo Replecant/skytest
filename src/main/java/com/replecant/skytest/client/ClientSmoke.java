@@ -113,7 +113,7 @@ public final class ClientSmoke {
                 case 394 -> shot("18_warden_c");
                 case 410 -> shot("18_warden_d");
                 case 426 -> shot("18_warden_e");
-                case 460 -> {
+                case 620 -> {
                     SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE DONE");
                     mc.stop();
                 }
@@ -148,6 +148,8 @@ public final class ClientSmoke {
     private static int hitTicks;
     private static int hits;
     private static boolean dodgeTried;
+    private static boolean parryTried;
+    private static int parriedShot = -1;
     private static float dodgeHealth;
     private static int dodgeTick = -1;
 
@@ -158,7 +160,10 @@ public final class ClientSmoke {
             return;
         }
         if (dodgeTick >= 0 && clientTicks == dodgeTick + 20) {
-            SkyTest.LOGGER.info("SKYTEST DODGE result hp {} -> {}", dodgeHealth, player.getHealth());
+            SkyTest.LOGGER.info("SKYTEST {} result hp {} -> {}", dodgeTried ? "DODGE" : "PARRY", dodgeHealth, player.getHealth());
+        }
+        if (parriedShot >= 0 && clientTicks == parriedShot + 8) {
+            shot("19_warden_parried");
         }
         if (lastHit != null && ++hitTicks <= 2) {
             var v = lastHit.getDeltaMovement();
@@ -172,13 +177,24 @@ public final class ClientSmoke {
         if (target == null || !target.isAlive()) {
             return;
         }
+        if (parriedShot < 0 && target instanceof com.replecant.skytest.entity.PrisonWardenEntity w
+                && w.state() == com.replecant.skytest.entity.PrisonWardenEntity.State.PARRIED) {
+            parriedShot = clientTicks;
+        }
         var d = target.getEyePosition().subtract(player.getEyePosition());
         player.setYRot((float) (Math.atan2(d.z, d.x) * 180.0 / Math.PI) - 90.0F);
         player.setXRot((float) -(Math.atan2(d.y, Math.sqrt(d.x * d.x + d.z * d.z)) * 180.0 / Math.PI));
         // Во время замаха Стража не бьём, а уклоняемся рывком назад перед самым ударом.
         if (target instanceof com.replecant.skytest.entity.PrisonWardenEntity warden
                 && warden.state() == com.replecant.skytest.entity.PrisonWardenEntity.State.WINDUP) {
-            if (!dodgeTried && warden.stateTime(0.0F) >= 13.0F) {
+            if (!parryTried && warden.stateTime(0.0F) >= 12.0F) {
+                parryTried = true;
+                dodgeHealth = player.getHealth();
+                dodgeTick = clientTicks;
+                var result = mc.gameMode.useItem(player, net.minecraft.world.InteractionHand.MAIN_HAND);
+                SkyTest.LOGGER.info("SKYTEST PARRY attempt {} holding {} hp={}", result,
+                        player.getMainHandItem().getItem(), dodgeHealth);
+            } else if (parryTried && clientTicks - dodgeTick > 40 && !dodgeTried && warden.stateTime(0.0F) >= 13.0F) {
                 dodgeTried = true;
                 dodgeHealth = player.getHealth();
                 dodgeTick = clientTicks;

@@ -50,6 +50,11 @@ public class SkyTestClient {
             VanillaGuiLayers.CONTEXTUAL_INFO_BAR_BACKGROUND);
 
     private static boolean wasJumpDown;
+
+    public SkyTestClient() {
+        com.replecant.skytest.item.DullSwordItem.clientParryHook =
+                com.replecant.skytest.client.feel.ComboFeel::startParry;
+    }
     private static boolean doubleJumpUsed;
     private static int airTicks;
 

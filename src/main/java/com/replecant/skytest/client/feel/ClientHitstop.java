@@ -23,6 +23,10 @@ public final class ClientHitstop {
         FROZEN.put(payload.targetId(), clientTicks + payload.ticks());
         Minecraft mc = Minecraft.getInstance();
         if (mc.player != null && mc.player.getId() == payload.attackerId()) {
+            if (payload.parried()) {
+                ComboFeel.parried();
+                return;
+            }
             float strength = payload.ticks() / 3.0F;
             MovementFeel.kick(70.0F * strength, (mc.player.getRandom().nextBoolean() ? 1 : -1) * 60.0F * strength);
         }

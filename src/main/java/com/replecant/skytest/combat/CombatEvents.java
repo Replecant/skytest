@@ -19,18 +19,23 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingKnockBackEvent;
+import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
  * Серверная часть «физичного» боя:
  * <ul>
+ *   <li>комбо из трёх ударов — третий (добивающий) сильнее, дальше отбрасывает и пробивает стойку;</li>
+ *   <li>парирование — ПКМ мечом за мгновение до удара врага: урон отменяется, враг оглушён,
+ *       а следующие удары по нему сильнее (рипост);</li>
  *   <li>хитстоп — цель удара на мгновение замирает, затем её отбрасывает;</li>
  *   <li>рывок — несколько тиков неуязвимости к ударам существ;</li>
  *   <li>импульс — удар на бегу (в сторону цели) бьёт до 50% сильнее и отбрасывает дальше;</li>
@@ -50,7 +55,112 @@ public final class CombatEvents {
     private static final int HITSTOP_TICKS = 3;
     private static final int HEAVY_HITSTOP_TICKS = 5;
 
+    /** Окно между ударами, в которое комбо продолжается (тики). */
+    private static final int COMBO_WINDOW = 28;
+    /** Минимальный заряд удара, чтобы он продолжил комбо. */
+    private static final float COMBO_MIN_CHARGE = 0.7F;
+    private static final float[] COMBO_DAMAGE = {1.0F, 1.0F, 1.15F, 1.6F};
+    private static final int FINISHER_HITSTOP_TICKS = 6;
+    /** Окно парирования после ПКМ (тики) и перезарядка между попытками. */
+    public static final int PARRY_WINDOW = 7;
+    public static final int PARRY_COOLDOWN = 18;
+    private static final int RIPOSTE_TICKS = 40;
+    private static final float RIPOSTE_DAMAGE = 1.5F;
+
+    /** Боевое состояние игрока. */
+    private static final class Fighter {
+        int combo;
+        long lastSwing = -100;
+        int step;
+        long stepTick = -1;
+        long parryUntil = -1;
+        int riposteTarget = -1;
+        long riposteUntil = -1;
+    }
+
+    private static final Map<UUID, Fighter> FIGHTERS = new HashMap<>();
     private static final Map<UUID, Long> DODGE_UNTIL = new HashMap<>();
+
+    private static Fighter fighter(Player player) {
+        return FIGHTERS.computeIfAbsent(player.getUUID(), id -> new Fighter());
+    }
+
+    /** Ступень комбо текущего удара игрока (1–3), 0 — если он сейчас не бьёт. */
+    public static int comboStep(Player player) {
+        Fighter f = FIGHTERS.get(player.getUUID());
+        return f != null && f.stepTick == player.level().getGameTime() ? f.step : 0;
+    }
+
+    /** Каждый взмах: продолжить комбо или начать заново. */
+    @SubscribeEvent
+    static void onSwing(AttackEntityEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+        Fighter f = fighter(player);
+        long now = player.level().getGameTime();
+        if (player.getAttackStrengthScale(0.5F) < COMBO_MIN_CHARGE) {
+            f.combo = 0; // беспорядочное закликивание сбивает ритм
+            f.step = 1;
+        } else {
+            f.combo = now - f.lastSwing <= COMBO_WINDOW && f.combo < 3 ? f.combo + 1 : 1;
+            f.step = f.combo;
+            if (f.combo == 3) {
+                f.combo = 0;
+            }
+        }
+        f.lastSwing = now;
+        f.stepTick = now;
+    }
+
+    /** ПКМ мечом: открыть окно парирования. */
+    public static void startParry(ServerPlayer player) {
+        fighter(player).parryUntil = player.level().getGameTime() + PARRY_WINDOW;
+    }
+
+    private static boolean tryParry(ServerPlayer player, DamageSource source) {
+        Fighter f = FIGHTERS.get(player.getUUID());
+        long now = player.level().getGameTime();
+        if (f == null || f.parryUntil < now || !(source.getEntity() instanceof LivingEntity attacker)
+                || source.getDirectEntity() != attacker) {
+            return false;
+        }
+        Vec3 look = player.getLookAngle();
+        Vec3 to = attacker.position().subtract(player.position());
+        Vec3 flat = new Vec3(to.x, 0.0, to.z);
+        if (flat.lengthSqr() > 1.0E-4 && new Vec3(look.x, 0.0, look.z).normalize().dot(flat.normalize()) < 0.2) {
+            return false; // удар сбоку или со спины не парируется
+        }
+        f.parryUntil = -1;
+        f.riposteTarget = attacker.getId();
+        f.riposteUntil = now + RIPOSTE_TICKS;
+
+        ServerLevel level = player.level();
+        Vec3 mid = player.getEyePosition().add(attacker.getEyePosition()).scale(0.5);
+        level.sendParticles(ParticleTypes.CRIT, mid.x, mid.y, mid.z, 24, 0.15, 0.15, 0.15, 0.6);
+        level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SHIELD_BLOCK.value(),
+                SoundSource.PLAYERS, 1.2F, 1.5F);
+        level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ANVIL_LAND,
+                SoundSource.PLAYERS, 0.25F, 2.0F);
+
+        if (attacker instanceof ParryReactive reactive) {
+            reactive.onParried(player);
+        } else {
+            attacker.knockback(0.9, player.getX() - attacker.getX(), player.getZ() - attacker.getZ());
+            attacker.hurtMarked = true;
+            if (attacker instanceof Mob mob) {
+                mob.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 40, 4, false, false));
+                mob.getNavigation().stop();
+            }
+        }
+        FROZEN_UNTIL.put(attacker.getUUID(), now + FINISHER_HITSTOP_TICKS);
+        PacketDistributor.sendToPlayersTrackingEntityAndSelf(attacker,
+                new HitstopPayload(attacker.getId(), player.getId(), FINISHER_HITSTOP_TICKS, 0, true));
+        if (com.replecant.skytest.story.SmokeTour.ENABLED) {
+            SkyTest.LOGGER.info("SKYTEST PARRY {} parried", attacker.getName().getString());
+        }
+        return true;
+    }
     private static final Map<UUID, Long> FROZEN_UNTIL = new HashMap<>();
 
     /** Игрок сделал рывок: неуязвимость к ударам существ на несколько тиков. */
@@ -69,9 +179,10 @@ public final class CombatEvents {
     }
 
     /** Хитстоп: сервер пропускает тики цели, клиенты замораживают её анимацию. */
-    private static void hitstop(LivingEntity target, Player attacker, int ticks) {
+    private static void hitstop(LivingEntity target, Player attacker, int ticks, int combo) {
         FROZEN_UNTIL.put(target.getUUID(), target.level().getGameTime() + ticks);
-        PacketDistributor.sendToPlayersTrackingEntityAndSelf(target, new HitstopPayload(target.getId(), attacker.getId(), ticks));
+        PacketDistributor.sendToPlayersTrackingEntityAndSelf(target,
+                new HitstopPayload(target.getId(), attacker.getId(), ticks, combo, false));
         if (target.level() instanceof ServerLevel level) {
             level.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY(0.6), target.getZ(), 10, 0.2, 0.25, 0.2, 0.35);
         }
@@ -123,10 +234,26 @@ public final class CombatEvents {
             }
             return;
         }
+        if (event.getEntity() instanceof ServerPlayer player && tryParry(player, event.getSource())) {
+            event.setCanceled(true);
+            return;
+        }
         if (isPlayerMelee(event.getEntity(), event.getSource())) {
             Player attacker = (Player) event.getSource().getEntity();
             float bonus = momentum(attacker, event.getEntity());
-            event.setAmount(event.getAmount() * (1.0F + MAX_DAMAGE_BONUS * bonus));
+            float multiplier = (1.0F + MAX_DAMAGE_BONUS * bonus) * COMBO_DAMAGE[comboStep(attacker)];
+            Fighter f = fighter(attacker);
+            boolean riposte = f.riposteTarget == event.getEntity().getId()
+                    && attacker.level().getGameTime() <= f.riposteUntil;
+            if (riposte) {
+                multiplier *= RIPOSTE_DAMAGE;
+            }
+            event.setAmount(event.getAmount() * multiplier);
+            if (com.replecant.skytest.story.SmokeTour.ENABLED) {
+                SkyTest.LOGGER.info("SKYTEST COMBO step {} on {} x{}{} = {}", comboStep(attacker),
+                        event.getEntity().getName().getString(), String.format("%.2f", multiplier),
+                        riposte ? " (riposte)" : "", String.format("%.1f", event.getAmount()));
+            }
         }
     }
 
@@ -141,19 +268,21 @@ public final class CombatEvents {
         // Дополнительный отброс от импульса, поверх ванильного.
         double dx = attacker.getX() - target.getX();
         double dz = attacker.getZ() - target.getZ();
-        target.knockback(0.2 + 0.6 * bonus, dx, dz);
+        int step = comboStep(attacker);
+        target.knockback(0.2 + 0.6 * bonus + (step == 3 ? 0.6 : 0.0), dx, dz);
         if (target instanceof Mob mob) {
             mob.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, STAGGER_TICKS, 3, false, false));
             mob.getNavigation().stop();
         }
         if (!(target instanceof Player)) {
-            int ticks = bonus > 0.5F || target.isDeadOrDying() ? HEAVY_HITSTOP_TICKS : HITSTOP_TICKS;
-            hitstop(target, attacker, ticks);
+            int ticks = step == 3 ? FINISHER_HITSTOP_TICKS
+                    : bonus > 0.5F || target.isDeadOrDying() ? HEAVY_HITSTOP_TICKS : HITSTOP_TICKS;
+            hitstop(target, attacker, ticks, step);
             if (com.replecant.skytest.story.SmokeTour.ENABLED) {
                 SkyTest.LOGGER.info("SKYTEST HITSTOP {} for {} ticks", target.getName().getString(), ticks);
             }
         }
-        if (bonus > 0.5F) {
+        if (bonus > 0.5F || step == 3) {
             target.level().playSound(null, target.getX(), target.getY(), target.getZ(),
                     SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1.0F, 0.8F);
         }

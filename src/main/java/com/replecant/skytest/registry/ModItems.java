@@ -1,6 +1,7 @@
 package com.replecant.skytest.registry;
 
 import com.replecant.skytest.SkyTest;
+import com.replecant.skytest.item.DullSwordItem;
 import com.replecant.skytest.item.GrapplingHookItem;
 
 import net.minecraft.core.registries.Registries;
@@ -40,9 +41,9 @@ public final class ModItems {
                     .setId(ResourceKey.create(Registries.ITEM, id))
                     .useBlockDescriptionPrefix()));
 
-    /** Затупленный меч, который бросает Незнакомец. Бьёт слабо, но лучше, чем кулаком. */
-    public static final DeferredItem<Item> DULL_SWORD = ITEMS.register("dull_sword",
-            id -> new Item(new Item.Properties()
+    /** Затупленный меч, который бросает Незнакомец. Бьёт слабо, зато умеет парировать (ПКМ). */
+    public static final DeferredItem<DullSwordItem> DULL_SWORD = ITEMS.register("dull_sword",
+            id -> new DullSwordItem(new Item.Properties()
                     .setId(ResourceKey.create(Registries.ITEM, id))
                     .sword(ToolMaterial.STONE, 2.0F, -2.4F)));
 
