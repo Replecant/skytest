@@ -55,7 +55,7 @@ public final class MagicVisuals {
         pose.translate((left ? 1.0F : -1.0F) / 16.0F, 0.0F, 0.0F);
         if (stack.getItem() instanceof LightningSphereItem) {
             float bob = 0.025F * Mth.sin(time * 0.12F);
-            pose.translate(0.0F, (9.5F + 2.0F * lunge) / 16.0F, -7.5F / 16.0F + bob);
+            pose.translate(0.0F, (10.5F + 2.0F * lunge) / 16.0F, -4.8F / 16.0F + bob);
             float t = time;
             collector.submitModel(sphere, new SoulSphereModel.State(t, false), pose, CORE_TYPE,
                     LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 0, null);
@@ -70,8 +70,8 @@ public final class MagicVisuals {
                 int arcs = 2 + random.nextInt(3);
                 for (int i = 0; i < arcs; i++) {
                     Vec3 dir = new Vec3(random.nextGaussian(), random.nextGaussian(), random.nextGaussian()).normalize();
-                    double reach = 0.22 + random.nextDouble() * 0.16;
-                    Bolt.draw(p, vc, dir.scale(0.08), dir.scale(reach), random.nextLong(), 0.006F, strength, 0);
+                    double reach = 0.16 + random.nextDouble() * 0.12;
+                    Bolt.draw(p, vc, dir.scale(0.05), dir.scale(reach), random.nextLong(), 0.006F, strength, 0);
                 }
             });
         } else {

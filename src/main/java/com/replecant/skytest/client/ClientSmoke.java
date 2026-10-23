@@ -83,8 +83,10 @@ public final class ClientSmoke {
             if (t == 25) {
                 shot("22_quest_started");
             }
-            magicTest(mc, t);
-            if (t == 110) {
+            if (t >= 100) {
+                magicTest(mc, t - 100);
+            }
+            if (t == 210) {
                 SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE DONE");
                 mc.stop();
             }
@@ -100,6 +102,9 @@ public final class ClientSmoke {
             return;
         }
         var uuid = mc.player.getUUID();
+        if (t == 28) {
+            mc.player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 400, 0, false, false));
+        }
         if (t == 30 || t == 52) {
             boolean first = t == 30;
             server.execute(() -> {

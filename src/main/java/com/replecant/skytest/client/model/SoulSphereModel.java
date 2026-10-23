@@ -28,23 +28,31 @@ public class SoulSphereModel extends Model<SoulSphereModel.State> {
     private final ModelPart core;
     private final ModelPart shellA;
     private final ModelPart shellB;
+    private final ModelPart shellC;
 
     public SoulSphereModel(ModelPart root) {
         super(root, RenderTypes::entityTranslucent);
         this.core = root.getChild("core");
         this.shellA = root.getChild("shell_a");
         this.shellB = root.getChild("shell_b");
+        this.shellC = root.getChild("shell_c");
     }
 
     public static LayerDefinition createLayer() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
+        // Ядро — три повёрнутых друг к другу кубика: издалека читается как шар.
         root.addOrReplaceChild("core", CubeListBuilder.create().texOffs(0, 0)
-                .addBox(-1.75F, -1.75F, -1.75F, 3.5F, 3.5F, 3.5F), PartPose.ZERO);
+                .addBox(-1.2F, -1.2F, -1.2F, 2.4F, 2.4F, 2.4F)
+                .addBox(-1.0F, -1.5F, -1.0F, 2.0F, 3.0F, 2.0F)
+                .addBox(-1.5F, -1.0F, -1.0F, 3.0F, 2.0F, 2.0F)
+                .addBox(-1.0F, -1.0F, -1.5F, 2.0F, 2.0F, 3.0F), PartPose.ZERO);
         root.addOrReplaceChild("shell_a", CubeListBuilder.create().texOffs(0, 16)
-                .addBox(-3.0F, -3.0F, -3.0F, 6.0F, 6.0F, 6.0F), PartPose.ZERO);
+                .addBox(-2.2F, -2.2F, -2.2F, 4.4F, 4.4F, 4.4F), PartPose.ZERO);
         root.addOrReplaceChild("shell_b", CubeListBuilder.create().texOffs(0, 32)
-                .addBox(-3.0F, -3.0F, -3.0F, 6.0F, 6.0F, 6.0F), PartPose.rotation(0.6F, 0.0F, 0.785F));
+                .addBox(-2.2F, -2.2F, -2.2F, 4.4F, 4.4F, 4.4F), PartPose.rotation(0.6F, 0.0F, 0.785F));
+        root.addOrReplaceChild("shell_c", CubeListBuilder.create().texOffs(32, 32)
+                .addBox(-2.2F, -2.2F, -2.2F, 4.4F, 4.4F, 4.4F), PartPose.rotation(0.785F, 0.785F, 0.0F));
         return LayerDefinition.create(mesh, 64, 64);
     }
 
@@ -55,6 +63,7 @@ public class SoulSphereModel extends Model<SoulSphereModel.State> {
         core.visible = !state.shells();
         shellA.visible = state.shells();
         shellB.visible = state.shells();
+        shellC.visible = state.shells();
         float pulse = 1.0F + 0.12F * Mth.sin(t * 0.7F) + 0.05F * Mth.sin(t * 2.3F);
         core.xScale = pulse;
         core.yScale = pulse;
@@ -64,5 +73,7 @@ public class SoulSphereModel extends Model<SoulSphereModel.State> {
         shellA.xRot = t * 0.11F;
         shellB.zRot += -t * 0.14F;
         shellB.yRot = -t * 0.09F;
+        shellC.xRot += t * 0.13F;
+        shellC.zRot = t * 0.08F;
     }
 }
