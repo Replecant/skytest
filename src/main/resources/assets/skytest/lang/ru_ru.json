@@ -67,5 +67,10 @@
   "quest.skytest.new": "Новое задание",
   "quest.skytest.find_larpi": "Найти Ларпи",
   "quest.skytest.find_larpi.objective": "Найди крысу Регулятора с белым пятнышком на ухе",
-  "entity.skytest.soul_orb": "Душа"
+  "entity.skytest.soul_orb": "Душа",
+  "item.skytest.lightning_sphere": "Сфера молний",
+  "item.skytest.primordial_serpent": "Первородный змей",
+  "entity.skytest.lightning_arc": "Разряд молнии",
+  "entity.skytest.serpent": "Змей",
+  "magic.skytest.no_souls": "Не хватает душ: нужно %s"
 }

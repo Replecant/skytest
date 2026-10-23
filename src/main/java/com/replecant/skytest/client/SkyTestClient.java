@@ -67,11 +67,19 @@ public class SkyTestClient {
         event.registerEntityRenderer(ModEntities.RAT.get(), RatRenderer::new);
         event.registerEntityRenderer(ModEntities.REGULATOR.get(), com.replecant.skytest.client.renderer.RegulatorRenderer::new);
         event.registerEntityRenderer(ModEntities.SOUL_ORB.get(), net.minecraft.client.renderer.entity.NoopRenderer::new);
+        event.registerEntityRenderer(ModEntities.LIGHTNING_ARC.get(), com.replecant.skytest.client.renderer.LightningArcRenderer::new);
+        event.registerEntityRenderer(ModEntities.SERPENT.get(), com.replecant.skytest.client.renderer.SerpentRenderer::new);
     }
 
     @SubscribeEvent
     static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(LamplighterModel.LAYER, LamplighterModel::createBodyLayer);
+        event.registerLayerDefinition(com.replecant.skytest.client.model.SoulSphereModel.LAYER,
+                com.replecant.skytest.client.model.SoulSphereModel::createLayer);
+        event.registerLayerDefinition(com.replecant.skytest.client.model.ArmSerpentModel.LAYER,
+                com.replecant.skytest.client.model.ArmSerpentModel::createLayer);
+        event.registerLayerDefinition(com.replecant.skytest.client.model.SerpentModel.LAYER,
+                com.replecant.skytest.client.model.SerpentModel::createLayer);
         event.registerLayerDefinition(StrangerModel.LAYER, StrangerModel::createBodyLayer);
         event.registerLayerDefinition(PrisonWardenModel.LAYER, PrisonWardenModel::createBodyLayer);
         event.registerLayerDefinition(RatModel.LAYER, RatModel::createBodyLayer);

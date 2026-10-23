@@ -3,6 +3,8 @@ package com.replecant.skytest.registry;
 import com.replecant.skytest.SkyTest;
 import com.replecant.skytest.item.DullSwordItem;
 import com.replecant.skytest.item.GrapplingHookItem;
+import com.replecant.skytest.item.LightningSphereItem;
+import com.replecant.skytest.item.PrimordialSerpentItem;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -28,6 +30,20 @@ public final class ModItems {
                     .setId(ResourceKey.create(Registries.ITEM, id))
                     .durability(384)
                     .rarity(Rarity.UNCOMMON)));
+
+    /** Сфера молний: за заряд душ бьёт цепной молнией. */
+    public static final DeferredItem<LightningSphereItem> LIGHTNING_SPHERE = ITEMS.register("lightning_sphere",
+            id -> new LightningSphereItem(new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, id))
+                    .stacksTo(1)
+                    .rarity(Rarity.RARE)));
+
+    /** Первородный змей: за заряд душ бросает ядовитого змея. */
+    public static final DeferredItem<PrimordialSerpentItem> PRIMORDIAL_SERPENT = ITEMS.register("primordial_serpent",
+            id -> new PrimordialSerpentItem(new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, id))
+                    .stacksTo(1)
+                    .rarity(Rarity.RARE)));
 
     /** Сапоги циркача: дают двойной прыжок. */
     public static final DeferredItem<Item> CIRCUS_BOOTS = ITEMS.register("circus_boots",

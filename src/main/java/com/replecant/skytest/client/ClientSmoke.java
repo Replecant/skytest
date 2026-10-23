@@ -82,10 +82,74 @@ public final class ClientSmoke {
             int t = clientTicks - regulatorClosed;
             if (t == 25) {
                 shot("22_quest_started");
-            } else if (t == 70) {
+            }
+            magicTest(mc, t);
+            if (t == 110) {
                 SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE DONE");
                 mc.stop();
             }
+        }
+    }
+
+    private static java.util.UUID magicTarget;
+
+    /** Сфера молний в правой руке, змей в левой: каст по крысам, кадры в первом и третьем лице. */
+    private static void magicTest(Minecraft mc, int t) {
+        var server = mc.getSingleplayerServer();
+        if (server == null || mc.player == null) {
+            return;
+        }
+        var uuid = mc.player.getUUID();
+        if (t == 30 || t == 52) {
+            boolean first = t == 30;
+            server.execute(() -> {
+                var player = server.getPlayerList().getPlayer(uuid);
+                if (player == null) {
+                    return;
+                }
+                if (first) {
+                    player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,
+                            new net.minecraft.world.item.ItemStack(com.replecant.skytest.registry.ModItems.LIGHTNING_SPHERE.get()));
+                    player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND,
+                            new net.minecraft.world.item.ItemStack(com.replecant.skytest.registry.ModItems.PRIMORDIAL_SERPENT.get()));
+                    com.replecant.skytest.soul.SoulCharge.set(player, 50);
+                }
+                var rat = com.replecant.skytest.registry.ModEntities.RAT.get().create(player.level(),
+                        net.minecraft.world.entity.EntitySpawnReason.COMMAND);
+                if (rat != null) {
+                    var look = player.getLookAngle();
+                    var at = player.position().add(look.x * 4.0, 0.0, look.z * 4.0).add(first ? 1.0 : -1.0, 0.0, 0.0);
+                    rat.snapTo(at.x, player.getY(), at.z, 0.0F, 0.0F);
+                    rat.setNoAi(true);
+                    player.level().addFreshEntity(rat);
+                    magicTarget = rat.getUUID();
+                }
+            });
+        }
+        if ((t == 36 || t == 58) && magicTarget != null && mc.level != null) {
+            for (var e : mc.level.entitiesForRendering()) {
+                if (e.getUUID().equals(magicTarget)) {
+                    var d = e.position().add(0, 0.2, 0).subtract(mc.player.getEyePosition());
+                    mc.player.setYRot((float) (Math.atan2(d.z, d.x) * 180.0 / Math.PI) - 90.0F);
+                    mc.player.setXRot((float) -(Math.atan2(d.y, Math.sqrt(d.x * d.x + d.z * d.z)) * 180.0 / Math.PI));
+                }
+            }
+        }
+        switch (t) {
+            case 40 -> shot("23_magic_hands");
+            case 44 -> SkyTest.LOGGER.info("SKYTEST MAGIC lightning {}", mc.gameMode.useItem(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND));
+            case 45 -> shot("24_lightning");
+            case 47 -> shot("24b_lightning");
+            case 62 -> SkyTest.LOGGER.info("SKYTEST MAGIC serpent {}", mc.gameMode.useItem(mc.player, net.minecraft.world.InteractionHand.OFF_HAND));
+            case 63 -> shot("25_serpent_lunge");
+            case 66 -> shot("25b_serpent_flying");
+            case 69 -> shot("25c_serpent_flying");
+            case 80 -> mc.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT);
+            case 86 -> shot("26_magic_third_person");
+            case 88 -> mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
+            case 100 -> SkyTest.LOGGER.info("SKYTEST MAGIC souls left {}",
+                    mc.player.getData(com.replecant.skytest.registry.ModAttachments.SOUL_CHARGE));
+            default -> { }
         }
     }
 
@@ -229,14 +293,14 @@ public final class ClientSmoke {
         // Во время замаха Стража не бьём, а уклоняемся рывком назад перед самым ударом.
         if (target instanceof com.replecant.skytest.entity.PrisonWardenEntity warden
                 && warden.state() == com.replecant.skytest.entity.PrisonWardenEntity.State.WINDUP) {
-            if (!parryTried && warden.stateTime(0.0F) >= 13.0F) {
+            if (!parryTried && warden.stateTime(0.0F) >= 10.0F) {
                 parryTried = true;
                 dodgeHealth = player.getHealth();
                 dodgeTick = clientTicks;
                 var result = mc.gameMode.useItem(player, net.minecraft.world.InteractionHand.MAIN_HAND);
                 SkyTest.LOGGER.info("SKYTEST PARRY attempt {} holding {} hp={}", result,
                         player.getMainHandItem().getItem(), dodgeHealth);
-            } else if (parryTried && clientTicks - dodgeTick > 40 && !dodgeTried && warden.stateTime(0.0F) >= 13.0F) {
+            } else if (parryTried && clientTicks - dodgeTick > 40 && !dodgeTried && warden.stateTime(0.0F) >= 10.0F) {
                 dodgeTried = true;
                 dodgeHealth = player.getHealth();
                 dodgeTick = clientTicks;

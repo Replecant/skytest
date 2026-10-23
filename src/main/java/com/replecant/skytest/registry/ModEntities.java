@@ -3,6 +3,8 @@ package com.replecant.skytest.registry;
 import com.replecant.skytest.SkyTest;
 import com.replecant.skytest.entity.GrapplingHookEntity;
 import com.replecant.skytest.entity.LamplighterEntity;
+import com.replecant.skytest.entity.LightningArcEntity;
+import com.replecant.skytest.entity.SerpentEntity;
 import com.replecant.skytest.entity.PrisonWardenEntity;
 import com.replecant.skytest.entity.RatEntity;
 import com.replecant.skytest.entity.RegulatorEntity;
@@ -81,6 +83,26 @@ public final class ModEntities {
                     .sized(0.25F, 0.25F)
                     .clientTrackingRange(8)
                     .updateInterval(1)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
+
+    /** Разряд Сферы молний (живёт несколько тиков, только для отрисовки). */
+    public static final DeferredHolder<EntityType<?>, EntityType<LightningArcEntity>> LIGHTNING_ARC =
+            ENTITY_TYPES.register("lightning_arc", id -> EntityType.Builder
+                    .<LightningArcEntity>of(LightningArcEntity::new, MobCategory.MISC)
+                    .sized(0.1F, 0.1F)
+                    .clientTrackingRange(10)
+                    .updateInterval(20)
+                    .noSave()
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
+
+    /** Змей, брошенный Первородным змеем. */
+    public static final DeferredHolder<EntityType<?>, EntityType<SerpentEntity>> SERPENT =
+            ENTITY_TYPES.register("serpent", id -> EntityType.Builder
+                    .<SerpentEntity>of(SerpentEntity::new, MobCategory.MISC)
+                    .sized(0.4F, 0.4F)
+                    .clientTrackingRange(8)
+                    .updateInterval(1)
+                    .noSave()
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
 
     public static void registerAttributes(EntityAttributeCreationEvent event) {

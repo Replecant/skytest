@@ -385,7 +385,9 @@ public class PrisonWardenEntity extends PathfinderMob implements ParryReactive {
         Player attacker = source.getEntity() instanceof Player player ? player : null;
         float momentum = attacker != null ? CombatEvents.momentum(attacker, this) : 0.0F;
 
-        if (shieldUp && frontal && !source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+        // Молния бьёт сквозь металл щита.
+        boolean lightning = source.is(net.minecraft.world.damagesource.DamageTypes.INDIRECT_MAGIC);
+        if (shieldUp && frontal && !lightning && !source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
             boolean finisher = attacker != null && CombatEvents.comboStep(attacker) == 3;
             if (momentum >= GUARD_BREAK_MOMENTUM || finisher) {
                 // Удар с разгона пробивает стойку.
