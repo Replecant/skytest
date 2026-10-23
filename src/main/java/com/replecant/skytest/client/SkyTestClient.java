@@ -14,6 +14,9 @@ import com.replecant.skytest.world.AdventureWorld;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.gui.components.toasts.AdvancementToast;
+import net.minecraft.client.gui.components.toasts.RecipeToast;
+import net.minecraft.client.gui.components.toasts.TutorialToast;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -27,6 +30,7 @@ import net.neoforged.neoforge.client.event.ComputeFovModifierEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
+import net.neoforged.neoforge.client.event.ToastAddEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
@@ -63,6 +67,15 @@ public class SkyTestClient {
     static void onRenderHudLayer(RenderGuiLayerEvent.Pre event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level != null && HIDDEN_HUD.contains(event.getName()) && AdventureWorld.isAdventure(mc.level)) {
+            event.setCanceled(true);
+        }
+    }
+
+    /** Ванильные достижения и рецепты в этой игре не нужны — их всплывашки тоже. */
+    @SubscribeEvent
+    static void onToast(ToastAddEvent event) {
+        if (event.getToast() instanceof AdvancementToast || event.getToast() instanceof RecipeToast
+                || event.getToast() instanceof TutorialToast) {
             event.setCanceled(true);
         }
     }

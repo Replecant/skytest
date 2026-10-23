@@ -31,7 +31,7 @@ public final class SmokeTour {
     private static final Stop[] BRIDGE_STOPS = {
             new Stop(190, new Vec3(38.5, 57, 35.0), 0.0F, 8.0F),       // мост уходит в небо
             new Stop(230, new Vec3(38.5, 57, 84.0), 180.0F, -28.0F),   // тюрьма-скала над мостом
-            new Stop(270, new Vec3(39.5, 57, 50.0), 70.0F, 55.0F),     // взгляд в бездну
+            new Stop(270, new Vec3(39.6, 57, 52.0), -90.0F, 38.0F),    // через перила вниз — в бездну
     };
 
     private static final Map<UUID, Integer> TOURS = new HashMap<>();
