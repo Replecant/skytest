@@ -21,12 +21,22 @@ jobs:
           curl -sSL -o /tmp/vf/vf.jar https://repo1.maven.org/maven2/org/vineflower/vineflower/1.11.1/vineflower-1.11.1.jar
       - name: Probe
         run: |
-          { echo "== jars"; cat jars.txt; bash probe.sh; } > out.txt 2>&1 || true
-          python3 - <<'PY'
-          s = open('out.txt', encoding='utf-8', errors='replace').read()
-          chunks = [s[i:i+60000] for i in range(0, len(s), 60000)][:30]
-          kinds = ['notice'] * 10 + ['warning'] * 10 + ['error'] * 10
-          for n, (c, k) in enumerate(zip(chunks, kinds)):
-              c = c.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
-              print(f'::{k} title=probe-{n:02d}::{c}')
-          PY
+          bash probe.sh > out.txt 2>&1 || true
+          gzip -9c out.txt | base64 -w0 > out.b64
+          split -b 4000 -d -a 2 out.b64 /tmp/chunk.
+          ls /tmp/chunk.* | wc -l
+      - name: Emit 0
+        run: |
+          for n in $(seq 0 9); do f=/tmp/chunk.$(printf %02d $n); [ -f $f ] && echo "::notice title=probe-$(printf %02d $n)::$(cat $f)"; done; true
+      - name: Emit 1
+        run: |
+          for n in $(seq 10 19); do f=/tmp/chunk.$(printf %02d $n); [ -f $f ] && echo "::notice title=probe-$(printf %02d $n)::$(cat $f)"; done; true
+      - name: Emit 2
+        run: |
+          for n in $(seq 20 29); do f=/tmp/chunk.$(printf %02d $n); [ -f $f ] && echo "::notice title=probe-$(printf %02d $n)::$(cat $f)"; done; true
+      - name: Emit 3
+        run: |
+          for n in $(seq 30 39); do f=/tmp/chunk.$(printf %02d $n); [ -f $f ] && echo "::notice title=probe-$(printf %02d $n)::$(cat $f)"; done; true
+      - name: Emit 4
+        run: |
+          for n in $(seq 40 49); do f=/tmp/chunk.$(printf %02d $n); [ -f $f ] && echo "::notice title=probe-$(printf %02d $n)::$(cat $f)"; done; true
