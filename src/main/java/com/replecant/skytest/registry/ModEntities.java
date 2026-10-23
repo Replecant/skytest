@@ -44,7 +44,7 @@ public final class ModEntities {
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
 
-    /** Страж Тюрьмы — враг с щитом и мечом на Небесном мосту. */
+    /** Страж Тюрьмы — рядовой враг с щитом и мечом (нижние уровни тюрьмы; первый стоит на мосту). */
     public static final DeferredHolder<EntityType<?>, EntityType<PrisonWardenEntity>> PRISON_WARDEN =
             ENTITY_TYPES.register("prison_warden", id -> EntityType.Builder
                     .<PrisonWardenEntity>of(PrisonWardenEntity::new, MobCategory.MONSTER)

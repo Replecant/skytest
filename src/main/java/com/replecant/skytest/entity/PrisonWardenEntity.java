@@ -7,13 +7,10 @@ import net.minecraft.core.Holder;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
-import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -41,6 +38,8 @@ import net.minecraft.world.phys.Vec3;
  * В стойке щит закрывает его спереди: такие удары блокируются и отталкивают
  * атакующего. Уязвим сбоку, сзади, во время замаха и «отдышки» после удара.
  * Удар с разгона пробивает стойку и оглушает.
+ *
+ * <p>Рядовой противник нижних уровней тюрьмы, не босс.
  */
 public class PrisonWardenEntity extends PathfinderMob {
     public enum State {
@@ -59,15 +58,13 @@ public class PrisonWardenEntity extends PathfinderMob {
 
     private static final double STRIKE_RANGE = 3.3;
     private static final double BASH_RANGE = 2.2;
-    private static final float STRIKE_DAMAGE = 7.0F;
+    private static final float STRIKE_DAMAGE = 6.0F;
     private static final float BASH_DAMAGE = 2.0F;
     /** Полуугол щита: удары внутри этого конуса спереди блокируются. */
     private static final double SHIELD_COS = Math.cos(Math.toRadians(70));
     private static final float GUARD_BREAK_MOMENTUM = 0.7F;
     private static final int PATROL_REACH = 7;
 
-    private final ServerBossEvent bossBar = new ServerBossEvent(getDisplayName(),
-            BossEvent.BossBarColor.PURPLE, BossEvent.BossBarOverlay.NOTCHED_10);
     private int stateTicks;
     private int attackCooldown;
     private int patrolPause;
@@ -84,8 +81,8 @@ public class PrisonWardenEntity extends PathfinderMob {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 44.0)
-                .add(Attributes.ARMOR, 8.0)
+                .add(Attributes.MAX_HEALTH, 30.0)
+                .add(Attributes.ARMOR, 6.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.24)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.55)
                 .add(Attributes.ATTACK_DAMAGE, STRIKE_DAMAGE)
@@ -142,7 +139,6 @@ public class PrisonWardenEntity extends PathfinderMob {
         if (attackCooldown > 0) {
             attackCooldown--;
         }
-        bossBar.setProgress(getHealth() / getMaxHealth());
 
         LivingEntity target = getTarget();
         boolean engaged = target != null && target.isAlive() && distanceToSqr(target) < 24 * 24
@@ -331,33 +327,7 @@ public class PrisonWardenEntity extends PathfinderMob {
         return super.hurtServer(level, source, amount);
     }
 
-    // ------------------------------------------------------------------ полоска босса и звуки
-
-    @Override
-    public void startSeenByPlayer(ServerPlayer player) {
-        super.startSeenByPlayer(player);
-        bossBar.addPlayer(player);
-    }
-
-    @Override
-    public void stopSeenByPlayer(ServerPlayer player) {
-        super.stopSeenByPlayer(player);
-        bossBar.removePlayer(player);
-    }
-
-    @Override
-    public void tick() {
-        super.tick();
-        if (!level().isClientSide()) {
-            bossBar.setVisible(getTarget() != null);
-        }
-    }
-
-    @Override
-    public void die(DamageSource source) {
-        super.die(source);
-        bossBar.removeAllPlayers();
-    }
+    // ------------------------------------------------------------------ звуки
 
     @Override
     protected void playStepSound(BlockPos pos, BlockState state) {
@@ -379,7 +349,12 @@ public class PrisonWardenEntity extends PathfinderMob {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return state() == State.PATROL ? null : SoundEvents.WARDEN_HEARTBEAT;
+        return SoundEvents.CHAIN_STEP;
+    }
+
+    @Override
+    public int getAmbientSoundInterval() {
+        return 160;
     }
 
     @Override
@@ -389,12 +364,6 @@ public class PrisonWardenEntity extends PathfinderMob {
 
     private void playSound(Holder<SoundEvent> sound, float volume, float pitch) {
         playSound(sound.value(), volume, pitch);
-    }
-
-    @Override
-    public void setCustomName(net.minecraft.network.chat.Component name) {
-        super.setCustomName(name);
-        bossBar.setName(getDisplayName());
     }
 
     static float clampedProgress(float time, int duration) {
