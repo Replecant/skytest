@@ -42,5 +42,8 @@
   "dialogue.skytest.stranger.meeting.7": "Лови! Им уже никого не зарубишь, но отмахнуться хватит. Удачи, счастливчик!",
   "area.skytest.sky_bridge": "Небесный мост",
   "area.skytest.sky_bridge.subtitle": "Тюрьма — над облаками. Внизу только небо.",
-  "entity.skytest.prison_warden": "Страж Тюрьмы"
+  "entity.skytest.prison_warden": "Страж Тюрьмы",
+  "entity.skytest.rat": "Крыса",
+  "item.skytest.raw_rat_meat": "Сырое крысиное мясо",
+  "dialogue.skytest.lamplighter.path.6": "И не брезгуй крысами. Здесь, внизу, другой еды нет."
 }

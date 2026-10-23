@@ -9,6 +9,11 @@ import net.minecraft.world.item.DoubleHighBlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.component.Consumables;
+import net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect;
 import net.minecraft.world.item.equipment.ArmorType;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -40,6 +45,16 @@ public final class ModItems {
             id -> new Item(new Item.Properties()
                     .setId(ResourceKey.create(Registries.ITEM, id))
                     .sword(ToolMaterial.STONE, 2.0F, -2.4F)));
+
+    /** Сырое крысиное мясо: немного сытости и шанс отравиться — как сырая курица. */
+    public static final DeferredItem<Item> RAW_RAT_MEAT = ITEMS.register("raw_rat_meat",
+            id -> new Item(new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, id))
+                    .food(new FoodProperties.Builder().nutrition(3).saturationModifier(0.3F).build(),
+                            Consumables.defaultFood()
+                                    .onConsume(new ApplyStatusEffectsConsumeEffect(
+                                            new MobEffectInstance(MobEffects.HUNGER, 600, 0), 0.3F))
+                                    .build())));
 
     private ModItems() {}
 }

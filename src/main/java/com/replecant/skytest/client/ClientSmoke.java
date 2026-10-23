@@ -76,6 +76,9 @@ public final class ClientSmoke {
                     shot(WAKE_NAMES[i]);
                 }
             }
+            if (wakeTicks == 706) {
+                shot("08c_rat");
+            }
             if (wakeTicks == 200) {
                 shot("06_lamplighter_dialogue");
             }

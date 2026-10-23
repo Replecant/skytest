@@ -22,6 +22,7 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.GRAPPLING_HOOK.get());
                         output.accept(ModItems.CIRCUS_BOOTS.get());
                         output.accept(ModItems.DULL_SWORD.get());
+                        output.accept(ModItems.RAW_RAT_MEAT.get());
                         output.accept(ModItems.PRISON_GATE.get());
                     })
                     .build());

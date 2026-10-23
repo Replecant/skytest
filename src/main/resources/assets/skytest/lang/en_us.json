@@ -42,5 +42,8 @@
   "dialogue.skytest.stranger.meeting.7": "Catch! It won't cut anyone down anymore, but it's enough to fend them off. Good luck, lucky one!",
   "area.skytest.sky_bridge": "The Sky Bridge",
   "area.skytest.sky_bridge.subtitle": "The prison hangs above the clouds. Below, only sky.",
-  "entity.skytest.prison_warden": "Prison Warden"
+  "entity.skytest.prison_warden": "Prison Warden",
+  "entity.skytest.rat": "Rat",
+  "item.skytest.raw_rat_meat": "Raw Rat Meat",
+  "dialogue.skytest.lamplighter.path.6": "And don't be squeamish about rats. Down here, there is no other food."
 }

@@ -46,6 +46,8 @@ final class SmokeTest {
         int wardens = level.getEntitiesOfClass(com.replecant.skytest.entity.PrisonWardenEntity.class,
                 new AABB(-20, -10, -24, 64, 100, 96)).size();
         check(failures, wardens == 1, "exactly one prison warden on the bridge (found " + wardens + ")");
+        int rats = level.getEntitiesOfClass(com.replecant.skytest.entity.RatEntity.class, area).size();
+        check(failures, rats > 0 && rats <= com.replecant.skytest.world.RatSpawner.MAX_RATS, "a few rats (found " + rats + ")");
         int strangers = level.getEntitiesOfClass(StrangerEntity.class, area).size();
         check(failures, strangers == 1, "exactly one stranger (found " + strangers + ")");
 

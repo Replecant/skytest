@@ -5,7 +5,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
+import com.replecant.skytest.SkyTest;
+import com.replecant.skytest.entity.RatEntity;
+
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -62,6 +66,44 @@ public final class SmokeTour {
     static void tick(MinecraftServer server) {
         runStops(server, BRIDGE_TOURS, BRIDGE_STOPS);
         runStops(server, TOURS, STOPS);
+        TOURS.forEach((uuid, ticks) -> {
+            ServerPlayer player = server.getPlayerList().getPlayer(uuid);
+            if (player != null) {
+                ratCheck(player, ticks);
+            }
+        });
+    }
+
+    private static RatEntity watchedRat;
+
+    /** Подойти к крысе, рассмотреть её, затем убить и проверить, что выпало мясо. */
+    private static void ratCheck(ServerPlayer player, int ticks) {
+        var level = player.level();
+        if (ticks == 695) {
+            watchedRat = level.getEntitiesOfClass(RatEntity.class, player.getBoundingBox().inflate(80.0))
+                    .stream().findFirst().orElse(null);
+            if (watchedRat == null) {
+                SkyTest.LOGGER.info("SKYTEST RAT none found");
+                return;
+            }
+            watchedRat.setNoAi(true);
+            Vec3 at = watchedRat.position();
+            Vec3 eye = at.add(1.8, 0, 0.6);
+            Vec3 d = at.add(0, 0.2, 0).subtract(eye.add(0, player.getEyeHeight(), 0));
+            float yaw = (float) (Mth.atan2(d.z, d.x) * Mth.RAD_TO_DEG) - 90.0F;
+            float pitch = (float) -(Mth.atan2(d.y, Math.sqrt(d.x * d.x + d.z * d.z)) * Mth.RAD_TO_DEG);
+            player.teleport(new TeleportTransition(server(player), eye, Vec3.ZERO, yaw, pitch, TeleportTransition.DO_NOTHING));
+        } else if (ticks == 712 && watchedRat != null) {
+            watchedRat.hurtServer(level, player.damageSources().playerAttack(player), 100.0F);
+        } else if (ticks == 716 && watchedRat != null) {
+            var drops = level.getEntitiesOfClass(ItemEntity.class, watchedRat.getBoundingBox().inflate(3.0));
+            SkyTest.LOGGER.info("SKYTEST RAT drops: {}", drops.stream()
+                    .map(e -> e.getItem().getCount() + "x " + e.getItem().getItem()).toList());
+        }
+    }
+
+    private static net.minecraft.server.level.ServerLevel server(ServerPlayer player) {
+        return player.level().getServer().overworld();
     }
 
     private static void runStops(MinecraftServer server, Map<UUID, Integer> tours, Stop[] stops) {

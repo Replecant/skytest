@@ -4,6 +4,7 @@ import com.replecant.skytest.SkyTest;
 import com.replecant.skytest.entity.GrapplingHookEntity;
 import com.replecant.skytest.entity.LamplighterEntity;
 import com.replecant.skytest.entity.PrisonWardenEntity;
+import com.replecant.skytest.entity.RatEntity;
 import com.replecant.skytest.entity.StrangerEntity;
 
 import net.minecraft.core.registries.Registries;
@@ -53,7 +54,17 @@ public final class ModEntities {
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
 
+    /** Тюремная крыса — основной источник еды. */
+    public static final DeferredHolder<EntityType<?>, EntityType<RatEntity>> RAT =
+            ENTITY_TYPES.register("rat", id -> EntityType.Builder
+                    .<RatEntity>of(RatEntity::new, MobCategory.CREATURE)
+                    .sized(0.5F, 0.35F)
+                    .eyeHeight(0.25F)
+                    .clientTrackingRange(8)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
+
     public static void registerAttributes(EntityAttributeCreationEvent event) {
+        event.put(RAT.get(), RatEntity.createAttributes().build());
         event.put(PRISON_WARDEN.get(), PrisonWardenEntity.createAttributes().build());
         event.put(LAMPLIGHTER.get(), LamplighterEntity.createAttributes().build());
         event.put(STRANGER.get(), StrangerEntity.createAttributes().build());

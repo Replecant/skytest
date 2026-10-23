@@ -5,6 +5,8 @@ import java.util.Set;
 import com.replecant.skytest.SkyTest;
 import com.replecant.skytest.client.model.LamplighterModel;
 import com.replecant.skytest.client.model.PrisonWardenModel;
+import com.replecant.skytest.client.model.RatModel;
+import com.replecant.skytest.client.renderer.RatRenderer;
 import com.replecant.skytest.client.model.StrangerModel;
 import com.replecant.skytest.client.renderer.PrisonWardenRenderer;
 import com.replecant.skytest.client.renderer.LamplighterRenderer;
@@ -43,7 +45,6 @@ public class SkyTestClient {
     private static final int MIN_AIR_TICKS = 3;
     /** Ванильные элементы HUD, которых нет в мире приключения. */
     private static final Set<Identifier> HIDDEN_HUD = Set.of(
-            VanillaGuiLayers.FOOD_LEVEL,
             VanillaGuiLayers.EXPERIENCE_LEVEL,
             VanillaGuiLayers.CONTEXTUAL_INFO_BAR,
             VanillaGuiLayers.CONTEXTUAL_INFO_BAR_BACKGROUND);
@@ -58,6 +59,7 @@ public class SkyTestClient {
         event.registerEntityRenderer(ModEntities.LAMPLIGHTER.get(), LamplighterRenderer::new);
         event.registerEntityRenderer(ModEntities.STRANGER.get(), StrangerRenderer::new);
         event.registerEntityRenderer(ModEntities.PRISON_WARDEN.get(), PrisonWardenRenderer::new);
+        event.registerEntityRenderer(ModEntities.RAT.get(), RatRenderer::new);
     }
 
     @SubscribeEvent
@@ -65,6 +67,7 @@ public class SkyTestClient {
         event.registerLayerDefinition(LamplighterModel.LAYER, LamplighterModel::createBodyLayer);
         event.registerLayerDefinition(StrangerModel.LAYER, StrangerModel::createBodyLayer);
         event.registerLayerDefinition(PrisonWardenModel.LAYER, PrisonWardenModel::createBodyLayer);
+        event.registerLayerDefinition(RatModel.LAYER, RatModel::createBodyLayer);
     }
 
     @SubscribeEvent

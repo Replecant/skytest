@@ -8,6 +8,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.replecant.skytest.SkyTest;
 import com.replecant.skytest.world.AdventureWorld;
 import com.replecant.skytest.world.LowerPrison;
+import com.replecant.skytest.world.RatSpawner;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -76,9 +77,6 @@ public final class GameEvents {
         if (!(event.getEntity() instanceof ServerPlayer player) || !AdventureWorld.isAdventure(player.level())) {
             return;
         }
-        // Голода в этой игре нет.
-        player.getFoodData().setFoodLevel(20);
-
         // Падение в бездну: возврат на начало моста (или в камеру) с уроном.
         if (player.getY() < LowerPrison.ABYSS_Y && !player.isSpectator() && !player.getAbilities().flying) {
             Vec3 back = REACHED_BRIDGE.contains(player.getUUID()) ? LowerPrison.BRIDGE_START : LowerPrison.PLAYER_SPAWN;
@@ -116,6 +114,9 @@ public final class GameEvents {
     static void onServerTick(ServerTickEvent.Post event) {
         Prologue.tick(event.getServer());
         HallEvent.tick(event.getServer());
+        if (AdventureWorld.isAdventure(event.getServer())) {
+            RatSpawner.tick(event.getServer().overworld());
+        }
     }
 
     /** Скелеты-узники ничего не роняют: в этой игре нет ванильного лута. */

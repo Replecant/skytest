@@ -15,7 +15,7 @@ public final class Dialogues {
     public static final List<Conversation> LAMPLIGHTER = List.of(
             new Conversation("lamplighter", "awakening", 6),
             new Conversation("lamplighter", "prison", 4),
-            new Conversation("lamplighter", "path", 5),
+            new Conversation("lamplighter", "path", 6),
             new Conversation("lamplighter", "farewell", 2));
 
     /** Встреча с Незнакомцем в зале. */

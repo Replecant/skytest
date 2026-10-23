@@ -6,6 +6,7 @@ import java.util.List;
 import com.replecant.skytest.SkyTest;
 import com.replecant.skytest.entity.LamplighterEntity;
 import com.replecant.skytest.entity.PrisonWardenEntity;
+import com.replecant.skytest.entity.RatEntity;
 import com.replecant.skytest.entity.StrangerEntity;
 import com.replecant.skytest.registry.ModBlocks;
 import com.replecant.skytest.registry.ModEntities;
@@ -504,9 +505,11 @@ public final class LowerPrison {
         level.getEntitiesOfClass(LamplighterEntity.class, WHOLE_AREA).forEach(LamplighterEntity::discard);
         level.getEntitiesOfClass(StrangerEntity.class, WHOLE_AREA).forEach(StrangerEntity::discard);
         level.getEntitiesOfClass(PrisonWardenEntity.class, WHOLE_AREA).forEach(PrisonWardenEntity::discard);
+        level.getEntitiesOfClass(RatEntity.class, WHOLE_AREA).forEach(RatEntity::discard);
         spawn(ModEntities.LAMPLIGHTER.get().create(level, EntitySpawnReason.STRUCTURE), LAMPLIGHTER_POS, LAMPLIGHTER_YAW);
         spawn(ModEntities.STRANGER.get().create(level, EntitySpawnReason.STRUCTURE), STRANGER_POS, STRANGER_YAW);
         spawn(ModEntities.PRISON_WARDEN.get().create(level, EntitySpawnReason.STRUCTURE), WARDEN_POS, 180.0F);
+        RatSpawner.populate(level);
     }
 
     private void spawn(Mob mob, Vec3 pos, float yaw) {
