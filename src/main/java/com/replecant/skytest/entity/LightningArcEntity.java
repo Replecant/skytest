@@ -1,6 +1,7 @@
 package com.replecant.skytest.entity;
 
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 
 import com.replecant.skytest.registry.ModEntities;
 
@@ -22,7 +23,7 @@ import net.minecraft.world.phys.Vec3;
  */
 public class LightningArcEntity extends Entity {
     public static final int LIFETIME = 7;
-    private static final EntityDataAccessor<Vector3f> OFFSET =
+    private static final EntityDataAccessor<Vector3fc> OFFSET =
             SynchedEntityData.defineId(LightningArcEntity.class, EntityDataSerializers.VECTOR3);
 
     public LightningArcEntity(EntityType<? extends LightningArcEntity> type, Level level) {
@@ -39,7 +40,7 @@ public class LightningArcEntity extends Entity {
     }
 
     public Vec3 offset() {
-        Vector3f v = entityData.get(OFFSET);
+        Vector3fc v = entityData.get(OFFSET);
         return new Vec3(v.x(), v.y(), v.z());
     }
 
