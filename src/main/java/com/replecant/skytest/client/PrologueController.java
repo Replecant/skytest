@@ -24,6 +24,7 @@ public final class PrologueController {
 
     /** Каждый тик клиента: открыть экран, как только мир загрузился. */
     static void tick(Minecraft mc) {
+        ClientSmoke.tick(mc);
         if (pending && mc.player != null && mc.level != null && mc.screen == null) {
             pending = false;
             mc.setScreen(new PrologueScreen());
@@ -33,6 +34,7 @@ public final class PrologueController {
     static void onVisionFinished() {
         ClientPacketDistributor.sendToServer(PrologueFinishedPayload.INSTANCE);
         wakeStart = System.currentTimeMillis();
+        ClientSmoke.onWake();
     }
 
     /** Поверх HUD: чёрный экран в ожидании и веки при пробуждении. */

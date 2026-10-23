@@ -54,6 +54,10 @@ neoForge {
     runs {
         client {
             client()
+            // CI visual test: open the given singleplayer world right away.
+            if (System.getenv('SKYTEST_QUICKPLAY')) {
+                programArguments.addAll '--quickPlaySingleplayer', System.getenv('SKYTEST_QUICKPLAY')
+            }
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }

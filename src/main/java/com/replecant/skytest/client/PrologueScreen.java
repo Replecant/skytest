@@ -51,6 +51,7 @@ public class PrologueScreen extends Screen {
     @Override
     public void tick() {
         ticks++;
+        ClientSmoke.onPrologueTick(ticks);
         if (ticks == 2) {
             playSound(SoundEvents.BEACON_AMBIENT, 0.5F, 0.6F);
         }

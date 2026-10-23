@@ -59,6 +59,7 @@ public final class Prologue {
         player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 20 * 6, 1, false, false));
         player.addEffect(new MobEffectInstance(MobEffects.NAUSEA, 20 * 4, 0, false, false));
         AWAKENING.put(player.getUUID(), 0);
+        SmokeTour.begin(player);
     }
 
     public static void teleportToCell(ServerPlayer player) {
@@ -69,6 +70,7 @@ public final class Prologue {
     }
 
     public static void tick(MinecraftServer server) {
+        SmokeTour.tick(server);
         Iterator<Map.Entry<UUID, Integer>> it = AWAKENING.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<UUID, Integer> entry = it.next();

@@ -60,6 +60,42 @@ jobs:
               print(f'::error title=server-{i//3900:02d}::{c}')
           PY
 
+      - name: Visual test (client screenshots)
+        if: startsWith(github.ref, 'refs/heads/claude/') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri mesa-utils > /dev/null
+          mkdir -p run/saves && rm -rf run/saves/smoke && cp -r run/world run/saves/smoke
+          printf 'onboardAccessibility:false\npauseOnLostFocus:false\nguiScale:2\nrenderDistance:6\nsoundCategory_master:0.0\ntutorialStep:none\nskipMultiplayerWarning:true\nlang:ru_ru\n' > run/options.txt
+          export SKYTEST_CLIENT_SMOKE=true SKYTEST_QUICKPLAY=smoke LIBGL_ALWAYS_SOFTWARE=1
+          timeout 1200 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClient > client.log 2>&1 || true
+          ls -la run/screenshots || true
+          grep -q "SKYTEST CLIENT SMOKE DONE" client.log
+
+      - name: Report client errors
+        if: always() && (startsWith(github.ref, 'refs/heads/claude/') || github.event_name == 'workflow_dispatch')
+        run: |
+          [ -f client.log ] || exit 0
+          grep -E "SKYTEST|Screenshot|ERROR|Exception|Caused by|OpenGL|GL_RENDERER|Backend" client.log \
+            | grep -v "DEBUG" | head -150 > cerrors.txt || true
+          python3 - <<'PY'
+          s = open('cerrors.txt', encoding='utf-8', errors='replace').read()
+          for i in range(0, min(len(s), 38000), 3900):
+              c = s[i:i+3900].replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+              print(f'::warning title=client-{i//3900:02d}::{c}')
+          PY
+
+      - name: Publish screenshots to branch claude/screenshots
+        if: always() && (startsWith(github.ref, 'refs/heads/claude/') || github.event_name == 'workflow_dispatch')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          [ -d run/screenshots ] || exit 0
+          cd run/screenshots
+          git init -q && git checkout -q -b shots && git add .
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "Screenshots for ${GITHUB_SHA}"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}" shots:claude/screenshots
+
       - name: Upload mod jar
         uses: actions/upload-artifact@v4
         with:
