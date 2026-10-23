@@ -1,42 +1,35 @@
 C=/tmp/cls; R=/tmp/res
-sig() { echo "===== SIG $1"; javap -p -cp $C "$1" 2>&1 | grep -v '^Compiled'; }
-dec() { # decompile class (+inner) by fqcn
-  echo "===== DEC $1"; p=${1//.//}; rm -rf /tmp/d /tmp/o; mkdir -p /tmp/d/$(dirname $p) /tmp/o
+sig() { echo "===== SIG $1"; javap -p -cp $C "$1" 2>&1 | grep -v '^Compiled\|lambda\$'; }
+dec() { echo "===== DEC $1"; p=${1//.//}; rm -rf /tmp/d /tmp/o; mkdir -p /tmp/d/$(dirname $p) /tmp/o
   cp $C/$p.class $C/$p\$*.class /tmp/d/$(dirname $p)/ 2>/dev/null
   java -jar /tmp/vf/vf.jar -log=ERROR /tmp/d /tmp/o >/dev/null 2>&1; cat /tmp/o/$p.java; }
 res() { echo "===== RES $1"; cat "$R/$1"; echo; }
-fnd() { echo "===== FIND $1"; (cd $C; find . -name "$1" | sort | head -40); }
-
-fnd 'RenderTypes.class'; fnd '*EyesLayer*.class'; fnd 'GameRules*.class'
-dec net.minecraft.client.renderer.entity.layers.EyesLayer
-dec net.minecraft.client.renderer.entity.IronGolemRenderer
-dec net.minecraft.client.model.animal.golem.IronGolemModel
-fnd 'IronGolemModel.class'
-sig net.minecraft.client.renderer.entity.MobRenderer
-sig net.minecraft.client.renderer.entity.LivingEntityRenderer
-sig net.minecraft.client.renderer.entity.state.LivingEntityRenderState
-sig net.minecraft.client.model.EntityModel
-sig net.minecraft.client.model.geom.ModelLayerLocation
-sig net.neoforged.neoforge.client.event.EntityRenderersEvent\$RegisterLayerDefinitions
-sig net.minecraft.client.gui.screens.Screen
-sig net.minecraft.client.gui.GuiGraphics
-sig net.neoforged.neoforge.attachment.AttachmentType\$Builder
-sig net.neoforged.neoforge.attachment.AttachmentType
-sig net.minecraft.world.level.portal.TeleportTransition
-sig net.minecraft.world.entity.player.Player | grep -i 'message\|food\|persistent'
-sig net.minecraft.server.level.ServerPlayer | grep -i 'teleport\|message\|gamemode\|setGameMode\|respawn'
-sig net.minecraft.world.level.gamerules.GameRules
-sig net.minecraft.world.level.GameRules
-sig net.neoforged.neoforge.client.gui.VanillaGuiLayers
-sig net.neoforged.neoforge.client.event.RenderGuiLayerEvent
-sig net.minecraft.world.entity.PathfinderMob
-sig net.minecraft.world.entity.Mob | grep -i 'interact\|createMob\|registerGoals\|persist\|setPersist'
-sig net.minecraft.world.entity.ai.attributes.Attributes | head -30
-sig net.minecraft.world.effect.MobEffects | head -20
-res data/minecraft/dimension_type/the_nether.json
-res data/minecraft/dimension_type/overworld_caves.json
-res data/minecraft/worldgen/biome/the_void.json
-res data/minecraft/worldgen/biome/basalt_deltas.json
-res data/minecraft/worldgen/world_preset/flat.json
-res data/minecraft/worldgen/flat_level_generator_preset/the_void.json
-res data/minecraft/tags/worldgen/world_preset/normal.json
+sig net.minecraft.world.level.block.Blocks | grep -E 'DEEPSLATE|CHAIN|LANTERN| LIGHT;|SKULL|COBWEB|BONE_BLOCK| CHEST;|CARPET|HAY|TUFF|IRON_BARS|CANDLE|END_ROD|SCULK;|MOSS|ROOTS|CAMPFIRE|BARRIER'
+sig net.minecraft.server.level.ServerLevel | grep -iE 'spawn|respawn|gamerule|getGameRules|setDayTime'
+sig net.minecraft.world.level.storage.LevelData\$RespawnData
+sig net.minecraft.world.entity.Entity | grep -E 'snapTo|moveTo|setYHeadRot|setYBodyRot|setInvulnerable|setCustomName|setSilent'
+sig net.minecraft.commands.CommandSourceStack | grep -iE 'permission|getPlayerOrException|sendSuccess|getServer|getLevel'
+sig net.minecraft.commands.Commands | grep -iE 'static|hasPermission|LEVEL_'
+sig net.minecraft.client.resources.sounds.SimpleSoundInstance | grep forUI
+sig net.neoforged.neoforge.client.event.RenderGuiEvent\$Post
+sig net.neoforged.neoforge.event.entity.player.PlayerEvent\$PlayerRespawnEvent
+sig net.neoforged.neoforge.event.entity.player.PlayerEvent\$PlayerLoggedInEvent
+sig net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent
+sig net.minecraft.client.renderer.rendertype.RenderTypes | grep -iE 'eyes|cutout'
+sig net.minecraft.world.entity.ai.goal.LookAtPlayerGoal | grep 'LookAtPlayerGoal('
+sig net.minecraft.world.effect.MobEffectInstance | grep 'MobEffectInstance('
+sig net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket | grep 'Packet('
+sig net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket | grep 'Packet('
+sig net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket | grep 'Packet('
+sig net.minecraft.world.level.block.state.properties.BlockStateProperties | grep -E 'HANGING|ROTATION_16| LEVEL;|FACING;|HORIZONTAL_FACING|AXIS;'
+sig net.minecraft.world.level.block.LightBlock | grep -E 'static'
+sig net.minecraft.world.level.block.Block | grep -E 'updateFromNeighbourShapes|UPDATE_'
+sig net.minecraft.world.level.block.entity.ChestBlockEntity | grep -E 'setItem|setLootTable'
+sig net.minecraft.world.food.FoodData | grep -E 'set'
+sig net.minecraft.world.entity.Mob | grep -E 'removeWhenFarAway|setNoAi|requiresCustomPersistence|checkDespawn'
+sig net.minecraft.world.entity.LivingEntity | grep -E 'addEffect|isPushable|doPush|pushEntities'
+dec net.minecraft.world.level.dimension.DimensionType | sed -n '1,140p'
+dec net.minecraft.world.level.levelgen.presets.WorldPreset | sed -n '1,80p'
+res data/minecraft/dimension_type/overworld.json
+ls $R/data/minecraft/timeline 2>/dev/null; ls $R/data/minecraft/tags/timeline 2>/dev/null
+ls $R/data/minecraft/worldgen/world_preset
