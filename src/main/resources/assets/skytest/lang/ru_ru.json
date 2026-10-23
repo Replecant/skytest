@@ -29,5 +29,15 @@
   "dialogue.skytest.lamplighter.path.5": "Она поможет тебе цепляться за жизнь. В самом прямом смысле.",
   "dialogue.skytest.lamplighter.farewell.1": "Иди. Мой свет будет ждать тебя здесь.",
   "dialogue.skytest.lamplighter.farewell.2": "Если заблудишься — возвращайся на него.",
-  "dialogue.skytest.hint": "ЛКМ / Пробел — далее  ·  Esc — закрыть"
+  "dialogue.skytest.hint": "ЛКМ / Пробел — далее  ·  Esc — закрыть",
+  "block.skytest.prison_gate": "Тюремные ворота",
+  "item.skytest.dull_sword": "Затупленный меч",
+  "entity.skytest.stranger": "Незнакомец",
+  "dialogue.skytest.stranger.meeting.1": "О! Ещё один счастливчик. Не думал, что кто-то выберется из камеры раньше меня.",
+  "dialogue.skytest.stranger.meeting.2": "Молчишь? Правильно. Здесь стены слушают внимательнее людей.",
+  "dialogue.skytest.stranger.meeting.3": "Видишь ли, эта тюрьма — не просто яма. Это механизм. Залы и коридоры сдвигаются, как шестерни в часах.",
+  "dialogue.skytest.stranger.meeting.4": "Двигает их Регулятор. Где-то наверху он поворачивает рычаги — и проходы открываются... или исчезают.",
+  "dialogue.skytest.stranger.meeting.5": "Только рычагов он не трогал уже очень давно. Пути наверх перекрыты, и вряд ли он сдвинет хоть один блок в ближайшее время.",
+  "dialogue.skytest.stranger.meeting.6": "Так что каждый ищет дорогу сам. Я — свою. Ты — свою.",
+  "dialogue.skytest.stranger.meeting.7": "Лови! Им уже никого не зарубишь, но отмахнуться хватит. Удачи, счастливчик!"
 }

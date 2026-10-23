@@ -7,28 +7,24 @@ import java.util.UUID;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.phys.Vec3;
 
-/** Для визуальной проверки на CI: водит игрока по точкам обзора локации. */
+/**
+ * Для визуальной проверки на CI: водит игрока по точкам обзора, а затем
+ * заводит в зал, где срабатывает встреча с Незнакомцем.
+ */
 public final class SmokeTour {
     public static final boolean ENABLED = "true".equals(System.getenv("SKYTEST_CLIENT_SMOKE"));
 
     private record Stop(int tick, Vec3 pos, float yaw, float pitch) {}
 
     private static final Stop[] STOPS = {
-            new Stop(600, new Vec3(2.0, 64, 1.2), -40.0F, -12.0F),   // Фонарщик анфас
-            new Stop(660, new Vec3(0.6, 64, 3.2), -90.0F, -8.0F),    // Фонарщик сбоку
-            new Stop(690, new Vec3(0.6, 64, 3.2), -90.0F, -8.0F),    // он же под ночным зрением
-            new Stop(750, new Vec3(-3.5, 64, 7.5), -90.0F, 0.0F),    // коридор
-            new Stop(810, new Vec3(46.0, 66, 13.0), 135.0F, -12.0F), // зал с уступа
-            new Stop(870, new Vec3(34.5, 74, -6.0), 180.0F, -20.0F), // конечная комната
-            // Замеры производительности.
-            new Stop(930, new Vec3(1.5, 64, 1.5), -53.0F, 10.0F),    // камера
-            new Stop(1150, new Vec3(-3.5, 64, 7.5), -90.0F, 0.0F),   // коридор
-            new Stop(1350, new Vec3(46.0, 66, 13.0), 135.0F, -12.0F), // зал
+            new Stop(600, new Vec3(-3.5, 64, 7.5), -90.0F, 0.0F),   // коридор с воротами
+            new Stop(660, new Vec3(8.5, 64, 7.0), 180.0F, 5.0F),    // закрытые ворота камеры N2
+            new Stop(720, new Vec3(31.5, 64, 7.5), -90.0F, -5.0F),  // вход в зал → встреча
     };
 
     private static final Map<UUID, Integer> TOURS = new HashMap<>();
@@ -37,6 +33,19 @@ public final class SmokeTour {
         if (ENABLED) {
             TOURS.put(player.getUUID(), 0);
         }
+    }
+
+    /** Повернуть игрока к поднимающемуся скелету, чтобы он попал в кадр. */
+    static void onSkeletonSpawned(ServerPlayer player, Entity skeleton) {
+        if (!ENABLED) {
+            return;
+        }
+        Vec3 from = player.getEyePosition();
+        Vec3 d = skeleton.position().add(0, 1.0, 0).subtract(from);
+        float yaw = (float) (Mth.atan2(d.z, d.x) * Mth.RAD_TO_DEG) - 90.0F;
+        float pitch = (float) -(Mth.atan2(d.y, Math.sqrt(d.x * d.x + d.z * d.z)) * Mth.RAD_TO_DEG);
+        player.teleport(new TeleportTransition(player.level().getServer().overworld(), player.position(), Vec3.ZERO,
+                yaw, pitch, TeleportTransition.DO_NOTHING));
     }
 
     static void tick(MinecraftServer server) {
@@ -54,12 +63,6 @@ public final class SmokeTour {
                 if (ticks == stop.tick) {
                     player.teleport(new TeleportTransition(server.overworld(), stop.pos, Vec3.ZERO,
                             stop.yaw, stop.pitch, TeleportTransition.DO_NOTHING));
-                    // Третья остановка — Фонарщик под ночным зрением, чтобы оценить силуэт модели.
-                    if (stop == STOPS[2]) {
-                        player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 600, 0, false, false));
-                    } else if (stop == STOPS[3]) {
-                        player.removeEffect(MobEffects.NIGHT_VISION);
-                    }
                 }
             }
         }

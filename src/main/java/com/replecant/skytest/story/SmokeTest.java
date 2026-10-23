@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.replecant.skytest.SkyTest;
 import com.replecant.skytest.entity.LamplighterEntity;
+import com.replecant.skytest.entity.StrangerEntity;
+import com.replecant.skytest.registry.ModBlocks;
 import com.replecant.skytest.registry.ModItems;
 import com.replecant.skytest.world.AdventureWorld;
 import com.replecant.skytest.world.LowerPrison;
@@ -13,6 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.phys.AABB;
 
@@ -24,12 +27,18 @@ final class SmokeTest {
         check(failures, AdventureWorld.isAdventure(level), "overworld uses the depths dimension type");
         check(failures, LowerPrison.isBuilt(level), "prison marker present");
         check(failures, level.getBlockState(BlockPos.containing(LowerPrison.PLAYER_SPAWN)).is(Blocks.BROWN_CARPET), "player mat in cell");
-        check(failures, level.getBlockState(new BlockPos(2, LowerPrison.FLOOR, 5)).isAir(), "cell door open");
+        check(failures, gateOpen(level, new BlockPos(2, LowerPrison.FLOOR, 5), true), "player cell gate open");
+        check(failures, gateOpen(level, new BlockPos(8, LowerPrison.FLOOR, 5), false), "N2 gate closed");
+        check(failures, gateOpen(level, new BlockPos(8, LowerPrison.FLOOR, 9), true), "S2 (boots) gate open");
+        check(failures, level.getBlockState(new BlockPos(38, 57, 21)).is(Blocks.DEEPSLATE_BRICK_STAIRS), "descent stairs");
         check(failures, level.getBlockState(new BlockPos(0, LowerPrison.FLOOR, 5)).is(Blocks.IRON_BARS), "cell bars");
         check(failures, chestHas(level, new BlockPos(8, LowerPrison.FLOOR, 13), ModItems.CIRCUS_BOOTS.get()), "boots chest");
         check(failures, chestHas(level, new BlockPos(45, LowerPrison.FLOOR + 2, 7), ModItems.GRAPPLING_HOOK.get()), "hook chest");
-        int keepers = level.getEntitiesOfClass(LamplighterEntity.class, new AABB(-12, 56, -16, 52, 94, 22)).size();
+        AABB area = new AABB(-12, 52, -16, 56, 94, 27);
+        int keepers = level.getEntitiesOfClass(LamplighterEntity.class, area).size();
         check(failures, keepers == 1, "exactly one lamplighter (found " + keepers + ")");
+        int strangers = level.getEntitiesOfClass(StrangerEntity.class, area).size();
+        check(failures, strangers == 1, "exactly one stranger (found " + strangers + ")");
 
         if (failures.isEmpty()) {
             SkyTest.LOGGER.info("SKYTEST SMOKE OK");
@@ -37,6 +46,13 @@ final class SmokeTest {
             failures.forEach(f -> SkyTest.LOGGER.error("SKYTEST SMOKE FAIL: {}", f));
         }
         server.halt(false);
+    }
+
+    private static boolean gateOpen(ServerLevel level, BlockPos pos, boolean open) {
+        var lower = level.getBlockState(pos);
+        var upper = level.getBlockState(pos.above());
+        return lower.is(ModBlocks.PRISON_GATE.get()) && upper.is(ModBlocks.PRISON_GATE.get())
+                && lower.getValue(DoorBlock.OPEN) == open;
     }
 
     private static boolean chestHas(ServerLevel level, BlockPos pos, net.minecraft.world.item.Item item) {

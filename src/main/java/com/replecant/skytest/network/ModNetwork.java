@@ -1,6 +1,7 @@
 package com.replecant.skytest.network;
 
 import com.replecant.skytest.client.ClientPayloadHandlers;
+import com.replecant.skytest.entity.StrangerEntity;
 import com.replecant.skytest.registry.ModItems;
 import com.replecant.skytest.story.Prologue;
 
@@ -24,6 +25,14 @@ public final class ModNetwork {
                 (payload, context) -> {
                     if (context.player() instanceof ServerPlayer player) {
                         Prologue.finish(player);
+                    }
+                });
+        registrar.playToServer(DialogueClosedPayload.TYPE, DialogueClosedPayload.STREAM_CODEC,
+                (payload, context) -> {
+                    if (context.player() instanceof ServerPlayer player
+                            && player.level().getEntity(payload.speakerId()) instanceof StrangerEntity stranger
+                            && stranger.distanceTo(player) < 32.0F) {
+                        stranger.onDialogueClosed(player);
                     }
                 });
         registrar.playToClient(StartProloguePayload.TYPE, StartProloguePayload.STREAM_CODEC,

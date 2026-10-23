@@ -24,6 +24,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
+import net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
@@ -55,7 +57,7 @@ public final class GameEvents {
         if (event.getEntity() instanceof ServerPlayer player
                 && AdventureWorld.isAdventure(player.level().getServer())
                 && !Prologue.isSeen(player)) {
-            Prologue.start(player);
+            Prologue.onFirstLogin(player);
         }
     }
 
@@ -75,6 +77,9 @@ public final class GameEvents {
         // Голода в этой игре нет.
         player.getFoodData().setFoodLevel(20);
 
+        if (player.tickCount % 5 == 0 && player instanceof ServerPlayer serverPlayer) {
+            HallEvent.checkTrigger(serverPlayer);
+        }
         if (player.tickCount % 10 == 0 && player instanceof ServerPlayer serverPlayer
                 && LowerPrison.END_ROOM.contains(player.position())
                 && REACHED_END.add(player.getUUID())) {
@@ -89,6 +94,22 @@ public final class GameEvents {
     @SubscribeEvent
     static void onServerTick(ServerTickEvent.Post event) {
         Prologue.tick(event.getServer());
+        HallEvent.tick(event.getServer());
+    }
+
+    /** Скелеты-узники ничего не роняют: в этой игре нет ванильного лута. */
+    @SubscribeEvent
+    static void onDrops(LivingDropsEvent event) {
+        if (event.getEntity().getTags().contains(HallEvent.PRISONER_TAG)) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    static void onExperienceDrop(LivingExperienceDropEvent event) {
+        if (event.getEntity().getTags().contains(HallEvent.PRISONER_TAG)) {
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent
@@ -108,6 +129,14 @@ public final class GameEvents {
                     level.setBlock(new net.minecraft.core.BlockPos(-12, 56, -16), Blocks.AIR.defaultBlockState(), 2);
                     LowerPrison.build(level);
                     ctx.getSource().sendSuccess(() -> Component.literal("Lower Prison rebuilt"), true);
+                    return 1;
+                }))
+                .then(Commands.literal("reset").executes(ctx -> {
+                    ServerPlayer player = ctx.getSource().getPlayerOrException();
+                    Prologue.reset(player);
+                    player.setData(com.replecant.skytest.registry.ModAttachments.STORY_FLAGS, new java.util.HashSet<>());
+                    REACHED_END.remove(player.getUUID());
+                    ctx.getSource().sendSuccess(() -> Component.literal("Story progress reset (use /skytest rebuild to respawn NPCs)"), false);
                     return 1;
                 }))
                 .then(Commands.literal("cell").executes(ctx -> {

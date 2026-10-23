@@ -7,6 +7,9 @@ import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public final class ModAttachments {
@@ -24,6 +27,13 @@ public final class ModAttachments {
     public static final Supplier<AttachmentType<Integer>> LAMPLIGHTER_STAGE = ATTACHMENT_TYPES.register("lamplighter_stage",
             () -> AttachmentType.builder(() -> 0)
                     .serialize(Codec.INT.fieldOf("stage"))
+                    .copyOnDeath()
+                    .build());
+
+    /** Сюжетные флаги игрока (встретил Незнакомца и т. п.). */
+    public static final Supplier<AttachmentType<Set<String>>> STORY_FLAGS = ATTACHMENT_TYPES.register("story_flags",
+            () -> AttachmentType.<Set<String>>builder(() -> new HashSet<>())
+                    .serialize(Codec.STRING.listOf().<Set<String>>xmap(HashSet::new, ArrayList::new).fieldOf("flags"))
                     .copyOnDeath()
                     .build());
 

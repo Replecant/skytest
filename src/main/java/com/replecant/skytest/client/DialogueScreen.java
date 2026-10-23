@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.lwjgl.glfw.GLFW;
 
+import com.replecant.skytest.network.DialogueClosedPayload;
+
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
@@ -16,6 +18,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 /**
  * Диалоговое окно: камера плавно наводится на лицо собеседника и слегка
@@ -69,6 +72,7 @@ public class DialogueScreen extends Screen {
             minecraft.options.hideGui = true;
             active = this;
             lastFrameNanos = System.nanoTime();
+            ClientSmoke.onDialogueOpened();
         }
     }
 
@@ -78,6 +82,8 @@ public class DialogueScreen extends Screen {
         if (active == this) {
             active = null;
         }
+        ClientPacketDistributor.sendToServer(new DialogueClosedPayload(speakerId));
+        ClientSmoke.onDialogueClosed();
     }
 
     @Override

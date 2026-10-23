@@ -18,6 +18,9 @@ public final class Dialogues {
             new Conversation("lamplighter", "path", 5),
             new Conversation("lamplighter", "farewell", 2));
 
+    /** Встреча с Незнакомцем в зале. */
+    public static final Conversation STRANGER_MEETING = new Conversation("stranger", "meeting", 7);
+
     /** Начать следующий по порядку разговор Фонарщика с игроком. */
     public static void talkToLamplighter(ServerPlayer player, Entity speaker) {
         int stage = player.getData(ModAttachments.LAMPLIGHTER_STAGE);

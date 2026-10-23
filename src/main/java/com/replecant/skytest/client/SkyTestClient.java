@@ -4,7 +4,9 @@ import java.util.Set;
 
 import com.replecant.skytest.SkyTest;
 import com.replecant.skytest.client.model.LamplighterModel;
+import com.replecant.skytest.client.model.StrangerModel;
 import com.replecant.skytest.client.renderer.LamplighterRenderer;
+import com.replecant.skytest.client.renderer.StrangerRenderer;
 import com.replecant.skytest.network.DoubleJumpPayload;
 import com.replecant.skytest.registry.ModEntities;
 import com.replecant.skytest.registry.ModItems;
@@ -48,11 +50,13 @@ public class SkyTestClient {
     static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.GRAPPLING_HOOK.get(), ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntities.LAMPLIGHTER.get(), LamplighterRenderer::new);
+        event.registerEntityRenderer(ModEntities.STRANGER.get(), StrangerRenderer::new);
     }
 
     @SubscribeEvent
     static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(LamplighterModel.LAYER, LamplighterModel::createBodyLayer);
+        event.registerLayerDefinition(StrangerModel.LAYER, StrangerModel::createBodyLayer);
     }
 
     @SubscribeEvent

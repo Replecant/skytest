@@ -3,6 +3,7 @@ package com.replecant.skytest.registry;
 import com.replecant.skytest.SkyTest;
 import com.replecant.skytest.entity.GrapplingHookEntity;
 import com.replecant.skytest.entity.LamplighterEntity;
+import com.replecant.skytest.entity.StrangerEntity;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -34,8 +35,17 @@ public final class ModEntities {
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
 
+    /** Незнакомец в охотничьей шляпе. */
+    public static final DeferredHolder<EntityType<?>, EntityType<StrangerEntity>> STRANGER =
+            ENTITY_TYPES.register("stranger", id -> EntityType.Builder
+                    .<StrangerEntity>of(StrangerEntity::new, MobCategory.MISC)
+                    .sized(0.6F, 1.95F)
+                    .clientTrackingRange(10)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
+
     public static void registerAttributes(EntityAttributeCreationEvent event) {
         event.put(LAMPLIGHTER.get(), LamplighterEntity.createAttributes().build());
+        event.put(STRANGER.get(), StrangerEntity.createAttributes().build());
     }
 
     private ModEntities() {}

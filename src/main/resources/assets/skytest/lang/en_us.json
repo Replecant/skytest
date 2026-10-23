@@ -29,5 +29,15 @@
   "dialogue.skytest.lamplighter.path.5": "It will help you cling to life. Quite literally.",
   "dialogue.skytest.lamplighter.farewell.1": "Go. My light will wait for you here.",
   "dialogue.skytest.lamplighter.farewell.2": "If you lose your way, come back to it.",
-  "dialogue.skytest.hint": "LMB / Space — next  ·  Esc — close"
+  "dialogue.skytest.hint": "LMB / Space — next  ·  Esc — close",
+  "block.skytest.prison_gate": "Prison Gate",
+  "item.skytest.dull_sword": "Dull Sword",
+  "entity.skytest.stranger": "Stranger",
+  "dialogue.skytest.stranger.meeting.1": "Oh! Another lucky one. I didn't think anyone would get out of their cell before me.",
+  "dialogue.skytest.stranger.meeting.2": "Silent? Good. The walls here listen more closely than people do.",
+  "dialogue.skytest.stranger.meeting.3": "You see, this prison isn't just a pit. It's a mechanism. Halls and corridors shift like gears in a clock.",
+  "dialogue.skytest.stranger.meeting.4": "The Regulator moves them. Somewhere above he turns his levers, and passages open... or vanish.",
+  "dialogue.skytest.stranger.meeting.5": "Only he hasn't touched those levers in a very long time. The ways up are blocked, and he won't move a single block any time soon.",
+  "dialogue.skytest.stranger.meeting.6": "So everyone finds their own way. I'll find mine. You find yours.",
+  "dialogue.skytest.stranger.meeting.7": "Catch! It won't cut anyone down anymore, but it's enough to fend them off. Good luck, lucky one!"
 }

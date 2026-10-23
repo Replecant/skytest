@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
+import com.replecant.skytest.Config;
 import com.replecant.skytest.entity.LamplighterEntity;
 import com.replecant.skytest.network.StartProloguePayload;
 import com.replecant.skytest.registry.ModAttachments;
@@ -39,12 +40,32 @@ public final class Prologue {
         return player.getData(ModAttachments.PROLOGUE_SEEN);
     }
 
-    public static void start(ServerPlayer player) {
+    /** Пролог включён в конфиге (на CI для визуальной проверки — всегда). */
+    public static boolean isEnabled() {
+        return Config.PROLOGUE_ENABLED.getAsBoolean() || SmokeTour.ENABLED;
+    }
+
+    /** Первый вход игрока: с прологом или сразу в камеру. */
+    public static void onFirstLogin(ServerPlayer player) {
+        if (isEnabled()) {
+            start(player);
+            return;
+        }
+        prepare(player);
+        player.setData(ModAttachments.PROLOGUE_SEEN, true);
+        showAreaTitle(player);
+    }
+
+    private static void prepare(ServerPlayer player) {
         AWAKENING.remove(player.getUUID());
         teleportToCell(player);
         if (player.gameMode() == GameType.SURVIVAL) {
             player.setGameMode(GameType.ADVENTURE);
         }
+    }
+
+    public static void start(ServerPlayer player) {
+        prepare(player);
         player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 20 * 60, 0, false, false));
         PacketDistributor.sendToPlayer(player, StartProloguePayload.INSTANCE);
     }
@@ -82,11 +103,7 @@ public final class Prologue {
             int ticks = entry.getValue() + 1;
             entry.setValue(ticks);
             if (ticks == TITLE_DELAY) {
-                player.connection.send(new ClientboundSetTitlesAnimationPacket(30, 70, 30));
-                player.connection.send(new ClientboundSetSubtitleTextPacket(
-                        Component.translatable("area.skytest.lower_prison.subtitle").withStyle(ChatFormatting.GRAY)));
-                player.connection.send(new ClientboundSetTitleTextPacket(
-                        Component.translatable("area.skytest.lower_prison").withStyle(ChatFormatting.GOLD)));
+                showAreaTitle(player);
             } else if (ticks >= GREETING_DELAY) {
                 player.level().getEntitiesOfClass(LamplighterEntity.class, player.getBoundingBox().inflate(16.0))
                         .stream().findFirst()
@@ -94,6 +111,14 @@ public final class Prologue {
                 it.remove();
             }
         }
+    }
+
+    private static void showAreaTitle(ServerPlayer player) {
+        player.connection.send(new ClientboundSetTitlesAnimationPacket(30, 70, 30));
+        player.connection.send(new ClientboundSetSubtitleTextPacket(
+                Component.translatable("area.skytest.lower_prison.subtitle").withStyle(ChatFormatting.GRAY)));
+        player.connection.send(new ClientboundSetTitleTextPacket(
+                Component.translatable("area.skytest.lower_prison").withStyle(ChatFormatting.GOLD)));
     }
 
     public static void reset(ServerPlayer player) {

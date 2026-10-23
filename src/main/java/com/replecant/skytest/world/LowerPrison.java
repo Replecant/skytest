@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.replecant.skytest.SkyTest;
 import com.replecant.skytest.entity.LamplighterEntity;
+import com.replecant.skytest.entity.StrangerEntity;
+import com.replecant.skytest.registry.ModBlocks;
 import com.replecant.skytest.registry.ModEntities;
 import com.replecant.skytest.registry.ModItems;
 
@@ -13,13 +15,17 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.DoorHingeSide;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -35,8 +41,9 @@ import net.minecraft.world.phys.Vec3;
  *  |   [S1][S2][S3][S4][S5]           |                (2 блока) |
  *  +--> x                             +--------------------------+
  * </pre>
- * N1 — камера игрока; в S2 открыта решётка и лежат Сапоги циркача;
- * на уступе зала — Крюк-хват; с балкона ход в конечную комнату.
+ * Камеры закрыты тюремными воротами; открыты только N1 (камера игрока)
+ * и S2 (там лежат Сапоги циркача). На уступе зала — Крюк-хват и Незнакомец,
+ * в южной стене зала — спуск вниз, с балкона — ход в конечную комнату.
  */
 public final class LowerPrison {
     public static final int FLOOR = 64;
@@ -46,6 +53,15 @@ public final class LowerPrison {
     public static final float LAMPLIGHTER_YAW = 127.0F;
     /** Конечная комната тестовой локации. */
     public static final AABB END_ROOM = new AABB(30, 74, -12, 39, 85, -5);
+    /** Зал: при входе сюда с игроком заговаривает Незнакомец. */
+    public static final AABB HALL = new AABB(31, 63, 0, 48, 71, 15);
+    public static final Vec3 STRANGER_POS = new Vec3(45.5, FLOOR + 2, 9.5);
+    public static final float STRANGER_YAW = 90.0F;
+    /** Проход в восточной стене, куда убегает Незнакомец. */
+    public static final Vec3 STRANGER_EXIT = new Vec3(51.5, FLOOR + 2, 10.5);
+    /** Низ спуска, откуда поднимается скелет. */
+    public static final Vec3 DESCENT_BOTTOM = new Vec3(38.5, 57, 23.5);
+    private static final AABB WHOLE_AREA = new AABB(-12, 52, -16, 56, 94, 27);
 
     private static final BlockPos MARKER = new BlockPos(-12, 56, -16);
     private static final int[] CELL_X = {0, 6, 12, 18, 24};
@@ -71,7 +87,7 @@ public final class LowerPrison {
 
     private void buildAll() {
         // Скальный массив, в котором вырублено всё остальное.
-        fillRock(-12, 56, -16, 52, 94, 22);
+        fillRock(-12, 52, -16, 56, 94, 27);
         set(MARKER, Blocks.BARRIER.defaultBlockState());
 
         // Камеры и коридор.
@@ -81,14 +97,18 @@ public final class LowerPrison {
         }
         room(-6, FLOOR, 6, 29, FLOOR + 4, 8);
         for (int x : CELL_X) {
-            bars(x, 5, x == 0 ? 2 : Integer.MIN_VALUE);
-            bars(x, 9, x == 6 ? 8 : Integer.MIN_VALUE);
+            // Ворота открыты только у камеры игрока и у камеры с сапогами.
+            bars(x, 5, Direction.NORTH, x == 0);
+            bars(x, 9, Direction.SOUTH, x == 6);
         }
 
         // Зал.
         room(31, FLOOR, 0, 47, FLOOR + 15, 14);
         fill(30, FLOOR, 6, 30, FLOOR + 2, 8, Blocks.AIR.defaultBlockState()); // проём из коридора
         decorateHall();
+
+        buildDescent();
+        buildStrangerExit();
 
         // Ход с балкона и конечная комната.
         fill(33, 74, -5, 35, 76, -1, Blocks.AIR.defaultBlockState());
@@ -108,7 +128,7 @@ public final class LowerPrison {
             set(pos, Block.updateFromNeighbourShapes(state, level, pos));
         }
 
-        spawnLamplighter();
+        spawnNpcs();
     }
 
     // ---------------------------------------------------------------- геометрия
@@ -150,18 +170,27 @@ public final class LowerPrison {
         }
     }
 
-    /** Решётка камеры по линии z; gapX — открытая дверь (или MIN_VALUE). */
-    private void bars(int cellX, int z, int gapX) {
+    /** Решётка камеры по линии z с тюремными воротами посередине. */
+    private void bars(int cellX, int z, Direction facing, boolean open) {
+        int gateX = cellX + 2;
         for (int x = cellX; x <= cellX + 4; x++) {
             for (int y = FLOOR; y <= FLOOR + 2; y++) {
-                BlockPos pos = new BlockPos(x, y, z);
-                if (x == gapX && y <= FLOOR + 1) {
-                    set(pos, Blocks.AIR.defaultBlockState());
-                } else {
-                    connectable(pos, Blocks.IRON_BARS.defaultBlockState());
+                if (x == gateX && y <= FLOOR + 1) {
+                    continue;
                 }
+                connectable(new BlockPos(x, y, z), Blocks.IRON_BARS.defaultBlockState());
             }
         }
+        gate(new BlockPos(gateX, FLOOR, z), facing, open);
+    }
+
+    private void gate(BlockPos pos, Direction facing, boolean open) {
+        BlockState gate = ModBlocks.PRISON_GATE.get().defaultBlockState()
+                .setValue(DoorBlock.FACING, facing)
+                .setValue(DoorBlock.HINGE, DoorHingeSide.LEFT)
+                .setValue(DoorBlock.OPEN, open);
+        set(pos, gate.setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER));
+        set(pos.above(), gate.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER));
     }
 
     private void fill(int x0, int y0, int z0, int x1, int y1, int z1, BlockState state) {
@@ -255,6 +284,35 @@ public final class LowerPrison {
         remains(32, 10);
     }
 
+    /** Спуск вниз в южной стене зала: лестница во тьму, внизу завал. */
+    private void buildDescent() {
+        fill(36, 55, 15, 40, 68, 26, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        for (int i = 0; i <= 6; i++) {
+            int z = 15 + i;
+            int y = 63 - i;
+            fill(37, y + 1, z, 39, y + 4, z, Blocks.AIR.defaultBlockState());
+            fill(37, y, z, 39, y, z, Blocks.DEEPSLATE_BRICK_STAIRS.defaultBlockState()
+                    .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
+        }
+        // Площадка внизу; дальше проход завален.
+        fill(37, 57, 22, 39, 60, 24, Blocks.AIR.defaultBlockState());
+        fill(37, 56, 22, 39, 56, 24, pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.4F));
+        fill(37, 57, 25, 39, 58, 25, Blocks.COBBLED_DEEPSLATE.defaultBlockState());
+        set(new BlockPos(38, 59, 25), Blocks.COBBLED_DEEPSLATE_SLAB.defaultBlockState());
+        set(new BlockPos(37, 57, 24), Blocks.SOUL_LANTERN.defaultBlockState());
+        cobweb(39, 60, 22);
+        cobweb(37, 60, 23);
+    }
+
+    /** Проход в восточной стене зала на уровне уступа. Дальше — обвал: зал «сдвинулся». */
+    private void buildStrangerExit() {
+        fill(48, FLOOR + 2, 9, 53, FLOOR + 4, 11, Blocks.AIR.defaultBlockState());
+        fill(48, FLOOR + 1, 9, 53, FLOOR + 1, 11, Blocks.DEEPSLATE_TILES.defaultBlockState());
+        fill(53, FLOOR + 2, 9, 53, FLOOR + 4, 11, Blocks.COBBLED_DEEPSLATE.defaultBlockState());
+        fill(52, FLOOR + 2, 9, 52, FLOOR + 2, 11, Blocks.COBBLED_DEEPSLATE_SLAB.defaultBlockState());
+        cobweb(51, FLOOR + 4, 9);
+    }
+
     private void remains(int x, int z) {
         BlockPos pos = new BlockPos(x, FLOOR, z);
         set(pos, Blocks.SKELETON_SKULL.defaultBlockState().setValue(BlockStateProperties.ROTATION_16, random.nextInt(16)));
@@ -292,15 +350,19 @@ public final class LowerPrison {
         }
     }
 
-    private void spawnLamplighter() {
-        AABB area = new AABB(-12, 56, -16, 52, 94, 22);
-        level.getEntitiesOfClass(LamplighterEntity.class, area).forEach(LamplighterEntity::discard);
-        LamplighterEntity keeper = ModEntities.LAMPLIGHTER.get().create(level, EntitySpawnReason.STRUCTURE);
-        if (keeper != null) {
-            keeper.snapTo(LAMPLIGHTER_POS.x, LAMPLIGHTER_POS.y, LAMPLIGHTER_POS.z, LAMPLIGHTER_YAW, 0.0F);
-            keeper.setYHeadRot(LAMPLIGHTER_YAW);
-            keeper.setYBodyRot(LAMPLIGHTER_YAW);
-            level.addFreshEntity(keeper);
+    private void spawnNpcs() {
+        level.getEntitiesOfClass(LamplighterEntity.class, WHOLE_AREA).forEach(LamplighterEntity::discard);
+        level.getEntitiesOfClass(StrangerEntity.class, WHOLE_AREA).forEach(StrangerEntity::discard);
+        spawn(ModEntities.LAMPLIGHTER.get().create(level, EntitySpawnReason.STRUCTURE), LAMPLIGHTER_POS, LAMPLIGHTER_YAW);
+        spawn(ModEntities.STRANGER.get().create(level, EntitySpawnReason.STRUCTURE), STRANGER_POS, STRANGER_YAW);
+    }
+
+    private void spawn(Mob mob, Vec3 pos, float yaw) {
+        if (mob != null) {
+            mob.snapTo(pos.x, pos.y, pos.z, yaw, 0.0F);
+            mob.setYHeadRot(yaw);
+            mob.setYBodyRot(yaw);
+            level.addFreshEntity(mob);
         }
     }
 
