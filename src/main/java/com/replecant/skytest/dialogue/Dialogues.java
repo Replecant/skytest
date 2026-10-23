@@ -21,6 +21,19 @@ public final class Dialogues {
     /** Встреча с Незнакомцем в зале. */
     public static final Conversation STRANGER_MEETING = new Conversation("stranger", "meeting", 7);
 
+    /** Регулятор: знакомство (запускает задание «Найти Ларпи») и подсказки, пока Ларпи не найдена. */
+    public static final Conversation REGULATOR_MEETING = new Conversation("regulator", "meeting", 9);
+    public static final Conversation REGULATOR_WAITING = new Conversation("regulator", "waiting", 4);
+
+    /** Регулятор: первая встреча — знакомство и задание, потом — подсказки. */
+    public static void talkToRegulator(ServerPlayer player, Entity regulator) {
+        if (com.replecant.skytest.story.Quests.isStarted(player, com.replecant.skytest.story.Quests.FIND_LARPI)) {
+            open(player, regulator, REGULATOR_WAITING);
+        } else {
+            open(player, regulator, REGULATOR_MEETING);
+        }
+    }
+
     /** Начать следующий по порядку разговор Фонарщика с игроком. */
     public static void talkToLamplighter(ServerPlayer player, Entity speaker) {
         int stage = player.getData(ModAttachments.LAMPLIGHTER_STAGE);

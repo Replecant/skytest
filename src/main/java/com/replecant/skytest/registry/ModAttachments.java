@@ -3,6 +3,8 @@ package com.replecant.skytest.registry;
 import com.mojang.serialization.Codec;
 import com.replecant.skytest.SkyTest;
 
+import net.minecraft.network.codec.ByteBufCodecs;
+
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
@@ -34,6 +36,14 @@ public final class ModAttachments {
     public static final Supplier<AttachmentType<Set<String>>> STORY_FLAGS = ATTACHMENT_TYPES.register("story_flags",
             () -> AttachmentType.<Set<String>>builder(() -> new HashSet<>())
                     .serialize(Codec.STRING.listOf().<Set<String>>xmap(HashSet::new, ArrayList::new).fieldOf("flags"))
+                    .copyOnDeath()
+                    .build());
+
+    /** Активное задание игрока (id или пустая строка). Синхронизируется клиенту для трекера. */
+    public static final Supplier<AttachmentType<String>> ACTIVE_QUEST = ATTACHMENT_TYPES.register("active_quest",
+            () -> AttachmentType.builder(() -> "")
+                    .serialize(Codec.STRING.fieldOf("quest"))
+                    .sync(ByteBufCodecs.STRING_UTF8)
                     .copyOnDeath()
                     .build());
 

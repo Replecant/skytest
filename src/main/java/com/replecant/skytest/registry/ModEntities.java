@@ -5,6 +5,7 @@ import com.replecant.skytest.entity.GrapplingHookEntity;
 import com.replecant.skytest.entity.LamplighterEntity;
 import com.replecant.skytest.entity.PrisonWardenEntity;
 import com.replecant.skytest.entity.RatEntity;
+import com.replecant.skytest.entity.RegulatorEntity;
 import com.replecant.skytest.entity.StrangerEntity;
 
 import net.minecraft.core.registries.Registries;
@@ -63,7 +64,17 @@ public final class ModEntities {
                     .clientTrackingRange(8)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
 
+    /** Регулятор — огромный сидящий хранитель механизма тюрьмы. */
+    public static final DeferredHolder<EntityType<?>, EntityType<RegulatorEntity>> REGULATOR =
+            ENTITY_TYPES.register("regulator", id -> EntityType.Builder
+                    .<RegulatorEntity>of(RegulatorEntity::new, MobCategory.MISC)
+                    .sized(2.6F, 4.4F)
+                    .eyeHeight(3.7F)
+                    .clientTrackingRange(12)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
+
     public static void registerAttributes(EntityAttributeCreationEvent event) {
+        event.put(REGULATOR.get(), RegulatorEntity.createAttributes().build());
         event.put(RAT.get(), RatEntity.createAttributes().build());
         event.put(PRISON_WARDEN.get(), PrisonWardenEntity.createAttributes().build());
         event.put(LAMPLIGHTER.get(), LamplighterEntity.createAttributes().build());

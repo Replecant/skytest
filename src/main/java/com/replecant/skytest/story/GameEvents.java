@@ -38,6 +38,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 public final class GameEvents {
     private static final Set<UUID> REACHED_END = new HashSet<>();
     private static final Set<UUID> REACHED_BRIDGE = new HashSet<>();
+    private static final Set<UUID> REACHED_REGULATOR = new HashSet<>();
 
     @SubscribeEvent
     static void onServerStarted(ServerStartedEvent event) {
@@ -89,6 +90,7 @@ public final class GameEvents {
 
         if (player.tickCount % 5 == 0) {
             HallEvent.checkTrigger(player);
+            HallEvent.checkRegulator(player);
         }
         if (player.tickCount % 10 != 0) {
             return;
@@ -97,7 +99,10 @@ public final class GameEvents {
         if (LowerPrison.BRIDGE.contains(pos) && REACHED_BRIDGE.add(player.getUUID())) {
             showTitle(player, "area.skytest.sky_bridge", 30, 90, 40);
         }
-        if ((LowerPrison.END_ROOM.contains(pos) || LowerPrison.BRIDGE_END.contains(pos)) && REACHED_END.add(player.getUUID())) {
+        if (LowerPrison.REGULATOR_HALL.contains(pos) && REACHED_REGULATOR.add(player.getUUID())) {
+            showTitle(player, "area.skytest.regulator_hall", 25, 80, 35);
+        }
+        if (LowerPrison.END_ROOM.contains(pos) && REACHED_END.add(player.getUUID())) {
             showTitle(player, "area.skytest.test_end", 20, 80, 40);
         }
     }
@@ -159,6 +164,8 @@ public final class GameEvents {
                     player.setData(com.replecant.skytest.registry.ModAttachments.STORY_FLAGS, new java.util.HashSet<>());
                     REACHED_END.remove(player.getUUID());
                     REACHED_BRIDGE.remove(player.getUUID());
+                    REACHED_REGULATOR.remove(player.getUUID());
+                    com.replecant.skytest.story.Quests.reset(player);
                     ctx.getSource().sendSuccess(() -> Component.literal("Story progress reset (use /skytest rebuild to respawn NPCs)"), false);
                     return 1;
                 }))

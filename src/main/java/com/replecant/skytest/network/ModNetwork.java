@@ -29,10 +29,15 @@ public final class ModNetwork {
                 });
         registrar.playToServer(DialogueClosedPayload.TYPE, DialogueClosedPayload.STREAM_CODEC,
                 (payload, context) -> {
-                    if (context.player() instanceof ServerPlayer player
-                            && player.level().getEntity(payload.speakerId()) instanceof StrangerEntity stranger
-                            && stranger.distanceTo(player) < 32.0F) {
+                    if (!(context.player() instanceof ServerPlayer player)) {
+                        return;
+                    }
+                    var speaker = player.level().getEntity(payload.speakerId());
+                    if (speaker instanceof StrangerEntity stranger && stranger.distanceTo(player) < 32.0F) {
                         stranger.onDialogueClosed(player);
+                    } else if (speaker instanceof com.replecant.skytest.entity.RegulatorEntity regulator
+                            && regulator.distanceTo(player) < 40.0F) {
+                        regulator.onDialogueClosed(player);
                     }
                 });
         registrar.playToServer(DashPayload.TYPE, DashPayload.STREAM_CODEC, (payload, context) -> {

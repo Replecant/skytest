@@ -37,6 +37,8 @@ public final class SmokeTour {
             new Stop(230, new Vec3(38.5, 57, 84.0), 180.0F, -28.0F),   // тюрьма-скала над мостом
             new Stop(270, new Vec3(39.6, 57, 52.0), -90.0F, 38.0F),    // через перила вниз — в бездну
             new Stop(300, new Vec3(38.5, 57, 42.5), 0.0F, -6.0F),      // лицом к лицу со Стражем
+            new Stop(480, new Vec3(38.5, 57, 101.0), 0.0F, -10.0F),    // зал Регулятора от входа
+            new Stop(520, new Vec3(38.5, 57, 113.0), 0.0F, -12.0F),    // подойти к Регулятору
     };
 
     private static final Map<UUID, Integer> TOURS = new HashMap<>();

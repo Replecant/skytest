@@ -43,6 +43,21 @@ public final class HallEvent {
                 .ifPresent(stranger -> meet(player, stranger));
     }
 
+    public static final String MET_REGULATOR = "met_regulator";
+
+    /** Регулятор сам заговаривает, когда игрок впервые подходит к его помосту. */
+    static void checkRegulator(ServerPlayer player) {
+        if (hasFlag(player, MET_REGULATOR) || !LowerPrison.REGULATOR_HALL.contains(player.position())) {
+            return;
+        }
+        player.level().getEntitiesOfClass(com.replecant.skytest.entity.RegulatorEntity.class,
+                        player.getBoundingBox().inflate(14.0)).stream().findFirst()
+                .ifPresent(regulator -> {
+                    setFlag(player, MET_REGULATOR);
+                    regulator.talkTo(player);
+                });
+    }
+
     public static void meet(ServerPlayer player, StrangerEntity stranger) {
         setFlag(player, MET_STRANGER);
         stranger.talkTo(player);

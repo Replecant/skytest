@@ -41,11 +41,16 @@ public final class ClientSmoke {
         }
     }
 
+    private static int regulatorOpened = -1;
+    private static int regulatorClosed = -1;
+
     static void onDialogueOpened() {
         if (ENABLED) {
             dialogues++;
             if (dialogues == 2) {
                 strangerOpened = clientTicks;
+            } else if (dialogues == 3) {
+                regulatorOpened = clientTicks;
             }
         }
     }
@@ -53,6 +58,34 @@ public final class ClientSmoke {
     static void onDialogueClosed() {
         if (ENABLED && dialogues == 2 && strangerClosed < 0) {
             strangerClosed = clientTicks;
+        } else if (ENABLED && dialogues == 3 && regulatorClosed < 0) {
+            regulatorClosed = clientTicks;
+        }
+    }
+
+    private static void regulatorShots(Minecraft mc) {
+        if (regulatorOpened >= 0 && regulatorClosed < 0) {
+            int t = clientTicks - regulatorOpened;
+            if (t == 30) {
+                shot("21_regulator_dialogue");
+            } else if (t == 90 && mc.player != null) {
+                mc.player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 400, 0, false, false));
+            } else if (t == 110) {
+                shot("21b_regulator_nightvision");
+            } else if (t == 120 && mc.player != null) {
+                mc.player.removeEffect(MobEffects.NIGHT_VISION);
+            } else if (t == 260) {
+                shot("21c_regulator_dialogue_late");
+            }
+        }
+        if (regulatorClosed >= 0) {
+            int t = clientTicks - regulatorClosed;
+            if (t == 25) {
+                shot("22_quest_started");
+            } else if (t == 70) {
+                SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE DONE");
+                mc.stop();
+            }
         }
     }
 
@@ -99,6 +132,7 @@ public final class ClientSmoke {
                 shot("09c_stranger_dialogue_late");
             }
         }
+        regulatorShots(mc);
         if (strangerClosed >= 0) {
             int t = clientTicks - strangerClosed;
             switch (t) {
@@ -113,7 +147,8 @@ public final class ClientSmoke {
                 case 394 -> shot("18_warden_c");
                 case 410 -> shot("18_warden_d");
                 case 426 -> shot("18_warden_e");
-                case 620 -> {
+                case 555 -> shot("20_regulator_hall");
+                case 1800 -> {
                     SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE DONE");
                     mc.stop();
                 }

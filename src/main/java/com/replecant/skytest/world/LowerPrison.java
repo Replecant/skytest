@@ -74,14 +74,16 @@ public final class LowerPrison {
     public static final AABB BRIDGE = new AABB(32, 55, 34, 45, 62, 92);
     /** Страж патрулирует мост между тоннелем и провалом. */
     public static final Vec3 WARDEN_POS = new Vec3(38.5, 57, 47.5);
-    /** Разрушенная площадка в конце моста. */
-    public static final AABB BRIDGE_END = new AABB(32, 55, 78, 45, 62, 92);
+    /** Зал Регулятора во второй скале, куда ведёт мост. */
+    public static final AABB REGULATOR_HALL = new AABB(21, 55, 97, 56, 83, 134);
+    public static final Vec3 REGULATOR_POS = new Vec3(38.5, 58, 126.5);
     /** Ниже этой высоты игрок считается упавшим в пропасть. */
     public static final double ABYSS_Y = 10.0;
     private static final int BRIDGE_Y = 56;
-    private static final AABB WHOLE_AREA = new AABB(-20, -10, -24, 64, 100, 96);
+    private static final AABB WHOLE_AREA = new AABB(-20, -10, -24, 70, 100, 148);
     /** Всё, что внутри этой коробки, — биом тюрьмы (тёмный туман); снаружи — небо над бездной. */
     private static final AABB PRISON_BIOME = new AABB(-16, 48, -20, 60, 99, 26);
+    private static final AABB REGULATOR_BIOME = new AABB(10, 40, 96, 66, 95, 146);
 
     private static final BlockPos MARKER = new BlockPos(-12, 56, -16);
     private static final int[] CELL_X = {0, 6, 12, 18, 24};
@@ -107,7 +109,7 @@ public final class LowerPrison {
 
     private void buildAll() {
         // Парящая скала, в которой вырублено всё остальное.
-        buildIsland();
+        buildIsland(-12, 56, -16, 27, 52, 94, 0);
         set(MARKER, Blocks.BARRIER.defaultBlockState());
 
         // Камеры и коридор.
@@ -130,6 +132,7 @@ public final class LowerPrison {
         buildDescent();
         buildStrangerExit();
         buildBridge();
+        buildRegulatorHall();
 
         // Ход с балкона и конечная комната.
         fill(33, 74, -5, 35, 76, -1, Blocks.AIR.defaultBlockState());
@@ -316,24 +319,29 @@ public final class LowerPrison {
      * Скальная глыба вокруг тюрьмы: неровный верх, скруглённые края
      * и свисающий книзу «корень», как у парящего острова.
      */
-    private void buildIsland() {
+    private void buildIsland(int minX, int maxX, int minZ, int maxZ, int coreBottom, int coreTop, int seed) {
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-        for (int x = -20; x <= 64; x++) {
-            for (int z = -24; z <= 35; z++) {
-                double ox = Math.max(Math.max(-12 - x, 0), x - 56);
-                double oz = Math.max(Math.max(-16 - z, 0), z - 27);
+        double cx = (minX + maxX) / 2.0;
+        double cz = (minZ + maxZ) / 2.0;
+        double rx = (maxX - minX) / 2.0 + 8.0;
+        double rz = (maxZ - minZ) / 2.0 + 8.5;
+        for (int x = minX - 8; x <= maxX + 8; x++) {
+            for (int z = minZ - 8; z <= maxZ + 8; z++) {
+                double ox = Math.max(Math.max(minX - x, 0), x - maxX);
+                double oz = Math.max(Math.max(minZ - z, 0), z - maxZ);
                 double outside = Math.sqrt(ox * ox + oz * oz);
-                double margin = 2.0 + 4.0 * noise(x, z, 7.0, 1);
+                double margin = 2.0 + 4.0 * noise(x, z, 7.0, seed + 1);
                 if (outside > margin) {
                     continue;
                 }
-                double nx = (x - 22.0) / 42.0;
-                double nz = (z - 5.5) / 30.0;
+                double nx = (x - cx) / rx;
+                double nz = (z - cz) / rz;
                 double hang = Math.max(0.0, 1.0 - Math.sqrt(nx * nx + nz * nz));
-                int top = 94 + (int) (4.0 * noise(x, z, 6.0, 2)) - (int) (outside * 1.2);
-                int bottom = 52 - (int) (Math.pow(hang, 1.4) * 42.0 + 6.0 * noise(x, z, 4.0, 3)) + (int) (outside * 1.5);
+                int top = coreTop + (int) (4.0 * noise(x, z, 6.0, seed + 2)) - (int) (outside * 1.2);
+                int bottom = coreBottom - (int) (Math.pow(hang, 1.4) * 42.0 + 6.0 * noise(x, z, 4.0, seed + 3))
+                        + (int) (outside * 1.5);
                 // Редкие сосульки-сталактиты снизу.
-                if (noise(x, z, 2.0, 4) > 0.82) {
+                if (noise(x, z, 2.0, seed + 4) > 0.82) {
                     bottom -= 4 + random.nextInt(8);
                 }
                 for (int y = bottom; y <= top; y++) {
@@ -349,16 +357,13 @@ public final class LowerPrison {
         // Устье тоннеля — арка из кирпича.
         fill(36, y + 1, 34, 40, y + 4, 34, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
         fill(37, y + 1, 34, 39, y + 3, 34, Blocks.AIR.defaultBlockState());
-        for (int z = 25; z <= 92; z++) {
+        for (int z = 25; z <= 97; z++) {
             boolean gap = z >= 60 && z <= 62;
-            boolean ruins = z >= 78;
+            boolean ruins = z >= 78 && z <= 86;
             if (gap) {
                 continue;
             }
             for (int x = 37; x <= 39; x++) {
-                if (z > 86 && (x != 38 || z > 89)) {
-                    continue; // обрывающийся край
-                }
                 set(new BlockPos(x, y, z), pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.25F));
             }
             if (z < 35 || ruins) {
@@ -384,10 +389,10 @@ public final class LowerPrison {
                 }
             }
         }
-        // Руины площадки в конце: обломки стен и арки, дальше — обрыв.
+        // Полуразрушенная площадка на полпути ко второй скале: обломки стен и арки.
         for (int x = 33; x <= 43; x++) {
             for (int z = 78; z <= 86; z++) {
-                boolean edge = x == 33 || x == 43 || z == 86;
+                boolean edge = x == 33 || x == 43;
                 if (random.nextFloat() < (edge ? 0.55F : 0.9F)) {
                     set(new BlockPos(x, y, z), pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.4F));
                 }
@@ -401,6 +406,126 @@ public final class LowerPrison {
         fill(41, y + 1, 82, 41, y + 3, 82, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
         fill(35, y + 6, 82, 38, y + 6, 82, Blocks.DEEPSLATE_BRICK_SLAB.defaultBlockState());
         set(new BlockPos(38, y + 1, 84), Blocks.SOUL_LANTERN.defaultBlockState());
+    }
+
+    // ---------------------------------------------------------------- зал Регулятора
+
+    /**
+     * Вторая скала и зал Регулятора: множество свисающих цепей, ряды рычагов
+     * на стенах, медные механизмы, шестерни, помост, на котором сидит Регулятор.
+     */
+    private void buildRegulatorHall() {
+        int floor = 57;
+        buildIsland(14, 62, 92, 140, 50, 88, 10);
+        room(22, floor, 98, 54, 81, 132);
+
+        // Вход: арка и проход сквозь скалу к мосту.
+        fill(35, floor, 97, 41, floor + 5, 97, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        fill(37, floor, 86, 39, floor + 3, 97, Blocks.AIR.defaultBlockState());
+        fill(37, floor - 1, 86, 39, floor - 1, 97, Blocks.DEEPSLATE_TILES.defaultBlockState());
+        set(new BlockPos(38, floor + 4, 97), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
+
+        // Пол: полированный глубинный сланец, ковровая дорожка плиткой к помосту.
+        fill(22, floor - 1, 98, 54, floor - 1, 132, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+        fill(36, floor - 1, 98, 40, floor - 1, 119, Blocks.DEEPSLATE_TILES.defaultBlockState());
+        fill(35, floor - 1, 98, 35, floor - 1, 119, Blocks.CHISELED_DEEPSLATE.defaultBlockState());
+        fill(41, floor - 1, 98, 41, floor - 1, 119, Blocks.CHISELED_DEEPSLATE.defaultBlockState());
+
+        // Колонны с медными лампами.
+        for (int z = 104; z <= 128; z += 8) {
+            for (int x : new int[] {26, 50}) {
+                fill(x, floor, z, x, 81, z, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+                int inner = x == 26 ? x + 1 : x - 1;
+                set(new BlockPos(inner, floor + 6, z), Blocks.WAXED_COPPER_BULB.defaultBlockState()
+                        .setValue(BlockStateProperties.LIT, true));
+                set(new BlockPos(x, floor + 12, z), Blocks.WAXED_OXIDIZED_CHISELED_COPPER.defaultBlockState());
+            }
+        }
+
+        // Ряды рычагов и медные решётки на боковых стенах.
+        for (int z = 100; z <= 130; z++) {
+            for (int side = 0; side < 2; side++) {
+                int x = side == 0 ? 22 : 54;
+                Direction facing = side == 0 ? Direction.EAST : Direction.WEST;
+                int wall = side == 0 ? 21 : 55;
+                if (z % 8 == 0) {
+                    continue; // у колонн
+                }
+                for (int y = floor + 8; y <= floor + 11; y++) {
+                    set(new BlockPos(wall, y, z), Blocks.WAXED_OXIDIZED_COPPER_GRATE.defaultBlockState());
+                }
+                if (z % 2 == 0) {
+                    for (int y : new int[] {floor + 2, floor + 4}) {
+                        set(new BlockPos(x, y, z), Blocks.LEVER.defaultBlockState()
+                                .setValue(BlockStateProperties.ATTACH_FACE, net.minecraft.world.level.block.state.properties.AttachFace.WALL)
+                                .setValue(BlockStateProperties.HORIZONTAL_FACING, facing)
+                                .setValue(BlockStateProperties.POWERED, random.nextFloat() < 0.4F));
+                    }
+                }
+            }
+        }
+
+        // Огромная шестерня на стене за помостом.
+        gear(38, 70, 132, 7);
+        gear(28, 66, 132, 3);
+        gear(48, 75, 132, 4);
+
+        // Помост с лестницей и жаровнями.
+        fill(30, floor, 120, 46, floor, 131, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+        fill(34, floor, 119, 42, floor, 119, Blocks.DEEPSLATE_BRICK_STAIRS.defaultBlockState()
+                .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));
+        for (int[] c : new int[][] {{31, 121}, {45, 121}}) {
+            set(new BlockPos(c[0], floor, c[1]), Blocks.SOUL_SOIL.defaultBlockState());
+            set(new BlockPos(c[0], floor + 1, c[1]), Blocks.SOUL_FIRE.defaultBlockState());
+        }
+        // Главный рычаг механизма рядом с Регулятором.
+        fill(44, floor + 1, 129, 44, floor + 4, 129, Blocks.POLISHED_DEEPSLATE_WALL.defaultBlockState());
+        for (int y = floor + 1; y <= floor + 4; y++) {
+            connectables.add(new BlockPos(44, y, 129));
+        }
+        set(new BlockPos(44, floor + 5, 129), Blocks.IRON_BLOCK.defaultBlockState());
+        set(new BlockPos(43, floor + 5, 129), Blocks.IRON_BLOCK.defaultBlockState());
+
+        // Множество свисающих цепей; часть с фонарями.
+        for (int i = 0; i < 70; i++) {
+            int x = 23 + random.nextInt(31);
+            int z = 99 + random.nextInt(33);
+            if (x == 26 || x == 50 || (z >= 118 && x >= 29 && x <= 47)) {
+                continue;
+            }
+            boolean walkway = x >= 34 && x <= 42;
+            int maxLength = walkway ? 81 - (floor + 4) : 20;
+            int length = 3 + random.nextInt(Math.max(1, maxLength - 3));
+            if (!level.getBlockState(new BlockPos(x, 81, z)).isAir()) {
+                continue;
+            }
+            chain(x, 81, z, length);
+            if (random.nextFloat() < 0.25F && 81 - length > floor + 2) {
+                set(new BlockPos(x, 81 - length, z), Blocks.SOUL_LANTERN.defaultBlockState()
+                        .setValue(BlockStateProperties.HANGING, true));
+            }
+        }
+        cobweb(23, 81, 99);
+        cobweb(53, 81, 131);
+    }
+
+    /** Шестерня-барельеф на стене (плоскость z). */
+    private void gear(int cx, int cy, int z, int radius) {
+        for (int dx = -radius - 1; dx <= radius + 1; dx++) {
+            for (int dy = -radius - 1; dy <= radius + 1; dy++) {
+                double r = Math.sqrt(dx * dx + dy * dy);
+                double angle = Math.atan2(dy, dx);
+                boolean tooth = r > radius - 0.5 && r <= radius + 1.2 && Math.cos(angle * Math.max(6, radius + 3)) > 0.3;
+                boolean ring = r > radius - 1.5 && r <= radius - 0.5;
+                boolean hub = r <= Math.max(1.0, radius / 3.0);
+                boolean spoke = r < radius - 1 && (Math.abs(dx) < 0.6 || Math.abs(dy) < 0.6);
+                if (tooth || ring || hub || spoke) {
+                    BlockState state = hub ? Blocks.WAXED_OXIDIZED_CUT_COPPER.defaultBlockState()
+                            : Blocks.WAXED_WEATHERED_CUT_COPPER.defaultBlockState();
+                    set(new BlockPos(cx + dx, cy + dy, z), state);
+                }
+            }
+        }
     }
 
     /** Окрашивает биомы: внутри скалы — тюрьма, снаружи — небо над бездной. */
@@ -417,7 +542,7 @@ public final class LowerPrison {
                 ChunkAccess chunk = level.getChunk(cx, cz);
                 chunk.fillBiomesFromNoise((qx, qy, qz, sampler) -> {
                     Vec3 center = new Vec3(QuartPos.toBlock(qx) + 2, QuartPos.toBlock(qy) + 2, QuartPos.toBlock(qz) + 2);
-                    return PRISON_BIOME.contains(center) ? prison : abyss;
+                    return PRISON_BIOME.contains(center) || REGULATOR_BIOME.contains(center) ? prison : abyss;
                 }, level.getChunkSource().randomState().sampler());
                 chunk.markUnsaved();
             }
@@ -506,9 +631,12 @@ public final class LowerPrison {
         level.getEntitiesOfClass(StrangerEntity.class, WHOLE_AREA).forEach(StrangerEntity::discard);
         level.getEntitiesOfClass(PrisonWardenEntity.class, WHOLE_AREA).forEach(PrisonWardenEntity::discard);
         level.getEntitiesOfClass(RatEntity.class, WHOLE_AREA).forEach(RatEntity::discard);
+        level.getEntitiesOfClass(com.replecant.skytest.entity.RegulatorEntity.class, WHOLE_AREA)
+                .forEach(com.replecant.skytest.entity.RegulatorEntity::discard);
         spawn(ModEntities.LAMPLIGHTER.get().create(level, EntitySpawnReason.STRUCTURE), LAMPLIGHTER_POS, LAMPLIGHTER_YAW);
         spawn(ModEntities.STRANGER.get().create(level, EntitySpawnReason.STRUCTURE), STRANGER_POS, STRANGER_YAW);
         spawn(ModEntities.PRISON_WARDEN.get().create(level, EntitySpawnReason.STRUCTURE), WARDEN_POS, 180.0F);
+        spawn(ModEntities.REGULATOR.get().create(level, EntitySpawnReason.STRUCTURE), REGULATOR_POS, 180.0F);
         RatSpawner.populate(level);
     }
 

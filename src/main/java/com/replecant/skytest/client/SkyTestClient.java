@@ -65,6 +65,7 @@ public class SkyTestClient {
         event.registerEntityRenderer(ModEntities.STRANGER.get(), StrangerRenderer::new);
         event.registerEntityRenderer(ModEntities.PRISON_WARDEN.get(), PrisonWardenRenderer::new);
         event.registerEntityRenderer(ModEntities.RAT.get(), RatRenderer::new);
+        event.registerEntityRenderer(ModEntities.REGULATOR.get(), com.replecant.skytest.client.renderer.RegulatorRenderer::new);
     }
 
     @SubscribeEvent
@@ -73,6 +74,8 @@ public class SkyTestClient {
         event.registerLayerDefinition(StrangerModel.LAYER, StrangerModel::createBodyLayer);
         event.registerLayerDefinition(PrisonWardenModel.LAYER, PrisonWardenModel::createBodyLayer);
         event.registerLayerDefinition(RatModel.LAYER, RatModel::createBodyLayer);
+        event.registerLayerDefinition(com.replecant.skytest.client.model.RegulatorModel.LAYER,
+                com.replecant.skytest.client.model.RegulatorModel::createBodyLayer);
     }
 
     @SubscribeEvent
