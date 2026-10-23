@@ -273,7 +273,14 @@ public final class ClientSmoke {
             }
             case 765 -> shot("38_bridge_back_a");
             case 805 -> shot("38b_bridge_back_b");
-            case 890 -> server.execute(() -> SkyTest.LOGGER.info("SKYTEST BRIDGE main={} upper={}",
+            // Тайник Копателя: щель в решётке и лаз до края скалы.
+            case 900 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(16.5, 55, 11.6), -20.0F, 12.0F);
+            case 912 -> shot("39a_digger_gap");
+            case 916 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(14.5, 47, 29.5), 0.0F, 5.0F);
+            case 930 -> shot("39b_digger_tunnel");
+            case 934 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(14.5, 47, 31.5), 0.0F, 25.0F);
+            case 948 -> shot("39c_digger_stash");
+            case 960 -> server.execute(() -> SkyTest.LOGGER.info("SKYTEST BRIDGE main={} upper={}",
                     com.replecant.skytest.world.LowerPrison.mainSpanBuilt(server.overworld()),
                     com.replecant.skytest.world.LowerPrison.upperBridgeBuilt(server.overworld())));
             default -> { }

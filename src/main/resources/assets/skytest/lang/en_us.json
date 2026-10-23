@@ -114,5 +114,10 @@
   "dialogue.skytest.regulator.to_lower.3": "No matter. I'll turn it. And if you want to go up again, come back and I'll turn it again.",
   "dialogue.skytest.regulator.to_upper.1": "Up again? Larpi says you looked good up there.",
   "dialogue.skytest.regulator.to_upper.2": "I'll take away the span to the cells: the bridge holds only one road at a time.",
-  "dialogue.skytest.regulator.to_upper.3": "Hold on. Turning it now."
+  "dialogue.skytest.regulator.to_upper.3": "Hold on. Turning it now.",
+  "dialogue.skytest.rat_catcher.idle.4": "The far cell by the wall held the Digger. Scratched and scratched all night... then one night he stopped. They say he got out.",
+  "dialogue.skytest.rat_catcher.waiting.4": "And another thing. The far cell by the wall held the Digger. Scratched and scratched all night... then one night he stopped. They say he got out.",
+  "dialogue.skytest.rat_catcher.after.3": "The far cell by the wall held the Digger. Scratched and scratched all night... then one night he stopped. They say he got out.",
+  "secret.skytest.found": "Secret found: %s",
+  "secret.skytest.diggers_stash": "The Digger's Burrow"
 }

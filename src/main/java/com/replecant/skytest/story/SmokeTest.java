@@ -96,6 +96,24 @@ final class SmokeTest {
         var nest = level.getEntitiesOfClass(com.replecant.skytest.entity.RatEntity.class, LowerPrison.RAT_ROOM.inflate(2.0));
         long larpis = nest.stream().filter(com.replecant.skytest.entity.RatEntity::isLarpi).count();
         check(failures, larpis == 1 && nest.size() >= 10, "rat room: " + nest.size() + " rats, larpi " + larpis);
+        check(failures, level.getBlockState(new BlockPos(18, LowerPrison.LOWER_FLOOR, 14)).isAir()
+                && level.getBlockState(new BlockPos(16, LowerPrison.LOWER_FLOOR - 1, 17)).is(Blocks.SPRUCE_TRAPDOOR),
+                "digger's cell: bent bars and a trapdoor");
+        boolean stash = false;
+        for (BlockPos pos : BlockPos.betweenClosed((int) LowerPrison.DIGGERS_STASH.minX, (int) LowerPrison.DIGGERS_STASH.minY,
+                (int) LowerPrison.DIGGERS_STASH.minZ, (int) LowerPrison.DIGGERS_STASH.maxX, (int) LowerPrison.DIGGERS_STASH.maxY,
+                (int) LowerPrison.DIGGERS_STASH.maxZ)) {
+            if (level.getBlockEntity(pos) instanceof net.minecraft.world.level.block.entity.ChestBlockEntity chest) {
+                int potions = 0;
+                boolean bread = false;
+                for (int i = 0; i < chest.getContainerSize(); i++) {
+                    potions += chest.getItem(i).is(net.minecraft.world.item.Items.POTION) ? 1 : 0;
+                    bread |= chest.getItem(i).is(net.minecraft.world.item.Items.BREAD);
+                }
+                stash |= potions == 2 && bread;
+            }
+        }
+        check(failures, stash, "digger's stash: 2 potions and bread");
         int strangers = level.getEntitiesOfClass(StrangerEntity.class, area).size();
         check(failures, strangers == 1, "exactly one stranger (found " + strangers + ")");
 

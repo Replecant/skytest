@@ -90,6 +90,9 @@ public final class LowerPrison {
     public static final Vec3 RUINS_POINT = new Vec3(38.5, BRIDGE_Y + 1, 72.5);
     /** Вход в зал Регулятора — здесь возрождается игрок, если камеры отрезаны. */
     public static final Vec3 REGULATOR_ENTRANCE = new Vec3(38.5, 57, 101.5);
+    /** Тайник Копателя: высота лаза и область, где «тайник найден». */
+    public static final int DIG_Y = 47;
+    public static final AABB DIGGERS_STASH = new AABB(12, DIG_Y - 1, 29, 17, DIG_Y + 3, 42);
     public static final AABB RAT_ROOM = new AABB(20, 54, 4, 32, 60, 20);
     public static final Vec3 RAT_CATCHER_POS = new Vec3(28.5, LOWER_FLOOR, 15.5);
     private static final int NEST_RATS = 11;
@@ -382,6 +385,85 @@ public final class LowerPrison {
         set(new BlockPos(3, y, 16), Blocks.SKELETON_SKULL.defaultBlockState().setValue(BlockStateProperties.ROTATION_16, 12));
 
         buildRatRoom();
+        buildDiggersTunnel();
+    }
+
+    /**
+     * Тайник «Подкоп Копателя». Крайняя южная камера заперта, но в углу решётки
+     * не хватает двух прутьев. Внутри — щебень и люк в полу; под ним шахта
+     * с лестницей и извилистый лаз до самого края скалы, где в стене дыра
+     * в небо. Там — давние кости и сундучок: два зелья лечения и хлеб.
+     */
+    private void buildDiggersTunnel() {
+        int y = LOWER_FLOOR;
+        // Отогнутые прутья в углу у стены — можно пролезть.
+        fill(18, y, 14, 18, y + 1, 14, Blocks.AIR.defaultBlockState());
+        // Выкопанный щебень и лежанка.
+        set(new BlockPos(14, y, 15), Blocks.COBBLED_DEEPSLATE.defaultBlockState());
+        set(new BlockPos(14, y, 16), Blocks.COBBLED_DEEPSLATE_SLAB.defaultBlockState());
+        set(new BlockPos(15, y, 15), Blocks.COBBLED_DEEPSLATE_SLAB.defaultBlockState());
+        set(new BlockPos(14, y + 1, 15), Blocks.COBBLED_DEEPSLATE_SLAB.defaultBlockState());
+        fill(17, y, 17, 18, y, 18, Blocks.BROWN_CARPET.defaultBlockState());
+        // Люк вровень с полом, под ним шахта с лестницей.
+        int shaftX = 16;
+        int shaftZ = 17;
+        set(new BlockPos(shaftX, y - 1, shaftZ), Blocks.SPRUCE_TRAPDOOR.defaultBlockState()
+                .setValue(BlockStateProperties.HALF, net.minecraft.world.level.block.state.properties.Half.TOP)
+                .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
+        int bottom = DIG_Y;
+        // Лестница держится за северную стенку шахты; внизу — пусто, спрыгнуть два блока.
+        fill(shaftX, bottom, shaftZ, shaftX, bottom + 1, shaftZ, Blocks.AIR.defaultBlockState());
+        for (int yy = bottom + 2; yy <= y - 2; yy++) {
+            set(new BlockPos(shaftX, yy, shaftZ), Blocks.LADDER.defaultBlockState()
+                    .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));
+        }
+        // Лаз на юг, к краю скалы: петляет, как копал человек.
+        int z = shaftZ + 1;
+        int prevX = shaftX;
+        int face = -1;
+        while (z < 60) {
+            int x = z <= 22 ? 16 : z <= 27 ? 15 : 14;
+            fill(Math.min(x, prevX), bottom, z, Math.max(x, prevX), bottom + 1, z, Blocks.AIR.defaultBlockState());
+            prevX = x;
+            BlockPos ahead = new BlockPos(x, bottom, z + 4);
+            if (level.getBlockState(ahead).isAir() && level.getBlockState(ahead.above()).isAir()) {
+                face = z + 4;
+                break;
+            }
+            if (z % 5 == 0) {
+                // Подпорки из досок нар.
+                set(new BlockPos(x, bottom + 2, z), Blocks.SPRUCE_SLAB.defaultBlockState()
+                        .setValue(BlockStateProperties.SLAB_TYPE, net.minecraft.world.level.block.state.properties.SlabType.TOP));
+            }
+            if (z % 7 == 3) {
+                set(new BlockPos(x, bottom, z), Blocks.GLOW_LICHEN.defaultBlockState().setValue(BlockStateProperties.DOWN, true));
+            }
+            z++;
+        }
+        if (face < 0) {
+            SkyTest.LOGGER.warn("Digger's tunnel found no cliff face");
+            return;
+        }
+        // Камерка у самого края и дыра в небо.
+        int cx = 14;
+        fill(cx - 1, bottom, face - 4, cx + 1, bottom + 2, face - 2, Blocks.AIR.defaultBlockState());
+        fill(cx, bottom, face - 1, cx, bottom + 1, face - 1, Blocks.AIR.defaultBlockState());
+        cobweb(cx + 1, bottom + 2, face - 4);
+        // Кости Копателя: лежит головой к дыре.
+        set(new BlockPos(cx, bottom, face - 2), Blocks.SKELETON_SKULL.defaultBlockState().setValue(BlockStateProperties.ROTATION_16, 8));
+        set(new BlockPos(cx, bottom, face - 3), Blocks.BONE_BLOCK.defaultBlockState().setValue(BlockStateProperties.AXIS, Direction.Axis.Z));
+        set(new BlockPos(cx - 1, bottom, face - 3), Blocks.BONE_BLOCK.defaultBlockState().setValue(BlockStateProperties.AXIS, Direction.Axis.X));
+        set(new BlockPos(cx - 1, bottom, face - 4), Blocks.CANDLE.defaultBlockState());
+        BlockPos chestPos = new BlockPos(cx + 1, bottom, face - 4);
+        set(chestPos, Blocks.CHEST.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST));
+        if (level.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
+            chest.setItem(11, net.minecraft.world.item.alchemy.PotionContents.createItemStack(
+                    net.minecraft.world.item.Items.POTION, net.minecraft.world.item.alchemy.Potions.HEALING));
+            chest.setItem(13, new ItemStack(net.minecraft.world.item.Items.BREAD));
+            chest.setItem(15, net.minecraft.world.item.alchemy.PotionContents.createItemStack(
+                    net.minecraft.world.item.Items.POTION, net.minecraft.world.item.alchemy.Potions.HEALING));
+        }
+        SkyTest.LOGGER.info("Digger's tunnel reaches the cliff at z={}", face);
     }
 
     /** Решётка нижней камеры по линии z с воротами посередине. */

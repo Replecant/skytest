@@ -33,11 +33,11 @@ public final class Dialogues {
     public static final Conversation REGULATOR_TO_LOWER = new Conversation("regulator", "to_lower", 3);
     public static final Conversation REGULATOR_TO_UPPER = new Conversation("regulator", "to_upper", 3);
 
-    public static final Conversation RAT_CATCHER_IDLE = new Conversation("rat_catcher", "idle", 3);
+    public static final Conversation RAT_CATCHER_IDLE = new Conversation("rat_catcher", "idle", 4);
     public static final Conversation RAT_CATCHER_MEETING = new Conversation("rat_catcher", "meeting", 8);
-    public static final Conversation RAT_CATCHER_WAITING = new Conversation("rat_catcher", "waiting", 3);
+    public static final Conversation RAT_CATCHER_WAITING = new Conversation("rat_catcher", "waiting", 4);
     public static final Conversation RAT_CATCHER_THANKS = new Conversation("rat_catcher", "thanks", 3);
-    public static final Conversation RAT_CATCHER_AFTER = new Conversation("rat_catcher", "after", 2);
+    public static final Conversation RAT_CATCHER_AFTER = new Conversation("rat_catcher", "after", 3);
 
     public static void talkToRegulator(ServerPlayer player, Entity regulator) {
         if (Quests.isDone(player, Quests.FIND_LARPI)) {
