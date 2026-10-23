@@ -58,7 +58,8 @@ public class RatEntity extends PathfinderMob {
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 4.0)
-                .add(Attributes.MOVEMENT_SPEED, 0.28);
+                .add(Attributes.MOVEMENT_SPEED, 0.28)
+                .add(Attributes.TEMPT_RANGE, 10.0);
     }
 
     @Override
