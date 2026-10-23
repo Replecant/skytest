@@ -148,12 +148,17 @@ public final class ClientSmoke {
     private static int hitTicks;
     private static int hits;
     private static boolean dodgeTried;
+    private static float dodgeHealth;
+    private static int dodgeTick = -1;
 
     /** Бьём поднимающегося скелета мечом и логируем отброс. */
     private static void fightTest(Minecraft mc) {
         var player = mc.player;
         if (player == null || mc.level == null || mc.screen != null) {
             return;
+        }
+        if (dodgeTick >= 0 && clientTicks == dodgeTick + 20) {
+            SkyTest.LOGGER.info("SKYTEST DODGE result hp {} -> {}", dodgeHealth, player.getHealth());
         }
         if (lastHit != null && ++hitTicks <= 2) {
             var v = lastHit.getDeltaMovement();
@@ -170,12 +175,16 @@ public final class ClientSmoke {
         var d = target.getEyePosition().subtract(player.getEyePosition());
         player.setYRot((float) (Math.atan2(d.z, d.x) * 180.0 / Math.PI) - 90.0F);
         player.setXRot((float) -(Math.atan2(d.y, Math.sqrt(d.x * d.x + d.z * d.z)) * 180.0 / Math.PI));
-        // Уклониться рывком назад, когда Страж заносит меч.
+        // Во время замаха Стража не бьём, а уклоняемся рывком назад перед самым ударом.
         if (target instanceof com.replecant.skytest.entity.PrisonWardenEntity warden
-                && warden.state() == com.replecant.skytest.entity.PrisonWardenEntity.State.WINDUP
-                && warden.stateTime(0.0F) > 11.0F && !dodgeTried) {
-            dodgeTried = true;
-            SkyTest.LOGGER.info("SKYTEST DODGE attempt dash={}", com.replecant.skytest.client.feel.Dash.tryDash(mc, 0.0, -1.0));
+                && warden.state() == com.replecant.skytest.entity.PrisonWardenEntity.State.WINDUP) {
+            if (!dodgeTried && warden.stateTime(0.0F) >= 13.0F) {
+                dodgeTried = true;
+                dodgeHealth = player.getHealth();
+                dodgeTick = clientTicks;
+                SkyTest.LOGGER.info("SKYTEST DODGE attempt dash={} hp={}",
+                        com.replecant.skytest.client.feel.Dash.tryDash(mc, 0.0, -1.0), dodgeHealth);
+            }
             return;
         }
         if (player.getAttackStrengthScale(0.0F) >= 0.95F && player.distanceTo(target) < 2.8F) {
