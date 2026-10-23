@@ -45,5 +45,6 @@
   "entity.skytest.prison_warden": "Prison Warden",
   "entity.skytest.rat": "Rat",
   "item.skytest.raw_rat_meat": "Raw Rat Meat",
-  "dialogue.skytest.lamplighter.path.6": "And don't be squeamish about rats. Down here, there is no other food."
+  "dialogue.skytest.lamplighter.path.6": "And don't be squeamish about rats. Down here, there is no other food.",
+  "key.skytest.dash": "Dash"
 }

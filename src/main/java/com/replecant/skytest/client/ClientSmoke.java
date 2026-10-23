@@ -133,18 +133,21 @@ public final class ClientSmoke {
         if (wakeTicks == 640) {
             mc.options.keyUp.setDown(true);
             mc.options.keySprint.setDown(true);
-        } else if (wakeTicks == 665) {
+        } else if (wakeTicks == 655) {
             mc.options.keyUp.setDown(false);
             mc.options.keySprint.setDown(false);
+        } else if (wakeTicks == 670) {
+            SkyTest.LOGGER.info("SKYTEST MOVE dash={}", com.replecant.skytest.client.feel.Dash.tryDash(mc));
         }
         var v = mc.player.getDeltaMovement();
-        SkyTest.LOGGER.info("SKYTEST MOVE t={} keys={} speed={}", wakeTicks - 640, wakeTicks < 665 ? "W+sprint" : "none",
+        SkyTest.LOGGER.info("SKYTEST MOVE t={} keys={} speed={}", wakeTicks - 640, wakeTicks < 655 ? "W+sprint" : wakeTicks >= 670 ? "dash" : "none",
                 String.format("%.3f", Math.sqrt(v.x * v.x + v.z * v.z)));
     }
 
     private static net.minecraft.world.entity.LivingEntity lastHit;
     private static int hitTicks;
     private static int hits;
+    private static boolean dodgeTried;
 
     /** Бьём поднимающегося скелета мечом и логируем отброс. */
     private static void fightTest(Minecraft mc) {
@@ -167,6 +170,14 @@ public final class ClientSmoke {
         var d = target.getEyePosition().subtract(player.getEyePosition());
         player.setYRot((float) (Math.atan2(d.z, d.x) * 180.0 / Math.PI) - 90.0F);
         player.setXRot((float) -(Math.atan2(d.y, Math.sqrt(d.x * d.x + d.z * d.z)) * 180.0 / Math.PI));
+        // Уклониться рывком назад, когда Страж заносит меч.
+        if (target instanceof com.replecant.skytest.entity.PrisonWardenEntity warden
+                && warden.state() == com.replecant.skytest.entity.PrisonWardenEntity.State.WINDUP
+                && warden.stateTime(0.0F) > 11.0F && !dodgeTried) {
+            dodgeTried = true;
+            SkyTest.LOGGER.info("SKYTEST DODGE attempt dash={}", com.replecant.skytest.client.feel.Dash.tryDash(mc, 0.0, -1.0));
+            return;
+        }
         if (player.getAttackStrengthScale(0.0F) >= 0.95F && player.distanceTo(target) < 2.8F) {
             mc.gameMode.attack(player, target);
             player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);

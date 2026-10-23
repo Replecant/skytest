@@ -41,9 +41,6 @@ public class GrapplingHookEntity extends Projectile implements ItemSupplier {
             SynchedEntityData.defineId(GrapplingHookEntity.class, EntityDataSerializers.BOOLEAN);
     private static final DustParticleOptions ROPE_PARTICLE = new DustParticleOptions(0xD9D3C2, 0.5F);
 
-    /** Тик игрока, когда крюк последний раз тянул его (клиент): инерцию тогда не сглаживаем. */
-    public static int lastClientPullTick = -100;
-
     private BlockPos anchorPos;
     private ItemStack displayStack;
 
@@ -137,7 +134,6 @@ public class GrapplingHookEntity extends Projectile implements ItemSupplier {
     }
 
     private void pullOwner(Player player) {
-        lastClientPullTick = player.tickCount;
         Vec3 center = player.position().add(0.0, player.getBbHeight() * 0.5, 0.0);
         Vec3 diff = position().subtract(center);
         double dist = diff.length();

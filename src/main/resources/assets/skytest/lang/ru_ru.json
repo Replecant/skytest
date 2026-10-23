@@ -45,5 +45,6 @@
   "entity.skytest.prison_warden": "Страж Тюрьмы",
   "entity.skytest.rat": "Крыса",
   "item.skytest.raw_rat_meat": "Сырое крысиное мясо",
-  "dialogue.skytest.lamplighter.path.6": "И не брезгуй крысами. Здесь, внизу, другой еды нет."
+  "dialogue.skytest.lamplighter.path.6": "И не брезгуй крысами. Здесь, внизу, другой еды нет.",
+  "key.skytest.dash": "Рывок"
 }

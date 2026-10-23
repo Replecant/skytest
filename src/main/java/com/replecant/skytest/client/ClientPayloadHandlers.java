@@ -19,5 +19,9 @@ public final class ClientPayloadHandlers {
                 new DialogueScreen(payload.speakerId(), Component.translatable(payload.speakerName()), lines));
     }
 
+    public static void hitstop(com.replecant.skytest.network.HitstopPayload payload) {
+        com.replecant.skytest.client.feel.ClientHitstop.handle(payload);
+    }
+
     private ClientPayloadHandlers() {}
 }

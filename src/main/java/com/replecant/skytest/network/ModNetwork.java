@@ -35,6 +35,13 @@ public final class ModNetwork {
                         stranger.onDialogueClosed(player);
                     }
                 });
+        registrar.playToServer(DashPayload.TYPE, DashPayload.STREAM_CODEC, (payload, context) -> {
+            if (context.player() instanceof ServerPlayer player) {
+                com.replecant.skytest.combat.CombatEvents.onDash(player);
+            }
+        });
+        registrar.playToClient(HitstopPayload.TYPE, HitstopPayload.STREAM_CODEC,
+                (payload, context) -> ClientPayloadHandlers.hitstop(payload));
         registrar.playToClient(StartProloguePayload.TYPE, StartProloguePayload.STREAM_CODEC,
                 (payload, context) -> ClientPayloadHandlers.startPrologue());
         registrar.playToClient(OpenDialoguePayload.TYPE, OpenDialoguePayload.STREAM_CODEC,
