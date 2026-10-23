@@ -86,7 +86,7 @@ public final class ClientSmoke {
             if (t >= 100) {
                 magicTest(mc, t - 100);
             }
-            if (t == 1000) {
+            if (t == 1100) {
                 SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE DONE");
                 mc.stop();
             }
