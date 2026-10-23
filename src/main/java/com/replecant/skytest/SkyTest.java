@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 import com.replecant.skytest.network.ModNetwork;
+import com.replecant.skytest.registry.ModAttachments;
 import com.replecant.skytest.registry.ModCreativeTabs;
 import com.replecant.skytest.registry.ModEntities;
 import com.replecant.skytest.registry.ModItems;
@@ -20,7 +21,9 @@ public class SkyTest {
     public SkyTest(IEventBus modEventBus, ModContainer modContainer) {
         ModItems.ITEMS.register(modEventBus);
         ModEntities.ENTITY_TYPES.register(modEventBus);
+        ModAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ModCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
         modEventBus.addListener(ModNetwork::register);
+        modEventBus.addListener(ModEntities::registerAttributes);
     }
 }

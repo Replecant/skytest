@@ -2,5 +2,21 @@
   "itemGroup.skytest": "SkyTest",
   "item.skytest.grappling_hook": "Крюк-хват «Скелетная рука»",
   "item.skytest.circus_boots": "Сапоги циркача",
-  "entity.skytest.grappling_hook": "Скелетная рука"
+  "entity.skytest.grappling_hook": "Скелетная рука",
+  "entity.skytest.lamplighter": "Фонарщик",
+  "prologue.skytest.title": "Видение",
+  "prologue.skytest.line1": "Сбрось с себя оковы сна.",
+  "prologue.skytest.line2": "Настало время, когда ты должен будешь вознестись.",
+  "prologue.skytest.line3": "Найди меня на вершине мира.",
+  "area.skytest.lower_prison": "Нижняя тюрьма",
+  "area.skytest.lower_prison.subtitle": "Самое дно мира",
+  "area.skytest.test_end": "Конец тестовой локации",
+  "area.skytest.test_end.subtitle": "Продолжение следует...",
+  "dialogue.skytest.lamplighter.greeting": "Тише... Не вставай так резко. Ты долго спал. (ПКМ — поговорить)",
+  "dialogue.skytest.lamplighter.1": "Свет говорил с тобой? Я вижу это по твоим глазам. Он говорит лишь с теми, кому суждено подняться.",
+  "dialogue.skytest.lamplighter.2": "Это Нижняя тюрьма. Самое дно мира. Отсюда ещё никто не поднимался.",
+  "dialogue.skytest.lamplighter.3": "Твоя дверь не заперта. Я позаботился об этом... Не спрашивай, чего мне это стоило.",
+  "dialogue.skytest.lamplighter.4": "В открытой камере напротив лежат старые сапоги. Их хозяин когда-то плясал под самым куполом цирка. Ему они больше не понадобятся.",
+  "dialogue.skytest.lamplighter.5": "За коридором — большой зал. На уступе лежит то, что поможет тебе цепляться за жизнь. В самом прямом смысле.",
+  "dialogue.skytest.lamplighter.6": "Иди. Мой свет будет ждать тебя здесь."
 }

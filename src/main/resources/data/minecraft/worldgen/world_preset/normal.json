@@ -1,0 +1,22 @@
+{
+  "dimensions": {
+    "minecraft:overworld": {
+      "type": "skytest:depths",
+      "generator": {
+        "type": "minecraft:flat",
+        "settings": {
+          "biome": "skytest:lower_prison",
+          "features": false,
+          "lakes": false,
+          "layers": [
+            {
+              "block": "minecraft:air",
+              "height": 1
+            }
+          ],
+          "structure_overrides": []
+        }
+      }
+    }
+  }
+}

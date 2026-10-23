@@ -1,9 +1,12 @@
 package com.replecant.skytest.network;
 
+import com.replecant.skytest.client.ClientPayloadHandlers;
 import com.replecant.skytest.registry.ModItems;
+import com.replecant.skytest.story.Prologue;
 
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -11,10 +14,20 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 public final class ModNetwork {
     public static void register(RegisterPayloadHandlersEvent event) {
-        event.registrar("1").playToServer(DoubleJumpPayload.TYPE, DoubleJumpPayload.STREAM_CODEC, ModNetwork::handleDoubleJump);
+        PayloadRegistrar registrar = event.registrar("1");
+        registrar.playToServer(DoubleJumpPayload.TYPE, DoubleJumpPayload.STREAM_CODEC, ModNetwork::handleDoubleJump);
+        registrar.playToServer(PrologueFinishedPayload.TYPE, PrologueFinishedPayload.STREAM_CODEC,
+                (payload, context) -> {
+                    if (context.player() instanceof ServerPlayer player) {
+                        Prologue.finish(player);
+                    }
+                });
+        registrar.playToClient(StartProloguePayload.TYPE, StartProloguePayload.STREAM_CODEC,
+                (payload, context) -> ClientPayloadHandlers.startPrologue());
     }
 
     private static void handleDoubleJump(DoubleJumpPayload payload, IPayloadContext context) {

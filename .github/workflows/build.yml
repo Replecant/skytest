@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'claude/**']
     tags: ['v*']
   pull_request:
   workflow_dispatch:
@@ -40,6 +40,25 @@ jobs:
           grep -E "error:|\\.java:[0-9]+|What went wrong|> " build.log | head -40 | while IFS= read -r line; do
             echo "::error::$line"
           done
+
+      - name: Smoke test (dedicated server)
+        run: |
+          mkdir -p run && echo "eula=true" > run/eula.txt
+          SKYTEST_SMOKE=true timeout 900 ./gradlew runServer > server.log 2>&1 || true
+          grep -q "SKYTEST SMOKE OK" server.log
+
+      - name: Report server errors
+        if: failure()
+        run: |
+          [ -f server.log ] || exit 0
+          grep -E "SKYTEST SMOKE|ERROR|Exception|Caused by|Failed|failed to|Couldn't|Error" server.log \
+            | grep -v "DEBUG" | head -120 > errors.txt || true
+          python3 - <<'PY'
+          s = open('errors.txt', encoding='utf-8', errors='replace').read()
+          for i in range(0, min(len(s), 40000), 3900):
+              c = s[i:i+3900].replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+              print(f'::error title=server-{i//3900:02d}::{c}')
+          PY
 
       - name: Upload mod jar
         uses: actions/upload-artifact@v4

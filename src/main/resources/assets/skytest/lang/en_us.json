@@ -2,5 +2,21 @@
   "itemGroup.skytest": "SkyTest",
   "item.skytest.grappling_hook": "Skeletal Grappling Hook",
   "item.skytest.circus_boots": "Circus Boots",
-  "entity.skytest.grappling_hook": "Skeletal Hand"
+  "entity.skytest.grappling_hook": "Skeletal Hand",
+  "entity.skytest.lamplighter": "Lamplighter",
+  "prologue.skytest.title": "Vision",
+  "prologue.skytest.line1": "Cast off the shackles of sleep.",
+  "prologue.skytest.line2": "The time has come for you to ascend.",
+  "prologue.skytest.line3": "Find me at the top of the world.",
+  "area.skytest.lower_prison": "The Lower Prison",
+  "area.skytest.lower_prison.subtitle": "The very bottom of the world",
+  "area.skytest.test_end": "End of the test area",
+  "area.skytest.test_end.subtitle": "To be continued...",
+  "dialogue.skytest.lamplighter.greeting": "Hush... Don't get up so fast. You slept for a long time. (Right-click to talk)",
+  "dialogue.skytest.lamplighter.1": "The light spoke to you? I can see it in your eyes. It only speaks to those who are meant to rise.",
+  "dialogue.skytest.lamplighter.2": "This is the Lower Prison. The very bottom of the world. No one has ever climbed out of here.",
+  "dialogue.skytest.lamplighter.3": "Your door is not locked. I saw to that... Don't ask what it cost me.",
+  "dialogue.skytest.lamplighter.4": "In the open cell across the corridor lie old boots. Their owner once danced beneath the circus dome. He won't need them anymore.",
+  "dialogue.skytest.lamplighter.5": "Past the corridor is a great hall. On the ledge lies something that will help you cling to life. Quite literally.",
+  "dialogue.skytest.lamplighter.6": "Go. My light will wait for you here."
 }
