@@ -72,5 +72,7 @@
   "item.skytest.primordial_serpent": "Первородный змей",
   "entity.skytest.lightning_arc": "Разряд молнии",
   "entity.skytest.serpent": "Змей",
-  "magic.skytest.no_souls": "Не хватает душ: нужно %s"
+  "magic.skytest.no_souls": "Не хватает душ: нужно %s",
+  "area.skytest.upper_tier": "Верхний ярус",
+  "area.skytest.upper_tier.subtitle": "Здесь держат тех, кого боятся даже стражи"
 }

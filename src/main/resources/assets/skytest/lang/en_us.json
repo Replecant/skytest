@@ -72,5 +72,7 @@
   "item.skytest.primordial_serpent": "Primordial Serpent",
   "entity.skytest.lightning_arc": "Lightning Arc",
   "entity.skytest.serpent": "Serpent",
-  "magic.skytest.no_souls": "Not enough souls: %s needed"
+  "magic.skytest.no_souls": "Not enough souls: %s needed",
+  "area.skytest.upper_tier": "Upper Tier",
+  "area.skytest.upper_tier.subtitle": "Where they keep those even the wardens fear"
 }

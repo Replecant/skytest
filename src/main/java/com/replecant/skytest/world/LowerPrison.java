@@ -82,9 +82,15 @@ public final class LowerPrison {
     private static final int BRIDGE_Y = 56;
     /** Насколько глубоко (в среднем) свисает скала под островом. */
     private static final double ISLAND_HANG = 44.0;
+    /** Верхний ярус: пол зала и ось входа (z), куда позже придёт мост. */
+    public static final int UPPER_FLOOR = 70;
+    public static final int UPPER_LANE = 71;
+    private static final int UPPER_HALL_X0 = 86;
+    public static final AABB UPPER_HALL = new AABB(85, 69, 59, 110, 82, 84);
+    private static final AABB UPPER_BIOME = new AABB(84, 66, 58, 112, 84, 86);
     private static final int GAP_START = 60;
     private static final int GAP_END = 62;
-    private static final AABB WHOLE_AREA = new AABB(-40, -10, -40, 86, 106, 160);
+    private static final AABB WHOLE_AREA = new AABB(-40, -10, -40, 132, 130, 160);
     /** Всё, что внутри этой коробки, — биом тюрьмы (тёмный туман); снаружи — небо над бездной. */
     private static final AABB PRISON_BIOME = new AABB(-16, 48, -20, 60, 99, 26);
     private static final AABB REGULATOR_BIOME = new AABB(10, 40, 96, 66, 95, 146);
@@ -127,6 +133,7 @@ public final class LowerPrison {
         // Парящая скала, в которой вырублено всё остальное.
         buildIsland(-12, 56, -16, 27, 52, 94, 0);
         buildIsland(14, 62, 92, 140, 50, 88, 10);
+        buildIsland(84, 112, 52, 84, 64, 98, 20);
         set(MARKER, Blocks.BARRIER.defaultBlockState());
 
         // Камеры и коридор.
@@ -150,6 +157,7 @@ public final class LowerPrison {
         buildStrangerExit();
         buildBridge();
         buildRegulatorHall();
+        buildUpperTier();
 
         // Ход с балкона и конечная комната.
         fill(33, 74, -5, 35, 76, -1, Blocks.AIR.defaultBlockState());
@@ -374,23 +382,36 @@ public final class LowerPrison {
     }
 
     /**
-     * Портал тоннеля в скальной стене: кирпичная рамка ровно там, где кончается камень,
-     * а за ней — несколько слоёв скалы, чтобы рамка не висела в воздухе.
+     * Портал тоннеля: кирпичная рамка там, где скала уже сплошная со всех сторон,
+     * — тогда рамка нигде не торчит наружу, а к ней ведёт естественная выемка в скале.
      */
-    private void portal(int z, int inward) {
+    private void portal(int z) {
         int y = BRIDGE_Y;
-        for (int i = 1; i <= 6; i++) {
-            for (int x = 34; x <= 42; x++) {
-                for (int dy = -3; dy <= 7; dy++) {
-                    BlockPos pos = new BlockPos(x, y + dy, z + i * inward);
-                    if (level.getBlockState(pos).isAir()) {
-                        set(pos, rock());
-                    }
+        fill(36, y - 1, z, 40, y + 5, z, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        set(new BlockPos(38, y + 5, z), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
+    }
+
+    /** Скала вокруг рамки портала сплошная (с запасом в блок). */
+    private boolean solidAround(int z) {
+        for (int x = 34; x <= 42; x++) {
+            for (int y = BRIDGE_Y - 2; y <= BRIDGE_Y + 7; y++) {
+                if (level.getBlockState(new BlockPos(x, y, z)).isAir()) {
+                    return false;
                 }
             }
         }
-        fill(36, y - 1, z, 40, y + 5, z, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
-        set(new BlockPos(38, y + 5, z), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
+        return true;
+    }
+
+    /** Проход сквозь край скалы шириной с мост: настил и кирпичные бортики, над ними пусто. */
+    private void notch(int z) {
+        int y = BRIDGE_Y;
+        fill(36, y + 1, z, 40, y + 4, z, Blocks.AIR.defaultBlockState());
+        for (int x = 37; x <= 39; x++) {
+            set(new BlockPos(x, y, z), pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.3F));
+        }
+        set(new BlockPos(36, y, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        set(new BlockPos(40, y, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
     }
 
     /** Есть ли камень в проёме тоннеля на данном z. */
@@ -434,16 +455,30 @@ public final class LowerPrison {
                 entryZ = z;
             }
         }
-        SkyTest.LOGGER.info("Bridge portals at z={} and z={}", exitZ, entryZ);
-        portal(exitZ, -1);
-        portal(entryZ, 1);
+        int exitPortal = exitZ;
+        while (exitPortal > 27 && !solidAround(exitPortal)) {
+            exitPortal--;
+        }
+        int entryPortal = entryZ;
+        while (entryPortal < 95 && !solidAround(entryPortal)) {
+            entryPortal++;
+        }
+        SkyTest.LOGGER.info("Bridge faces z={}/{}, portals z={}/{}", exitZ, entryZ, exitPortal, entryPortal);
+        portal(exitPortal);
+        portal(entryPortal);
         // Тоннели сквозь скалу: от спуска к мосту и от моста к залу Регулятора.
-        fill(37, y + 1, 25, 39, y + 3, exitZ, Blocks.AIR.defaultBlockState());
-        fill(37, y + 1, entryZ, 39, y + 4, 96, Blocks.AIR.defaultBlockState());
-        set(new BlockPos(38, y + 4, exitZ), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        fill(37, y + 1, 25, 39, y + 3, exitPortal, Blocks.AIR.defaultBlockState());
+        fill(37, y + 1, entryPortal, 39, y + 4, 96, Blocks.AIR.defaultBlockState());
+        // Выемки в скале между порталом и открытым мостом.
+        for (int z = exitPortal + 1; z <= exitZ; z++) {
+            notch(z);
+        }
+        for (int z = entryZ; z < entryPortal; z++) {
+            notch(z);
+        }
 
-        int ruinsStart = GAP_END + 6;
-        int ruinsEnd = Math.min(ruinsStart + 7, entryZ - 4);
+        int ruinsStart = UPPER_LANE - 3;
+        int ruinsEnd = Math.min(UPPER_LANE + 4, entryZ - 4);
         for (int z = 25; z <= 96; z++) {
             boolean gap = z >= GAP_START && z <= GAP_END;
             boolean ruins = z >= ruinsStart && z <= ruinsEnd;
@@ -481,26 +516,268 @@ public final class LowerPrison {
                 }
             }
         }
-        // Полуразрушенная площадка на полпути ко второй скале: обломки стен по краям
-        // и остов арки; середина свободна для прохода.
+        // Полуразрушенная площадка на полпути ко второй скале: пол с выщерблинами,
+        // низкий обломанный парапет, остов арки. Восточный край посередине открыт —
+        // сюда Регулятор потом перекинет мост к Верхнему ярусу; пока там торчит обломок.
         for (int x = 33; x <= 43; x++) {
             for (int z = ruinsStart; z <= ruinsEnd; z++) {
-                boolean edge = x == 33 || x == 43;
-                if (random.nextFloat() < (edge ? 0.55F : 0.9F) || (x >= 37 && x <= 39)) {
+                boolean edge = x == 33 || x == 43 || z == ruinsStart || z == ruinsEnd;
+                boolean walkway = (x >= 37 && x <= 39) || (z >= UPPER_LANE - 1 && z <= UPPER_LANE + 1);
+                if (walkway || random.nextFloat() < (edge ? 0.7F : 0.92F)) {
                     set(new BlockPos(x, y, z), pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.4F));
                 }
-                if (edge && random.nextFloat() < 0.45F) {
-                    int height = 1 + random.nextInt(3);
-                    fill(x, y + 1, z, x, y + height, z, pick(Blocks.DEEPSLATE_BRICKS, Blocks.CRACKED_DEEPSLATE_BRICKS, 0.5F));
+                boolean parapet = (x == 33 || x == 43) && !(z >= UPPER_LANE - 2 && z <= UPPER_LANE + 2);
+                if (parapet && random.nextFloat() < 0.6F) {
+                    fill(x, y + 1, z, x, y + 1 + random.nextInt(2), z,
+                            pick(Blocks.DEEPSLATE_BRICKS, Blocks.CRACKED_DEEPSLATE_BRICKS, 0.5F));
                 }
             }
         }
-        int arch = (ruinsStart + ruinsEnd) / 2;
+        int arch = ruinsStart + 1;
         fill(35, y + 1, arch, 35, y + 5, arch, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
         fill(41, y + 1, arch, 41, y + 3, arch, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
         fill(35, y + 6, arch, 38, y + 6, arch, Blocks.DEEPSLATE_BRICK_SLAB.defaultBlockState());
-        set(new BlockPos(42, y + 1, arch + 2), Blocks.SOUL_LANTERN.defaultBlockState());
-        set(new BlockPos(34, y + 1, arch - 2), Blocks.SOUL_LANTERN.defaultBlockState());
+        set(new BlockPos(34, y + 1, ruinsEnd), Blocks.SOUL_LANTERN.defaultBlockState());
+        set(new BlockPos(42, y + 1, ruinsStart), Blocks.SOUL_LANTERN.defaultBlockState());
+        // Обломок старого пролёта к Верхнему ярусу.
+        for (int dz = -1; dz <= 1; dz++) {
+            fill(44, y, UPPER_LANE + dz, 44 + 2 - Math.abs(dz) - (dz == 1 ? 1 : 0), y, UPPER_LANE + dz,
+                    Blocks.CRACKED_DEEPSLATE_TILES.defaultBlockState());
+        }
+        chain(45, y - 1, UPPER_LANE, 5);
+    }
+
+    // ---------------------------------------------------------------- Верхний ярус
+
+    /**
+     * Верхний ярус: третья скала к востоку от моста, на 14 блоков выше. Вход —
+     * портал в западной стене, пока забранный решёткой; со скалы свисает обломок
+     * моста. Внутри — зал с камерами по обе стороны и запертыми воротами дальше,
+     * на вершине — дозорная башня с огнями, видная с моста.
+     */
+    private void buildUpperTier() {
+        int floor = UPPER_FLOOR;
+        int lane = UPPER_LANE;
+        int faceX = UPPER_HALL_X0;
+        for (int x = 60; x < UPPER_HALL_X0; x++) {
+            if (rockAcrossX(x)) {
+                faceX = x;
+                break;
+            }
+        }
+        int portalX = faceX;
+        while (portalX < UPPER_HALL_X0 - 2 && !solidAroundX(portalX)) {
+            portalX++;
+        }
+        SkyTest.LOGGER.info("Upper tier face x={}, portal x={}", faceX, portalX);
+
+        room(UPPER_HALL_X0, floor, 60, 108, floor + 10, 82);
+        // Выемка в скале, портал и тоннель в зал.
+        for (int x = faceX; x < portalX; x++) {
+            fill(x, floor + 1, lane - 2, x, floor + 4, lane + 2, Blocks.AIR.defaultBlockState());
+            fill(x, floor, lane - 1, x, floor, lane + 1, pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.3F));
+            set(new BlockPos(x, floor, lane - 2), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+            set(new BlockPos(x, floor, lane + 2), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        }
+        fill(portalX, floor - 1, lane - 2, portalX, floor + 5, lane + 2, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        set(new BlockPos(portalX, floor + 5, lane), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
+        fill(portalX + 1, floor + 1, lane - 1, UPPER_HALL_X0 - 1, floor + 3, lane + 1, Blocks.AIR.defaultBlockState());
+        fill(portalX, floor + 1, lane - 1, portalX, floor + 3, lane + 1, Blocks.AIR.defaultBlockState());
+        fill(portalX, floor, lane - 1, UPPER_HALL_X0 - 1, floor, lane + 1, Blocks.DEEPSLATE_TILES.defaultBlockState());
+        // Пока моста нет — вход забран решёткой.
+        for (int z = lane - 1; z <= lane + 1; z++) {
+            for (int yy = floor + 1; yy <= floor + 3; yy++) {
+                connectable(new BlockPos(portalX, yy, z), Blocks.IRON_BARS.defaultBlockState());
+            }
+        }
+        set(new BlockPos(portalX - 1, floor + 1, lane + 1), Blocks.SOUL_LANTERN.defaultBlockState());
+        // Обломок моста, свисающий с края скалы.
+        for (int dz = -1; dz <= 1; dz++) {
+            int length = dz == 0 ? 4 : 2 + (dz + 1) / 2;
+            fill(faceX - length, floor, lane + dz, faceX - 1, floor, lane + dz, Blocks.CRACKED_DEEPSLATE_TILES.defaultBlockState());
+        }
+        chain(faceX - 3, floor - 1, lane, 6);
+        chain(faceX - 1, floor - 1, lane - 1, 3);
+
+        // Пол: полированный сланец, по центру — дорожка из плитки.
+        fill(UPPER_HALL_X0, floor - 1, 60, 108, floor - 1, 82, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+        fill(UPPER_HALL_X0, floor - 1, lane - 1, 108, floor - 1, lane + 1, Blocks.DEEPSLATE_TILES.defaultBlockState());
+        // Камеры вдоль северной и южной стен.
+        for (int x : new int[] {92, 98, 104}) {
+            fill(x, floor, 60, x, floor + 3, 64, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+            fill(x, floor, 78, x, floor + 3, 82, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        }
+        for (int x = UPPER_HALL_X0; x <= 108; x++) {
+            for (int yy = floor; yy <= floor + 3; yy++) {
+                connectable(new BlockPos(x, yy, 65), Blocks.IRON_BARS.defaultBlockState());
+                connectable(new BlockPos(x, yy, 77), Blocks.IRON_BARS.defaultBlockState());
+            }
+        }
+        for (int x : new int[] {89, 95, 101, 106}) {
+            fill(x, floor, 65, x, floor + 1, 65, Blocks.AIR.defaultBlockState());
+            fill(x, floor, 77, x, floor + 1, 77, Blocks.AIR.defaultBlockState());
+            gate(new BlockPos(x, floor, 65), Direction.NORTH, false);
+            gate(new BlockPos(x, floor, 77), Direction.SOUTH, false);
+            set(new BlockPos(x + (random.nextBoolean() ? 1 : -1), floor, 61 + random.nextInt(2)),
+                    Blocks.SKELETON_SKULL.defaultBlockState().setValue(BlockStateProperties.ROTATION_16, random.nextInt(16)));
+            cobweb(x + 1, floor + 3, 81);
+        }
+        // Дальше — запертые ворота вглубь скалы.
+        fill(109, floor, lane - 1, 109, floor + 2, lane + 1, Blocks.AIR.defaultBlockState());
+        for (int z : new int[] {lane - 1, lane + 1}) {
+            for (int yy = floor; yy <= floor + 2; yy++) {
+                connectable(new BlockPos(109, yy, z), Blocks.IRON_BARS.defaultBlockState());
+            }
+        }
+        gate(new BlockPos(109, floor, lane), Direction.EAST, false);
+        fill(110, floor, lane - 1, 111, floor + 2, lane + 1, Blocks.COBBLED_DEEPSLATE.defaultBlockState());
+        // Свет: фонари на цепях над дорожкой и огонь душ у входа.
+        for (int x = 88; x <= 106; x += 6) {
+            hangingLantern(x, floor + 10, lane, 3 + random.nextInt(3));
+        }
+        for (int z : new int[] {lane - 3, lane + 3}) {
+            set(new BlockPos(UPPER_HALL_X0, floor - 1, z), Blocks.SOUL_SOIL.defaultBlockState());
+            set(new BlockPos(UPPER_HALL_X0, floor, z), Blocks.SOUL_FIRE.defaultBlockState());
+        }
+        for (int i = 0; i < 12; i++) {
+            chain(UPPER_HALL_X0 + random.nextInt(23), floor + 10, 66 + random.nextInt(11), 2 + random.nextInt(4));
+        }
+
+        buildWatchtower();
+    }
+
+    /** Дозорная башня на вершине Верхнего яруса: окна светятся, на шпиле — огонь. */
+    private void buildWatchtower() {
+        int cx = 98;
+        int cz = UPPER_LANE;
+        int base = UPPER_FLOOR + 12;
+        while (base < 120 && !level.getBlockState(new BlockPos(cx, base + 1, cz)).isAir()) {
+            base++;
+        }
+        int top = base + 16;
+        for (int x = cx - 3; x <= cx + 3; x++) {
+            for (int z = cz - 3; z <= cz + 3; z++) {
+                boolean wall = Math.abs(x - cx) == 3 || Math.abs(z - cz) == 3;
+                boolean corner = Math.abs(x - cx) == 3 && Math.abs(z - cz) == 3;
+                for (int y = base - 3; y <= top; y++) {
+                    BlockPos pos = new BlockPos(x, y, z);
+                    if (corner) {
+                        set(pos, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+                    } else if (wall) {
+                        set(pos, pick(Blocks.DEEPSLATE_BRICKS, Blocks.CRACKED_DEEPSLATE_BRICKS, 0.15F));
+                    } else {
+                        set(pos, Blocks.AIR.defaultBlockState());
+                    }
+                }
+                if (wall && !corner && (x + z) % 2 == 0) {
+                    set(new BlockPos(x, top + 1, z), Blocks.DEEPSLATE_BRICK_WALL.defaultBlockState());
+                    connectables.add(new BlockPos(x, top + 1, z));
+                }
+            }
+        }
+        fill(cx - 2, top, cz - 2, cx + 2, top, cz + 2, Blocks.DEEPSLATE_TILES.defaultBlockState());
+        // Узкие окна на все стороны, за ними — свет.
+        for (int y : new int[] {base + 5, base + 11}) {
+            for (int[] w : new int[][] {{cx - 3, cz}, {cx + 3, cz}, {cx, cz - 3}, {cx, cz + 3}}) {
+                fill(w[0], y, w[1], w[0], y + 1, w[1], Blocks.AIR.defaultBlockState());
+            }
+            set(new BlockPos(cx, y, cz), Blocks.SOUL_LANTERN.defaultBlockState());
+            fill(cx, y - 1, cz, cx, y - 1, cz, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+            set(new BlockPos(cx + 1, y + 1, cz), Blocks.LIGHT.defaultBlockState().setValue(BlockStateProperties.LEVEL, 13));
+        }
+        // Шпиль с огнём душ.
+        fill(cx, top + 1, cz, cx, top + 4, cz, Blocks.POLISHED_DEEPSLATE_WALL.defaultBlockState());
+        for (int y = top + 1; y <= top + 4; y++) {
+            connectables.add(new BlockPos(cx, y, cz));
+        }
+        set(new BlockPos(cx, top + 5, cz), Blocks.SOUL_SOIL.defaultBlockState());
+        set(new BlockPos(cx, top + 6, cz), Blocks.SOUL_FIRE.defaultBlockState());
+    }
+
+    /** Есть ли камень в проёме входа Верхнего яруса на данном x. */
+    private boolean rockAcrossX(int x) {
+        for (int z = UPPER_LANE - 2; z <= UPPER_LANE + 2; z++) {
+            for (int y = UPPER_FLOOR + 1; y <= UPPER_FLOOR + 5; y++) {
+                if (!level.getBlockState(new BlockPos(x, y, z)).isAir()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean solidAroundX(int x) {
+        for (int z = UPPER_LANE - 4; z <= UPPER_LANE + 4; z++) {
+            for (int y = UPPER_FLOOR - 2; y <= UPPER_FLOOR + 7; y++) {
+                if (level.getBlockState(new BlockPos(x, y, z)).isAir()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Регулятор перекидывает мост: от руин на середине Небесного моста ступенями
+     * вверх к Верхнему ярусу; решётка на входе поднимается. Вызывается сюжетом
+     * (после задания с Ларпи) или командой {@code /skytest upperbridge}.
+     */
+    public static boolean buildUpperBridge(ServerLevel level) {
+        return new LowerPrison(level).upperBridge();
+    }
+
+    private boolean upperBridge() {
+        int lane = UPPER_LANE;
+        int portalX = -1;
+        for (int x = 50; x < UPPER_HALL_X0; x++) {
+            if (level.getBlockState(new BlockPos(x, UPPER_FLOOR + 5, lane)).is(Blocks.CHISELED_DEEPSLATE)) {
+                portalX = x;
+                break;
+            }
+        }
+        if (portalX < 0) {
+            return false;
+        }
+        int faceX = portalX;
+        while (faceX > 50 && (level.getBlockState(new BlockPos(faceX - 1, UPPER_FLOOR, lane)).is(Blocks.DEEPSLATE_TILES)
+                || level.getBlockState(new BlockPos(faceX - 1, UPPER_FLOOR, lane)).is(Blocks.CRACKED_DEEPSLATE_TILES))) {
+            faceX--;
+        }
+        // Решётка поднята.
+        fill(portalX, UPPER_FLOOR + 1, lane - 1, portalX, UPPER_FLOOR + 3, lane + 1, Blocks.AIR.defaultBlockState());
+        int startX = 44;
+        int endX = faceX - 1;
+        int rise = UPPER_FLOOR - BRIDGE_Y;
+        int run = Math.max(1, endX - startX);
+        for (int x = startX; x <= endX; x++) {
+            int y = BRIDGE_Y + Math.round((float) (x - startX) / run * rise);
+            int prev = x == startX ? BRIDGE_Y : BRIDGE_Y + Math.round((float) (x - 1 - startX) / run * rise);
+            fill(x, y + 1, lane - 2, x, y + 5, lane + 2, Blocks.AIR.defaultBlockState());
+            for (int z = lane - 1; z <= lane + 1; z++) {
+                BlockState step = y > prev
+                        ? Blocks.DEEPSLATE_TILE_STAIRS.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST)
+                        : pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.2F);
+                set(new BlockPos(x, y, z), step);
+                set(new BlockPos(x, y - 1, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+            }
+            for (int z : new int[] {lane - 2, lane + 2}) {
+                set(new BlockPos(x, y, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+                connectable(new BlockPos(x, y + 1, z), Blocks.DEEPSLATE_TILE_WALL.defaultBlockState());
+            }
+            if ((x - startX) % 7 == 3) {
+                fill(x, y - 2, lane - 3, x, y - 2, lane + 3, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+                chain(x, y - 3, lane - 3, 3 + random.nextInt(5));
+                chain(x, y - 3, lane + 3, 3 + random.nextInt(5));
+                for (int z : new int[] {lane - 2, lane + 2}) {
+                    connectable(new BlockPos(x, y + 1, z), Blocks.POLISHED_DEEPSLATE_WALL.defaultBlockState());
+                    set(new BlockPos(x, y + 2, z), Blocks.SOUL_LANTERN.defaultBlockState());
+                }
+            }
+        }
+        for (BlockPos pos : connectables) {
+            set(pos, Block.updateFromNeighbourShapes(level.getBlockState(pos), level, pos));
+        }
+        return true;
     }
 
     // ---------------------------------------------------------------- зал Регулятора
@@ -635,7 +912,8 @@ public final class LowerPrison {
                 ChunkAccess chunk = level.getChunk(cx, cz);
                 chunk.fillBiomesFromNoise((qx, qy, qz, sampler) -> {
                     Vec3 center = new Vec3(QuartPos.toBlock(qx) + 2, QuartPos.toBlock(qy) + 2, QuartPos.toBlock(qz) + 2);
-                    return PRISON_BIOME.contains(center) || REGULATOR_BIOME.contains(center) ? prison : abyss;
+                    return PRISON_BIOME.contains(center) || REGULATOR_BIOME.contains(center) || UPPER_BIOME.contains(center)
+                            ? prison : abyss;
                 }, level.getChunkSource().randomState().sampler());
                 chunk.markUnsaved();
             }

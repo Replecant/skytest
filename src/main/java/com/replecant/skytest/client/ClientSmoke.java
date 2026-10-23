@@ -86,11 +86,24 @@ public final class ClientSmoke {
             if (t >= 100) {
                 magicTest(mc, t - 100);
             }
-            if (t == 210) {
+            if (t == 310) {
                 SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE DONE");
                 mc.stop();
             }
         }
+    }
+
+    private static void tourTo(net.minecraft.server.MinecraftServer server, java.util.UUID uuid,
+            net.minecraft.world.phys.Vec3 pos, float yaw, float pitch) {
+        server.execute(() -> {
+            var player = server.getPlayerList().getPlayer(uuid);
+            if (player != null) {
+                player.getAbilities().flying = player.getAbilities().mayfly;
+                player.onUpdateAbilities();
+                player.teleport(new net.minecraft.world.level.portal.TeleportTransition(server.overworld(), pos,
+                        net.minecraft.world.phys.Vec3.ZERO, yaw, pitch, net.minecraft.world.level.portal.TeleportTransition.DO_NOTHING));
+            }
+        });
     }
 
     private static java.util.UUID magicTarget;
@@ -155,6 +168,18 @@ public final class ClientSmoke {
             case 88 -> mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
             case 100 -> SkyTest.LOGGER.info("SKYTEST MAGIC souls left {}",
                     mc.player.getData(com.replecant.skytest.registry.ModAttachments.SOUL_CHARGE));
+            case 110 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 72.5), -60.0F, -22.0F);
+            case 120 -> shot("27_upper_tier_from_ruins");
+            case 125 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 46.5), -50.0F, -12.0F);
+            case 135 -> shot("27b_upper_tier_far");
+            case 140 -> server.execute(() -> SkyTest.LOGGER.info("SKYTEST UPPER bridge built={}",
+                    com.replecant.skytest.world.LowerPrison.buildUpperBridge(server.overworld())));
+            case 150 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 72.5), -70.0F, -14.0F);
+            case 162 -> shot("28_upper_bridge");
+            case 166 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 46.5), -50.0F, -10.0F);
+            case 178 -> shot("28b_upper_bridge_far");
+            case 182 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(88.5, 70, 71.5), -90.0F, 0.0F);
+            case 196 -> shot("29_upper_hall");
             default -> { }
         }
     }

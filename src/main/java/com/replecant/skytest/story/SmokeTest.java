@@ -80,6 +80,15 @@ final class SmokeTest {
             }
         }
         check(failures, holes == 0 && blocked == 0, "bridge deck solid and clear (holes " + holes + ", blocked " + blocked + ")");
+        check(failures, level.getBlockState(new BlockPos(97, LowerPrison.UPPER_FLOOR + 4, LowerPrison.UPPER_LANE)).isAir(),
+                "upper tier hall is hollow");
+        check(failures, level.getBlockState(new BlockPos(95, LowerPrison.UPPER_FLOOR, 65)).is(ModBlocks.PRISON_GATE.get()),
+                "upper tier cell gates");
+        boolean barred = false;
+        for (int x = 60; x < 86; x++) {
+            barred |= level.getBlockState(new BlockPos(x, LowerPrison.UPPER_FLOOR + 2, LowerPrison.UPPER_LANE)).is(Blocks.IRON_BARS);
+        }
+        check(failures, barred, "upper tier entrance is barred until the bridge is moved");
         int strangers = level.getEntitiesOfClass(StrangerEntity.class, area).size();
         check(failures, strangers == 1, "exactly one stranger (found " + strangers + ")");
 

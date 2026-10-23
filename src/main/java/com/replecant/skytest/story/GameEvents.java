@@ -38,6 +38,7 @@ public final class GameEvents {
     private static final Set<UUID> REACHED_END = new HashSet<>();
     private static final Set<UUID> REACHED_BRIDGE = new HashSet<>();
     private static final Set<UUID> REACHED_REGULATOR = new HashSet<>();
+    private static final Set<UUID> REACHED_UPPER = new HashSet<>();
 
     @SubscribeEvent
     static void onServerStarted(ServerStartedEvent event) {
@@ -98,6 +99,9 @@ public final class GameEvents {
         if (LowerPrison.BRIDGE.contains(pos) && REACHED_BRIDGE.add(player.getUUID())) {
             showTitle(player, "area.skytest.sky_bridge", 30, 90, 40);
         }
+        if (LowerPrison.UPPER_HALL.contains(pos) && REACHED_UPPER.add(player.getUUID())) {
+            showTitle(player, "area.skytest.upper_tier", 25, 80, 35);
+        }
         if (LowerPrison.REGULATOR_HALL.contains(pos) && REACHED_REGULATOR.add(player.getUUID())) {
             showTitle(player, "area.skytest.regulator_hall", 25, 80, 35);
         }
@@ -157,9 +161,16 @@ public final class GameEvents {
                     REACHED_END.remove(player.getUUID());
                     REACHED_BRIDGE.remove(player.getUUID());
                     REACHED_REGULATOR.remove(player.getUUID());
+                    REACHED_UPPER.remove(player.getUUID());
                     com.replecant.skytest.story.Quests.reset(player);
                     ctx.getSource().sendSuccess(() -> Component.literal("Story progress reset (use /skytest rebuild to respawn NPCs)"), false);
                     return 1;
+                }))
+                .then(Commands.literal("upperbridge").executes(ctx -> {
+                    boolean built = LowerPrison.buildUpperBridge(ctx.getSource().getServer().overworld());
+                    ctx.getSource().sendSuccess(() -> Component.literal(built
+                            ? "Bridge to the Upper Tier built" : "Upper Tier portal not found (try /skytest rebuild)"), true);
+                    return built ? 1 : 0;
                 }))
                 .then(Commands.literal("cell").executes(ctx -> {
                     Prologue.teleportToCell(ctx.getSource().getPlayerOrException());
