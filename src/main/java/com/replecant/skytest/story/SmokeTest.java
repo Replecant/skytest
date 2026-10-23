@@ -65,6 +65,21 @@ final class SmokeTest {
             int orbs = level.getEntitiesOfClass(com.replecant.skytest.entity.SoulOrbEntity.class, rat.getBoundingBox().inflate(4.0)).size();
             check(failures, orbs == 1, "rat releases one soul orb (found " + orbs + ")");
         }
+        // Мост сплошной (кроме провала) и над ним ничего не нависает.
+        int holes = 0;
+        int blocked = 0;
+        for (int z = 38; z <= 80; z++) {
+            if (z >= 60 && z <= 62) {
+                continue;
+            }
+            if (level.getBlockState(new BlockPos(38, 56, z)).isAir()) {
+                holes++;
+            }
+            if (!level.getBlockState(new BlockPos(38, 57, z)).isAir() || !level.getBlockState(new BlockPos(38, 58, z)).isAir()) {
+                blocked++;
+            }
+        }
+        check(failures, holes == 0 && blocked == 0, "bridge deck solid and clear (holes " + holes + ", blocked " + blocked + ")");
         int strangers = level.getEntitiesOfClass(StrangerEntity.class, area).size();
         check(failures, strangers == 1, "exactly one stranger (found " + strangers + ")");
 

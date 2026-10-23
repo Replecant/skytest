@@ -434,7 +434,7 @@ public final class LowerPrison {
                 entryZ = z;
             }
         }
-        SkyTest.LOGGER.debug("Bridge portals at z={} and z={}", exitZ, entryZ);
+        SkyTest.LOGGER.info("Bridge portals at z={} and z={}", exitZ, entryZ);
         portal(exitZ, -1);
         portal(entryZ, 1);
         // Тоннели сквозь скалу: от спуска к мосту и от моста к залу Регулятора.

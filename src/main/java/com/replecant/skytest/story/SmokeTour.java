@@ -121,6 +121,10 @@ public final class SmokeTour {
             int ticks = entry.getValue() + 1;
             entry.setValue(ticks);
             for (Stop stop : stops) {
+                if (ticks == stop.tick + 10) {
+                    SkyTest.LOGGER.info("SKYTEST TOUR stop {} -> player at {} rot {}/{}", stop.tick, player.position(),
+                            player.getYRot(), player.getXRot());
+                }
                 if (ticks == stop.tick) {
                     player.teleport(new TeleportTransition(server.overworld(), stop.pos, Vec3.ZERO,
                             stop.yaw, stop.pitch, TeleportTransition.DO_NOTHING));
