@@ -178,7 +178,7 @@ public final class ClientSmoke {
             case 162 -> shot("28_upper_bridge");
             case 166 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 46.5), -50.0F, -10.0F);
             case 178 -> shot("28b_upper_bridge_far");
-            case 182 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(88.5, 70, 71.5), -90.0F, 0.0F);
+            case 182 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(89.5, 74, 71.5), -90.0F, 0.0F);
             case 196 -> shot("29_upper_hall");
             default -> { }
         }

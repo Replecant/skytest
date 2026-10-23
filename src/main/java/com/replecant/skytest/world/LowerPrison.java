@@ -83,11 +83,12 @@ public final class LowerPrison {
     /** Насколько глубоко (в среднем) свисает скала под островом. */
     private static final double ISLAND_HANG = 44.0;
     /** Верхний ярус: пол зала и ось входа (z), куда позже придёт мост. */
-    public static final int UPPER_FLOOR = 70;
+    public static final int UPPER_FLOOR = 74;
     public static final int UPPER_LANE = 71;
-    private static final int UPPER_HALL_X0 = 86;
-    public static final AABB UPPER_HALL = new AABB(85, 69, 59, 110, 82, 84);
-    private static final AABB UPPER_BIOME = new AABB(84, 66, 58, 112, 84, 86);
+    private static final int UPPER_HALL_X0 = 88;
+    private static final int UPPER_HALL_X1 = 104;
+    public static final AABB UPPER_HALL = new AABB(87, 73, 61, 106, 86, 82);
+    private static final AABB UPPER_BIOME = new AABB(86, 70, 60, 108, 88, 84);
     private static final int GAP_START = 60;
     private static final int GAP_END = 62;
     private static final AABB WHOLE_AREA = new AABB(-40, -10, -40, 132, 130, 160);
@@ -133,7 +134,7 @@ public final class LowerPrison {
         // Парящая скала, в которой вырублено всё остальное.
         buildIsland(-12, 56, -16, 27, 52, 94, 0);
         buildIsland(14, 62, 92, 140, 50, 88, 10);
-        buildIsland(84, 112, 52, 84, 64, 98, 20);
+        buildIsland(88, 104, 61, 81, 70, 96, 20, 28.0);
         set(MARKER, Blocks.BARRIER.defaultBlockState());
 
         // Камеры и коридор.
@@ -345,6 +346,10 @@ public final class LowerPrison {
      * (уступы, навесы), книзу скала сужается в свисающий конус с сосульками.
      */
     private void buildIsland(int minX, int maxX, int minZ, int maxZ, int coreBottom, int coreTop, int seed) {
+        buildIsland(minX, maxX, minZ, maxZ, coreBottom, coreTop, seed, ISLAND_HANG);
+    }
+
+    private void buildIsland(int minX, int maxX, int minZ, int maxZ, int coreBottom, int coreTop, int seed, double hangDepth) {
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         double cx = (minX + maxX) / 2.0;
         double cz = (minZ + maxZ) / 2.0;
@@ -359,7 +364,7 @@ public final class LowerPrison {
                     continue;
                 }
                 int top = coreTop + (int) (4.0 * noise(x, z, 6.0, seed + 2)) - (int) (Math.max(0.0, d - 0.7) * 40.0);
-                double hang = ISLAND_HANG * (0.75 + 0.5 * noise(x, z, 9.0, seed + 3));
+                double hang = hangDepth * (0.75 + 0.5 * noise(x, z, 9.0, seed + 3));
                 boolean spike = noise(x, z, 2.0, seed + 4) > 0.84;
                 for (int y = (int) (coreBottom - hang - 14); y <= top; y++) {
                     double limit;
@@ -571,7 +576,7 @@ public final class LowerPrison {
         }
         SkyTest.LOGGER.info("Upper tier face x={}, portal x={}", faceX, portalX);
 
-        room(UPPER_HALL_X0, floor, 60, 108, floor + 10, 82);
+        room(UPPER_HALL_X0, floor, 62, UPPER_HALL_X1, floor + 10, 80);
         // Выемка в скале, портал и тоннель в зал.
         for (int x = faceX; x < portalX; x++) {
             fill(x, floor + 1, lane - 2, x, floor + 4, lane + 2, Blocks.AIR.defaultBlockState());
@@ -600,47 +605,48 @@ public final class LowerPrison {
         chain(faceX - 1, floor - 1, lane - 1, 3);
 
         // Пол: полированный сланец, по центру — дорожка из плитки.
-        fill(UPPER_HALL_X0, floor - 1, 60, 108, floor - 1, 82, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
-        fill(UPPER_HALL_X0, floor - 1, lane - 1, 108, floor - 1, lane + 1, Blocks.DEEPSLATE_TILES.defaultBlockState());
+        fill(UPPER_HALL_X0, floor - 1, 62, UPPER_HALL_X1, floor - 1, 80, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+        fill(UPPER_HALL_X0, floor - 1, lane - 1, UPPER_HALL_X1, floor - 1, lane + 1, Blocks.DEEPSLATE_TILES.defaultBlockState());
         // Камеры вдоль северной и южной стен.
-        for (int x : new int[] {92, 98, 104}) {
-            fill(x, floor, 60, x, floor + 3, 64, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
-            fill(x, floor, 78, x, floor + 3, 82, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        for (int x : new int[] {93, 99}) {
+            fill(x, floor, 62, x, floor + 3, 65, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+            fill(x, floor, 77, x, floor + 3, 80, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
         }
-        for (int x = UPPER_HALL_X0; x <= 108; x++) {
+        for (int x = UPPER_HALL_X0; x <= UPPER_HALL_X1; x++) {
             for (int yy = floor; yy <= floor + 3; yy++) {
-                connectable(new BlockPos(x, yy, 65), Blocks.IRON_BARS.defaultBlockState());
-                connectable(new BlockPos(x, yy, 77), Blocks.IRON_BARS.defaultBlockState());
+                connectable(new BlockPos(x, yy, 66), Blocks.IRON_BARS.defaultBlockState());
+                connectable(new BlockPos(x, yy, 76), Blocks.IRON_BARS.defaultBlockState());
             }
         }
-        for (int x : new int[] {89, 95, 101, 106}) {
-            fill(x, floor, 65, x, floor + 1, 65, Blocks.AIR.defaultBlockState());
-            fill(x, floor, 77, x, floor + 1, 77, Blocks.AIR.defaultBlockState());
-            gate(new BlockPos(x, floor, 65), Direction.NORTH, false);
-            gate(new BlockPos(x, floor, 77), Direction.SOUTH, false);
-            set(new BlockPos(x + (random.nextBoolean() ? 1 : -1), floor, 61 + random.nextInt(2)),
+        for (int x : new int[] {90, 96, 102}) {
+            fill(x, floor, 66, x, floor + 1, 66, Blocks.AIR.defaultBlockState());
+            fill(x, floor, 76, x, floor + 1, 76, Blocks.AIR.defaultBlockState());
+            gate(new BlockPos(x, floor, 66), Direction.NORTH, false);
+            gate(new BlockPos(x, floor, 76), Direction.SOUTH, false);
+            set(new BlockPos(x + (random.nextBoolean() ? 1 : -1), floor, 63 + random.nextInt(2)),
                     Blocks.SKELETON_SKULL.defaultBlockState().setValue(BlockStateProperties.ROTATION_16, random.nextInt(16)));
-            cobweb(x + 1, floor + 3, 81);
+            cobweb(x + 1, floor + 3, 79);
         }
         // Дальше — запертые ворота вглубь скалы.
-        fill(109, floor, lane - 1, 109, floor + 2, lane + 1, Blocks.AIR.defaultBlockState());
+        int east = UPPER_HALL_X1 + 1;
+        fill(east, floor, lane - 1, east, floor + 2, lane + 1, Blocks.AIR.defaultBlockState());
         for (int z : new int[] {lane - 1, lane + 1}) {
             for (int yy = floor; yy <= floor + 2; yy++) {
-                connectable(new BlockPos(109, yy, z), Blocks.IRON_BARS.defaultBlockState());
+                connectable(new BlockPos(east, yy, z), Blocks.IRON_BARS.defaultBlockState());
             }
         }
-        gate(new BlockPos(109, floor, lane), Direction.EAST, false);
-        fill(110, floor, lane - 1, 111, floor + 2, lane + 1, Blocks.COBBLED_DEEPSLATE.defaultBlockState());
+        gate(new BlockPos(east, floor, lane), Direction.EAST, false);
+        fill(east + 1, floor, lane - 1, east + 2, floor + 2, lane + 1, Blocks.COBBLED_DEEPSLATE.defaultBlockState());
         // Свет: фонари на цепях над дорожкой и огонь душ у входа.
-        for (int x = 88; x <= 106; x += 6) {
+        for (int x = 90; x <= 102; x += 6) {
             hangingLantern(x, floor + 10, lane, 3 + random.nextInt(3));
         }
         for (int z : new int[] {lane - 3, lane + 3}) {
             set(new BlockPos(UPPER_HALL_X0, floor - 1, z), Blocks.SOUL_SOIL.defaultBlockState());
             set(new BlockPos(UPPER_HALL_X0, floor, z), Blocks.SOUL_FIRE.defaultBlockState());
         }
-        for (int i = 0; i < 12; i++) {
-            chain(UPPER_HALL_X0 + random.nextInt(23), floor + 10, 66 + random.nextInt(11), 2 + random.nextInt(4));
+        for (int i = 0; i < 9; i++) {
+            chain(UPPER_HALL_X0 + random.nextInt(17), floor + 10, 67 + random.nextInt(9), 2 + random.nextInt(4));
         }
 
         buildWatchtower();
@@ -648,7 +654,7 @@ public final class LowerPrison {
 
     /** Дозорная башня на вершине Верхнего яруса: окна светятся, на шпиле — огонь. */
     private void buildWatchtower() {
-        int cx = 98;
+        int cx = 96;
         int cz = UPPER_LANE;
         int base = UPPER_FLOOR + 12;
         while (base < 120 && !level.getBlockState(new BlockPos(cx, base + 1, cz)).isAir()) {
