@@ -208,7 +208,7 @@ public final class ClientSmoke {
                 player.level().getEntitiesOfClass(com.replecant.skytest.entity.RatEntity.class, player.getBoundingBox().inflate(40.0),
                         com.replecant.skytest.entity.RatEntity::isLarpi).stream().findFirst().ifPresent(larpi -> {
                             larpi.setNoAi(true);
-                            var eye = larpi.position().add(1.6, 0.0, 1.0);
+                            var eye = larpi.position().add(-1.4, 0.0, 1.3);
                             var d = larpi.position().subtract(eye.add(0, player.getEyeHeight(), 0));
                             float yaw = (float) (Math.atan2(d.z, d.x) * 180.0 / Math.PI) - 90.0F;
                             float pitch = (float) -(Math.atan2(d.y, Math.sqrt(d.x * d.x + d.z * d.z)) * 180.0 / Math.PI);
