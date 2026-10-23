@@ -77,7 +77,7 @@ public class PrisonWardenEntity extends PathfinderMob implements ParryReactive {
     private static final float GUARD_BREAK_MOMENTUM = 0.7F;
     private static final int PATROL_REACH = 7;
     /** За сколько тиков до конца замаха вспыхивает клинок (сигнал к парированию). */
-    private static final int PARRY_CUE = 4;
+    private static final int PARRY_CUE = 5;
     private static final int WHIFF_RECOVERY_BONUS = 14;
     private static final int BLOCKS_BEFORE_COUNTER = 3;
 

@@ -62,7 +62,7 @@ public final class CombatEvents {
     private static final float[] COMBO_DAMAGE = {1.0F, 1.0F, 1.15F, 1.6F};
     private static final int FINISHER_HITSTOP_TICKS = 6;
     /** Окно парирования после ПКМ (тики) и перезарядка между попытками. */
-    public static final int PARRY_WINDOW = 7;
+    public static final int PARRY_WINDOW = 8;
     public static final int PARRY_COOLDOWN = 18;
     private static final int RIPOSTE_TICKS = 40;
     private static final float RIPOSTE_DAMAGE = 1.5F;
@@ -116,11 +116,18 @@ public final class CombatEvents {
     /** ПКМ мечом: открыть окно парирования. */
     public static void startParry(ServerPlayer player) {
         fighter(player).parryUntil = player.level().getGameTime() + PARRY_WINDOW;
+        if (com.replecant.skytest.story.SmokeTour.ENABLED) {
+            SkyTest.LOGGER.info("SKYTEST PARRY window t={}..{}", player.level().getGameTime(), fighter(player).parryUntil);
+        }
     }
 
     private static boolean tryParry(ServerPlayer player, DamageSource source) {
         Fighter f = FIGHTERS.get(player.getUUID());
         long now = player.level().getGameTime();
+        if (com.replecant.skytest.story.SmokeTour.ENABLED && source.getEntity() instanceof LivingEntity) {
+            SkyTest.LOGGER.info("SKYTEST PARRY check t={} until={} direct={}", now, f == null ? -1 : f.parryUntil,
+                    source.getDirectEntity() == source.getEntity());
+        }
         if (f == null || f.parryUntil < now || !(source.getEntity() instanceof LivingEntity attacker)
                 || source.getDirectEntity() != attacker) {
             return false;
@@ -129,6 +136,9 @@ public final class CombatEvents {
         Vec3 to = attacker.position().subtract(player.position());
         Vec3 flat = new Vec3(to.x, 0.0, to.z);
         if (flat.lengthSqr() > 1.0E-4 && new Vec3(look.x, 0.0, look.z).normalize().dot(flat.normalize()) < 0.2) {
+            if (com.replecant.skytest.story.SmokeTour.ENABLED) {
+                SkyTest.LOGGER.info("SKYTEST PARRY rejected: attacker not in front");
+            }
             return false; // удар сбоку или со спины не парируется
         }
         f.parryUntil = -1;

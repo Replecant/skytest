@@ -187,7 +187,7 @@ public final class ClientSmoke {
         // Во время замаха Стража не бьём, а уклоняемся рывком назад перед самым ударом.
         if (target instanceof com.replecant.skytest.entity.PrisonWardenEntity warden
                 && warden.state() == com.replecant.skytest.entity.PrisonWardenEntity.State.WINDUP) {
-            if (!parryTried && warden.stateTime(0.0F) >= 12.0F) {
+            if (!parryTried && warden.stateTime(0.0F) >= 13.0F) {
                 parryTried = true;
                 dodgeHealth = player.getHealth();
                 dodgeTick = clientTicks;
