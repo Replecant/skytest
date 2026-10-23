@@ -28,7 +28,9 @@ import net.neoforged.neoforge.client.network.ClientPacketDistributor;
  */
 public class DialogueScreen extends Screen {
     private static final float CHARS_PER_TICK = 1.6F;
-    private static final float ZOOM = 0.82F;
+    /** Приближение: вблизи лёгкое, к далёкому собеседнику — сильнее. */
+    private static final float MIN_ZOOM = 0.4F;
+    private static final float MAX_ZOOM = 0.82F;
     private static final double MAX_DISTANCE = 32.0;
     private static final int PANEL_COLOR = 0xE00D0B09;
     private static final int BORDER_COLOR = 0xFF5E4C33;
@@ -48,6 +50,7 @@ public class DialogueScreen extends Screen {
     private int closingTicks;
     private boolean previousHideGui;
     private long lastFrameNanos;
+    private float zoom = MAX_ZOOM;
 
     public DialogueScreen(int speakerId, Component speakerName, List<Component> lines) {
         super(speakerName);
@@ -62,7 +65,7 @@ public class DialogueScreen extends Screen {
             return 1.0F;
         }
         float t = active.closing ? 1.0F - active.closingTicks / 8.0F : active.ticksOpen / 12.0F;
-        return Mth.lerp(smooth(t), 1.0F, ZOOM);
+        return Mth.lerp(smooth(t), 1.0F, active.zoom);
     }
 
     @Override
@@ -72,6 +75,10 @@ public class DialogueScreen extends Screen {
             minecraft.options.hideGui = true;
             active = this;
             lastFrameNanos = System.nanoTime();
+            Entity speaker = speaker();
+            if (speaker != null && minecraft.player != null) {
+                zoom = Mth.clamp(2.5F / Math.max(0.1F, speaker.distanceTo(minecraft.player)), MIN_ZOOM, MAX_ZOOM);
+            }
             ClientSmoke.onDialogueOpened();
         }
     }
