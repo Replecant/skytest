@@ -244,8 +244,8 @@ public class DialogueScreen extends Screen {
         Vec3 d = to.subtract(from);
         double horizontal = Math.sqrt(d.x * d.x + d.z * d.z);
         float targetYaw = (float) (Mth.atan2(d.z, d.x) * Mth.RAD_TO_DEG) - 90.0F;
-        // Чуть выше центра: лицо не перекрывается панелью внизу.
-        float targetPitch = (float) (-(Mth.atan2(d.y, horizontal) * Mth.RAD_TO_DEG)) + 4.0F;
+        // Лицо чуть выше центра: его не перекрывают ни панель внизу, ни полоса сверху.
+        float targetPitch = (float) (-(Mth.atan2(d.y, horizontal) * Mth.RAD_TO_DEG)) + 1.5F;
 
         float k = 1.0F - (float) Math.exp(-dt * 6.0F);
         float yaw = player.getYRot() + Mth.wrapDegrees(targetYaw - player.getYRot()) * k;

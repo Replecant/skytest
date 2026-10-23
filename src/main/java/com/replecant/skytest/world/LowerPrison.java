@@ -246,8 +246,10 @@ public final class LowerPrison {
         hangingLantern(33, 79, 12, 6);
         hangingLantern(44, 79, 4, 4);
         hangingLantern(44, 79, 11, 7);
+        // Огонь душ вместо костров: тот же свет, но без столбов дыма из частиц.
         for (int z : new int[] {4, 10}) {
-            set(new BlockPos(31, FLOOR, z), Blocks.SOUL_CAMPFIRE.defaultBlockState());
+            set(new BlockPos(31, FLOOR - 1, z), Blocks.SOUL_SOIL.defaultBlockState());
+            set(new BlockPos(31, FLOOR, z), Blocks.SOUL_FIRE.defaultBlockState());
         }
         fill(31, FLOOR, 13, 33, FLOOR, 14, Blocks.COBBLED_DEEPSLATE.defaultBlockState());
         remains(32, 10);
