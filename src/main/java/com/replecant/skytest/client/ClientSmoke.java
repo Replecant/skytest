@@ -102,7 +102,10 @@ public final class ClientSmoke {
                 case 6 -> shot("10_sword_thrown");
                 case 25 -> shot("11_stranger_leaving");
                 case 75 -> shot("12_skeleton");
-                case 230 -> {
+                case 265 -> shot("15_bridge");
+                case 305 -> shot("16_prison_from_bridge");
+                case 345 -> shot("17_abyss");
+                case 370 -> {
                     SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE DONE");
                     mc.stop();
                 }

@@ -10,6 +10,7 @@ import com.replecant.skytest.registry.ModBlocks;
 import com.replecant.skytest.registry.ModItems;
 import com.replecant.skytest.world.AdventureWorld;
 import com.replecant.skytest.world.LowerPrison;
+import com.replecant.skytest.world.ModBiomes;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
@@ -31,6 +32,11 @@ final class SmokeTest {
         check(failures, gateOpen(level, new BlockPos(8, LowerPrison.FLOOR, 5), false), "N2 gate closed");
         check(failures, gateOpen(level, new BlockPos(8, LowerPrison.FLOOR, 9), true), "S2 (boots) gate open");
         check(failures, level.getBlockState(new BlockPos(38, 57, 21)).is(Blocks.DEEPSLATE_BRICK_STAIRS), "descent stairs");
+        check(failures, level.getBlockState(new BlockPos(38, 58, 30)).isAir(), "tunnel to the bridge");
+        check(failures, !level.getBlockState(new BlockPos(38, 56, 50)).isAir(), "bridge deck");
+        check(failures, level.getBlockState(new BlockPos(38, 56, 61)).isAir(), "gap in the bridge");
+        check(failures, level.getBiome(new BlockPos(2, 65, 2)).is(ModBiomes.LOWER_PRISON), "prison biome in the cell");
+        check(failures, level.getBiome(new BlockPos(38, 58, 50)).is(ModBiomes.SKY_ABYSS), "sky biome over the bridge");
         check(failures, level.getBlockState(new BlockPos(0, LowerPrison.FLOOR, 5)).is(Blocks.IRON_BARS), "cell bars");
         check(failures, chestHas(level, new BlockPos(8, LowerPrison.FLOOR, 13), ModItems.CIRCUS_BOOTS.get()), "boots chest");
         check(failures, chestHas(level, new BlockPos(45, LowerPrison.FLOOR + 2, 7), ModItems.GRAPPLING_HOOK.get()), "hook chest");

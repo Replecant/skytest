@@ -21,6 +21,8 @@ public final class AdventureWorld {
      */
     public static final ResourceKey<DimensionType> DEPTHS = BuiltinDimensionTypes.OVERWORLD_CAVES;
 
+    public static final long DUSK = 12900L;
+
     public static boolean isAdventure(Level level) {
         return level.dimensionTypeRegistration().is(DEPTHS);
     }
@@ -46,7 +48,8 @@ public final class AdventureWorld {
         set(rules, GameRules.SHOW_ADVANCEMENT_MESSAGES, false, server);
         set(rules, GameRules.LOCATOR_BAR, false, server);
         set(rules, GameRules.SPREAD_VINES, false, server);
-        level.setDayTime(18000L);
+        // Сразу после заката: небо в сумеречных цветах, а нежить на мосту не горит.
+        level.setDayTime(DUSK);
     }
 
     private static <T> void set(GameRules rules, GameRule<T> rule, T value, MinecraftServer server) {

@@ -5,7 +5,7 @@
       "generator": {
         "type": "minecraft:flat",
         "settings": {
-          "biome": "skytest:lower_prison",
+          "biome": "skytest:sky_abyss",
           "features": false,
           "lakes": false,
           "layers": [

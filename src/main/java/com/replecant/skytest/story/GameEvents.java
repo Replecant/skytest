@@ -21,6 +21,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.portal.TeleportTransition;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -34,6 +36,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 @EventBusSubscriber(modid = SkyTest.MODID)
 public final class GameEvents {
     private static final Set<UUID> REACHED_END = new HashSet<>();
+    private static final Set<UUID> REACHED_BRIDGE = new HashSet<>();
 
     @SubscribeEvent
     static void onServerStarted(ServerStartedEvent event) {
@@ -70,25 +73,43 @@ public final class GameEvents {
 
     @SubscribeEvent
     static void onPlayerTick(PlayerTickEvent.Post event) {
-        Player player = event.getEntity();
-        if (player.level().isClientSide() || !AdventureWorld.isAdventure(player.level())) {
+        if (!(event.getEntity() instanceof ServerPlayer player) || !AdventureWorld.isAdventure(player.level())) {
             return;
         }
         // Голода в этой игре нет.
         player.getFoodData().setFoodLevel(20);
 
-        if (player.tickCount % 5 == 0 && player instanceof ServerPlayer serverPlayer) {
-            HallEvent.checkTrigger(serverPlayer);
+        // Падение в бездну: возврат на начало моста (или в камеру) с уроном.
+        if (player.getY() < LowerPrison.ABYSS_Y && !player.isSpectator() && !player.getAbilities().flying) {
+            Vec3 back = REACHED_BRIDGE.contains(player.getUUID()) ? LowerPrison.BRIDGE_START : LowerPrison.PLAYER_SPAWN;
+            player.teleport(new TeleportTransition(player.level().getServer().overworld(), back, Vec3.ZERO,
+                    0.0F, 0.0F, TeleportTransition.DO_NOTHING));
+            player.resetFallDistance();
+            player.hurtServer(player.level(), player.damageSources().fellOutOfWorld(), 4.0F);
+            return;
         }
-        if (player.tickCount % 10 == 0 && player instanceof ServerPlayer serverPlayer
-                && LowerPrison.END_ROOM.contains(player.position())
-                && REACHED_END.add(player.getUUID())) {
-            serverPlayer.connection.send(new ClientboundSetTitlesAnimationPacket(20, 80, 40));
-            serverPlayer.connection.send(new ClientboundSetSubtitleTextPacket(
-                    Component.translatable("area.skytest.test_end.subtitle").withStyle(ChatFormatting.GRAY)));
-            serverPlayer.connection.send(new ClientboundSetTitleTextPacket(
-                    Component.translatable("area.skytest.test_end").withStyle(ChatFormatting.GOLD)));
+
+        if (player.tickCount % 5 == 0) {
+            HallEvent.checkTrigger(player);
         }
+        if (player.tickCount % 10 != 0) {
+            return;
+        }
+        Vec3 pos = player.position();
+        if (LowerPrison.BRIDGE.contains(pos) && REACHED_BRIDGE.add(player.getUUID())) {
+            showTitle(player, "area.skytest.sky_bridge", 30, 90, 40);
+        }
+        if ((LowerPrison.END_ROOM.contains(pos) || LowerPrison.BRIDGE_END.contains(pos)) && REACHED_END.add(player.getUUID())) {
+            showTitle(player, "area.skytest.test_end", 20, 80, 40);
+        }
+    }
+
+    private static void showTitle(ServerPlayer player, String key, int fadeIn, int stay, int fadeOut) {
+        player.connection.send(new ClientboundSetTitlesAnimationPacket(fadeIn, stay, fadeOut));
+        player.connection.send(new ClientboundSetSubtitleTextPacket(
+                Component.translatable(key + ".subtitle").withStyle(ChatFormatting.GRAY)));
+        player.connection.send(new ClientboundSetTitleTextPacket(
+                Component.translatable(key).withStyle(ChatFormatting.GOLD)));
     }
 
     @SubscribeEvent
@@ -136,6 +157,7 @@ public final class GameEvents {
                     Prologue.reset(player);
                     player.setData(com.replecant.skytest.registry.ModAttachments.STORY_FLAGS, new java.util.HashSet<>());
                     REACHED_END.remove(player.getUUID());
+                    REACHED_BRIDGE.remove(player.getUUID());
                     ctx.getSource().sendSuccess(() -> Component.literal("Story progress reset (use /skytest rebuild to respawn NPCs)"), false);
                     return 1;
                 }))
