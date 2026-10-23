@@ -86,7 +86,7 @@ public final class ClientSmoke {
             if (t >= 100) {
                 magicTest(mc, t - 100);
             }
-            if (t == 730) {
+            if (t == 1000) {
                 SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE DONE");
                 mc.stop();
             }
@@ -254,6 +254,28 @@ public final class ClientSmoke {
             case 588 -> shot("28b_upper_bridge_far");
             case 592 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(89.5, 74, 71.5), -90.0F, 0.0F);
             case 606 -> shot("29_upper_hall");
+            // Повернуть мост обратно к камерам: снова к Регулятору.
+            case 615 -> {
+                tourTo(server, uuid, new net.minecraft.world.phys.Vec3(38.5, 57, 114.5), 0.0F, -12.0F);
+                server.execute(() -> {
+                    var player = server.getPlayerList().getPlayer(uuid);
+                    if (player != null) {
+                        player.level().getEntitiesOfClass(com.replecant.skytest.entity.RegulatorEntity.class,
+                                player.getBoundingBox().inflate(30.0)).stream().findFirst().ifPresent(r -> r.talkTo(player));
+                    }
+                });
+            }
+            case 630 -> shot("37_regulator_to_lower");
+            case 640 -> {
+                if (mc.screen instanceof com.replecant.skytest.client.DialogueScreen dialogue) {
+                    dialogue.onClose();
+                }
+            }
+            case 765 -> shot("38_bridge_back_a");
+            case 805 -> shot("38b_bridge_back_b");
+            case 890 -> server.execute(() -> SkyTest.LOGGER.info("SKYTEST BRIDGE main={} upper={}",
+                    com.replecant.skytest.world.LowerPrison.mainSpanBuilt(server.overworld()),
+                    com.replecant.skytest.world.LowerPrison.upperBridgeBuilt(server.overworld())));
             default -> { }
         }
     }

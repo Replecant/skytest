@@ -50,17 +50,42 @@ public final class RegulatorCutscene {
 
     private static final Map<UUID, Run> RUNS = new HashMap<>();
 
+    /** Куда Регулятор поворачивает мост. */
+    public enum Target { UPPER, LOWER }
+
+    /** Пролёт, который в сцене строится или разбирается по шагам. */
+    private interface Job {
+        /** Сделать шаг; false — больше нечего. */
+        boolean step();
+
+        void finish();
+
+        int length();
+
+        Vec3 last();
+    }
+
     private static final class Run {
         final RegulatorEntity regulator;
         final Vec3 anchor;
-        final LowerPrison.UpperBridge bridge;
+        final Target target;
+        final Job build;
+        final Job remove;
+        final LowerPrison.UpperBridge upper;
+        final boolean completesQuest;
         int t;
-        float stepCredit;
+        float buildCredit;
+        float removeCredit;
 
-        Run(RegulatorEntity regulator, Vec3 anchor, LowerPrison.UpperBridge bridge) {
+        Run(RegulatorEntity regulator, Vec3 anchor, Target target, Job build, Job remove,
+                LowerPrison.UpperBridge upper, boolean completesQuest) {
             this.regulator = regulator;
             this.anchor = anchor;
-            this.bridge = bridge;
+            this.target = target;
+            this.build = build;
+            this.remove = remove;
+            this.upper = upper;
+            this.completesQuest = completesQuest;
         }
     }
 
@@ -68,15 +93,69 @@ public final class RegulatorCutscene {
         return RUNS.containsKey(player.getUUID());
     }
 
+    /** Ларпи вернулась: мост от руин уходит к Верхнему ярусу, задание выполнено в конце сцены. */
     public static void start(ServerPlayer player, RegulatorEntity regulator) {
+        start(player, regulator, Target.UPPER, true);
+    }
+
+    /**
+     * Повернуть мост. К Верхнему ярусу: пролёт к камерам разбирается, к ярусу —
+     * строится; к камерам — наоборот.
+     */
+    public static void start(ServerPlayer player, RegulatorEntity regulator, Target target, boolean completesQuest) {
         if (isRunning(player)) {
             return;
         }
-        LowerPrison.UpperBridge bridge = LowerPrison.startUpperBridge(player.level());
-        RUNS.put(player.getUUID(), new Run(regulator, player.position(), bridge));
+        ServerLevel level = player.level();
+        LowerPrison.UpperBridge upper = LowerPrison.startUpperBridge(level);
+        LowerPrison.MainSpan main = LowerPrison.mainSpan(level);
+        Job mainBuild = job(main::step, main::finish, main::length, main::lastColumn);
+        Job mainRemove = job(main::unstep, () -> { }, main::length, main::lastColumn);
+        Job upperBuild = upper == null ? null : job(upper::step, () -> { }, upper::length, upper::lastColumn);
+        Job upperRemove = upper == null ? null
+                : job(upper.fromEnd()::unstep, upper::finishRemoval, upper::length, upper::lastColumn);
+        boolean toUpper = target == Target.UPPER;
+        // Разбирать только то, что стоит, и строить только то, чего нет.
+        Job build = toUpper ? (LowerPrison.upperBridgeBuilt(level) ? null : upperBuild)
+                : (LowerPrison.mainSpanBuilt(level) ? null : mainBuild);
+        Job remove = toUpper ? (LowerPrison.mainSpanBuilt(level) ? mainRemove : null)
+                : (LowerPrison.upperBridgeBuilt(level) ? upperRemove : null);
+        if (toUpper && build != null && upper != null) {
+            // Для постройки — заново с начала, fromEnd() трогал общий счётчик.
+            LowerPrison.UpperBridge fresh = LowerPrison.startUpperBridge(level);
+            build = job(fresh::step, () -> { }, fresh::length, fresh::lastColumn);
+            upper = fresh;
+        }
+        RUNS.put(player.getUUID(), new Run(regulator, player.position(), target, build, remove, upper, completesQuest));
         player.setInvisible(true);
         PacketDistributor.sendToPlayer(player, new CutscenePayload(ID));
-        log("start, bridge spans {}", bridge == null ? -1 : bridge.length());
+        log("start to {}, build {} spans, remove {} spans", target,
+                build == null ? 0 : build.length(), remove == null ? 0 : remove.length());
+    }
+
+    private static Job job(java.util.function.BooleanSupplier step, Runnable finish,
+            java.util.function.IntSupplier length, java.util.function.Supplier<Vec3> last) {
+        return new Job() {
+            @Override
+            public boolean step() {
+                return step.getAsBoolean();
+            }
+
+            @Override
+            public void finish() {
+                finish.run();
+            }
+
+            @Override
+            public int length() {
+                return length.getAsInt();
+            }
+
+            @Override
+            public Vec3 last() {
+                return last.get();
+            }
+        };
     }
 
     static void tick(MinecraftServer server) {
@@ -130,33 +209,20 @@ public final class RegulatorCutscene {
         if (t == PULL_END) {
             regulator.setPulling(false);
         }
-        if (run.bridge != null && t >= BUILD_START && t <= BUILD_END) {
-            run.stepCredit += (float) run.bridge.length() / (BUILD_END - BUILD_START + 1);
-            while (run.stepCredit >= 1.0F) {
-                run.stepCredit -= 1.0F;
-                boolean more = run.bridge.step();
-                Vec3 at = run.bridge.lastColumn();
-                sound(level, at, SoundEvents.DEEPSLATE_BRICKS_PLACE, 4.0F, 0.6F + level.random.nextFloat() * 0.2F);
-                if (level.random.nextInt(3) == 0) {
-                    sound(level, at, SoundEvents.GRINDSTONE_USE, 3.0F, 0.5F);
-                }
-                particles(player, new BlockParticleOption(ParticleTypes.BLOCK, Blocks.DEEPSLATE_BRICKS.defaultBlockState()),
-                        at, 14, 0.4, 0.4, 1.4, 0.1);
-                particles(player, ParticleTypes.LARGE_SMOKE, at.add(0, -1, 0), 2, 0.3, 0.2, 1.0, 0.01);
-                if (!more) {
-                    break;
-                }
-            }
+        if (t >= BUILD_START && t <= BUILD_END) {
+            run.buildCredit = progress(level, player, run.build, run.buildCredit, false);
+            run.removeCredit = progress(level, player, run.remove, run.removeCredit, true);
         }
         if (t == GATE_OPEN) {
             finishBridge(run);
-            if (run.bridge != null) {
-                Vec3 gate = run.bridge.portal();
-                sound(level, gate, SoundEvents.IRON_DOOR_OPEN, 4.0F, 0.5F);
+            if (run.upper != null) {
+                Vec3 gate = run.upper.portal();
+                sound(level, gate, run.target == Target.UPPER ? SoundEvents.IRON_DOOR_OPEN : SoundEvents.IRON_DOOR_CLOSE,
+                        4.0F, 0.5F);
                 sound(level, gate, SoundEvents.ANVIL_LAND, 3.0F, 0.6F);
             }
         }
-        if (t == QUEST_DONE) {
+        if (t == QUEST_DONE && run.completesQuest) {
             Quests.complete(player, Quests.FIND_LARPI);
         }
         if (t >= LENGTH) {
@@ -167,14 +233,51 @@ public final class RegulatorCutscene {
         return false;
     }
 
+    /** Равномерно растянуть шаги работы на окно постройки; возвращает остаток «кредита» шагов. */
+    private static float progress(ServerLevel level, ServerPlayer player, Job job, float credit, boolean removing) {
+        if (job == null) {
+            return 0.0F;
+        }
+        credit += (float) job.length() / (BUILD_END - BUILD_START + 1);
+        while (credit >= 1.0F) {
+            credit -= 1.0F;
+            boolean more = job.step();
+            Vec3 at = job.last();
+            if (removing) {
+                sound(level, at, SoundEvents.DEEPSLATE_BRICKS_BREAK, 4.0F, 0.5F + level.random.nextFloat() * 0.2F);
+                if (level.random.nextInt(3) == 0) {
+                    sound(level, at, SoundEvents.ARMOR_EQUIP_CHAIN.value(), 3.0F, 0.6F);
+                }
+                particles(player, ParticleTypes.LARGE_SMOKE, at, 4, 0.8, 0.3, 0.8, 0.02);
+            } else {
+                sound(level, at, SoundEvents.DEEPSLATE_BRICKS_PLACE, 4.0F, 0.6F + level.random.nextFloat() * 0.2F);
+                if (level.random.nextInt(3) == 0) {
+                    sound(level, at, SoundEvents.GRINDSTONE_USE, 3.0F, 0.5F);
+                }
+                particles(player, ParticleTypes.LARGE_SMOKE, at.add(0, -1, 0), 2, 0.3, 0.2, 1.0, 0.01);
+            }
+            particles(player, new BlockParticleOption(ParticleTypes.BLOCK, Blocks.DEEPSLATE_BRICKS.defaultBlockState()),
+                    at, 14, 0.6, 0.4, 0.6, 0.1);
+            if (!more) {
+                break;
+            }
+        }
+        return credit;
+    }
+
     private static void finishBridge(Run run) {
-        if (run.bridge == null) {
-            return;
+        if (run.remove != null) {
+            while (run.remove.step()) {
+                // разобрать оставшееся
+            }
+            run.remove.finish();
         }
-        while (run.bridge.step()) {
-            // доложить оставшиеся пролёты
+        if (run.build != null) {
+            while (run.build.step()) {
+                // доложить оставшиеся пролёты
+            }
+            run.build.finish();
         }
-        run.bridge.finish();
     }
 
     private static void sound(ServerLevel level, Vec3 at, SoundEvent sound, float volume, float pitch) {

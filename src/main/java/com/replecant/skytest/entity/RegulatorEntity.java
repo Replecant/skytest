@@ -130,6 +130,12 @@ public class RegulatorEntity extends PathfinderMob {
             Quests.start(player, Quests.FIND_LARPI);
         } else if (!Quests.isDone(player, Quests.FIND_LARPI) && takeLarpi(player)) {
             returnLarpi(player);
+        } else if (Quests.isDone(player, Quests.FIND_LARPI)) {
+            // После задания он поворачивает мост туда, куда игроку нужно.
+            boolean toLower = com.replecant.skytest.world.LowerPrison.upperBridgeBuilt((ServerLevel) level());
+            com.replecant.skytest.story.RegulatorCutscene.start(player, this,
+                    toLower ? com.replecant.skytest.story.RegulatorCutscene.Target.LOWER
+                            : com.replecant.skytest.story.RegulatorCutscene.Target.UPPER, false);
         }
     }
 

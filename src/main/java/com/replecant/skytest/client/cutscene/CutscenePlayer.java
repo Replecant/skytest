@@ -78,8 +78,9 @@ public final class CutscenePlayer {
                         new Shot(0, 100, new Vec3(35.5, 58.6, 113.0), regulator.add(0, 5.0, 0),
                                 new Vec3(37.0, 58.5, 118.0), regulator.add(0, 9.5, 0)),
                         // Снаружи: общий план руин и Верхнего яруса, мост растёт ступенями вверх.
-                        new Shot(105, 225, new Vec3(64.0, 71.0, 41.0), new Vec3(61.0, 64.0, 71.0),
-                                new Vec3(57.0, 68.0, 44.0), new Vec3(64.0, 66.0, 71.0))),
+                        // Снаружи: в кадре и пролёт к камерам, и подъём к Верхнему ярусу — один разбирается, другой растёт.
+                        new Shot(105, 225, new Vec3(77.0, 70.0, 49.0), new Vec3(46.0, 60.0, 64.0),
+                                new Vec3(73.0, 72.5, 44.5), new Vec3(48.0, 61.5, 65.0))),
                 List.of(new Fade(0, 8, 1.0F, 0.0F), new Fade(92, 104, 0.0F, 1.0F), new Fade(105, 114, 1.0F, 0.0F),
                         new Fade(212, 224, 0.0F, 1.0F), new Fade(225, 238, 1.0F, 0.0F)),
                 List.of(new Shake(RegulatorCutscene.IMPACTS[0], 0.25F), new Shake(RegulatorCutscene.IMPACTS[1], 0.4F),

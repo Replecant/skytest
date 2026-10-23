@@ -30,7 +30,8 @@ public final class Dialogues {
 
     /** Регулятор: первая встреча — знакомство и задание, потом — подсказки. */
     public static final Conversation REGULATOR_LARPI = new Conversation("regulator", "larpi", 6);
-    public static final Conversation REGULATOR_AFTER = new Conversation("regulator", "after", 2);
+    public static final Conversation REGULATOR_TO_LOWER = new Conversation("regulator", "to_lower", 3);
+    public static final Conversation REGULATOR_TO_UPPER = new Conversation("regulator", "to_upper", 3);
 
     public static final Conversation RAT_CATCHER_IDLE = new Conversation("rat_catcher", "idle", 3);
     public static final Conversation RAT_CATCHER_MEETING = new Conversation("rat_catcher", "meeting", 8);
@@ -40,7 +41,8 @@ public final class Dialogues {
 
     public static void talkToRegulator(ServerPlayer player, Entity regulator) {
         if (Quests.isDone(player, Quests.FIND_LARPI)) {
-            open(player, regulator, REGULATOR_AFTER);
+            open(player, regulator, com.replecant.skytest.world.LowerPrison.upperBridgeBuilt(player.level())
+                    ? REGULATOR_TO_LOWER : REGULATOR_TO_UPPER);
         } else if (player.getInventory().contains(stack -> stack.is(ModItems.LARPI.get()))) {
             open(player, regulator, REGULATOR_LARPI);
         } else if (Quests.isStarted(player, Quests.FIND_LARPI)) {

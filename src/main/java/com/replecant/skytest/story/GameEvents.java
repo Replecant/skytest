@@ -65,7 +65,13 @@ public final class GameEvents {
     @SubscribeEvent
     static void onRespawn(PlayerEvent.PlayerRespawnEvent event) {
         if (event.getEntity() instanceof ServerPlayer player && AdventureWorld.isAdventure(player.level())) {
-            Prologue.teleportToCell(player);
+            if (LowerPrison.mainSpanBuilt(player.level())) {
+                Prologue.teleportToCell(player);
+            } else {
+                // Мост повёрнут к Верхнему ярусу — из камеры не выбраться; возрождаемся у Регулятора.
+                player.teleport(new TeleportTransition(player.level(), LowerPrison.REGULATOR_ENTRANCE, Vec3.ZERO,
+                        180.0F, 0.0F, TeleportTransition.DO_NOTHING));
+            }
         }
     }
 
@@ -76,7 +82,8 @@ public final class GameEvents {
         }
         // Падение в бездну: возврат на начало моста (или в камеру) с уроном.
         if (player.getY() < LowerPrison.ABYSS_Y && !player.isSpectator() && !player.getAbilities().flying) {
-            Vec3 back = HallEvent.hasFlag(player, "reached_bridge") ? LowerPrison.BRIDGE_START : LowerPrison.PLAYER_SPAWN;
+            Vec3 back = !HallEvent.hasFlag(player, "reached_bridge") ? LowerPrison.PLAYER_SPAWN
+                    : LowerPrison.mainSpanBuilt(player.level()) ? LowerPrison.BRIDGE_START : LowerPrison.RUINS_POINT;
             player.teleport(new TeleportTransition(player.level().getServer().overworld(), back, Vec3.ZERO,
                     0.0F, 0.0F, TeleportTransition.DO_NOTHING));
             player.resetFallDistance();

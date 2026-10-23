@@ -109,6 +109,10 @@
   "dialogue.skytest.regulator.larpi.4": "I promised, and I remember. The paths will change.",
   "dialogue.skytest.regulator.larpi.5": "See the levers? Now... this one. And this one. Hold on tight.",
   "dialogue.skytest.regulator.larpi.6": "The bridge to the Upper Tier is back in place. Go. But remember: up there they keep those we down here were afraid of.",
-  "dialogue.skytest.regulator.after.1": "Larpi is happy. So I am happy.",
-  "dialogue.skytest.regulator.after.2": "The bridge to the Upper Tier holds. As long as I hold the levers, it holds."
+  "dialogue.skytest.regulator.to_lower.1": "Larpi is happy. So I am happy.",
+  "dialogue.skytest.regulator.to_lower.2": "Want to go back down, to the cells? That span is taken apart now: the bridge holds only one road at a time.",
+  "dialogue.skytest.regulator.to_lower.3": "No matter. I'll turn it. And if you want to go up again, come back and I'll turn it again.",
+  "dialogue.skytest.regulator.to_upper.1": "Up again? Larpi says you looked good up there.",
+  "dialogue.skytest.regulator.to_upper.2": "I'll take away the span to the cells: the bridge holds only one road at a time.",
+  "dialogue.skytest.regulator.to_upper.3": "Hold on. Turning it now."
 }

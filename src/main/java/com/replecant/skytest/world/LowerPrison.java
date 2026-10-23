@@ -86,6 +86,10 @@ public final class LowerPrison {
     public static final int UPPER_FLOOR = 74;
     /** Нижние камеры и крысятник Крысолова. */
     public static final int LOWER_FLOOR = 55;
+    /** Точка на руинах посреди моста — сюда возвращает падение, если пролёта к камерам нет. */
+    public static final Vec3 RUINS_POINT = new Vec3(38.5, BRIDGE_Y + 1, 72.5);
+    /** Вход в зал Регулятора — здесь возрождается игрок, если камеры отрезаны. */
+    public static final Vec3 REGULATOR_ENTRANCE = new Vec3(38.5, 57, 101.5);
     public static final AABB RAT_ROOM = new AABB(20, 54, 4, 32, 60, 20);
     public static final Vec3 RAT_CATCHER_POS = new Vec3(28.5, LOWER_FLOOR, 15.5);
     private static final int NEST_RATS = 11;
@@ -540,6 +544,53 @@ public final class LowerPrison {
         return true;
     }
 
+    /** Поперечный пролёт открытого моста на данном z: настил, бортики, перила; на опорах — балка, цепи и фонари. */
+    private void spanColumn(int z, boolean supportsAllowed) {
+        int y = BRIDGE_Y;
+        for (int x = 37; x <= 39; x++) {
+            set(new BlockPos(x, y, z), pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.25F));
+        }
+        // Перила с разрушенными участками рядом с провалом.
+        boolean brokenRail = (z >= GAP_START - 3 && z <= GAP_END + 3) && random.nextFloat() < 0.6F;
+        if (!brokenRail) {
+            connectable(new BlockPos(36, y + 1, z), Blocks.DEEPSLATE_TILE_WALL.defaultBlockState());
+            connectable(new BlockPos(40, y + 1, z), Blocks.DEEPSLATE_TILE_WALL.defaultBlockState());
+        }
+        set(new BlockPos(36, y, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        set(new BlockPos(40, y, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        // Опоры: балка снизу и свисающие в пропасть цепи; фонари на столбах.
+        if (z % 8 == 0 && supportsAllowed) {
+            fill(35, y - 1, z, 41, y - 1, z, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+            for (int x : new int[] {35, 41}) {
+                chain(x, y - 2, z, 4 + random.nextInt(6));
+            }
+            for (int x : new int[] {36, 40}) {
+                connectable(new BlockPos(x, y + 1, z), Blocks.POLISHED_DEEPSLATE_WALL.defaultBlockState());
+                set(new BlockPos(x, y + 2, z), Blocks.SOUL_LANTERN.defaultBlockState());
+            }
+        }
+    }
+
+    /**
+     * Разобрать поперечный срез моста: настил срывается и падает в бездну
+     * (падающие блоки), остальное — перила, фонари, цепи — исчезает.
+     */
+    private void dismantle(int x0, int x1, int y0, int y1, int z0, int z1, int deckY) {
+        for (BlockPos pos : BlockPos.betweenClosed(x0, y0, z0, x1, y1, z1)) {
+            BlockState state = level.getBlockState(pos);
+            if (state.isAir()) {
+                continue;
+            }
+            if (pos.getY() >= deckY - 1 && pos.getY() <= deckY && random.nextFloat() < 0.55F) {
+                var falling = net.minecraft.world.entity.item.FallingBlockEntity.fall(level, pos.immutable(), state);
+                falling.dropItem = false;
+                falling.setDeltaMovement((random.nextFloat() - 0.5F) * 0.15, 0.05, (random.nextFloat() - 0.5F) * 0.15);
+            } else {
+                level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
+            }
+        }
+    }
+
     /** Проход сквозь край скалы шириной с мост: настил и кирпичные бортики, над ними пусто. */
     private void notch(int z) {
         int y = BRIDGE_Y;
@@ -633,25 +684,7 @@ public final class LowerPrison {
             if (ruins) {
                 continue;
             }
-            // Перила с разрушенными участками рядом с провалом.
-            boolean brokenRail = (z >= GAP_START - 3 && z <= GAP_END + 3) && random.nextFloat() < 0.6F;
-            if (!brokenRail) {
-                connectable(new BlockPos(36, y + 1, z), Blocks.DEEPSLATE_TILE_WALL.defaultBlockState());
-                connectable(new BlockPos(40, y + 1, z), Blocks.DEEPSLATE_TILE_WALL.defaultBlockState());
-            }
-            set(new BlockPos(36, y, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
-            set(new BlockPos(40, y, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
-            // Опоры: балка снизу и свисающие в пропасть цепи; фонари на столбах.
-            if (z % 8 == 0 && z > exitZ + 2 && z < entryZ - 2) {
-                fill(35, y - 1, z, 41, y - 1, z, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
-                for (int x : new int[] {35, 41}) {
-                    chain(x, y - 2, z, 4 + random.nextInt(6));
-                }
-                for (int x : new int[] {36, 40}) {
-                    connectable(new BlockPos(x, y + 1, z), Blocks.POLISHED_DEEPSLATE_WALL.defaultBlockState());
-                    set(new BlockPos(x, y + 2, z), Blocks.SOUL_LANTERN.defaultBlockState());
-                }
-            }
+            spanColumn(z, z > exitZ + 2 && z < entryZ - 2);
         }
         // Полуразрушенная площадка на полпути ко второй скале: пол с выщерблинами,
         // низкий обломанный парапет, остов арки. Восточный край посередине открыт —
@@ -873,6 +906,95 @@ public final class LowerPrison {
         return true;
     }
 
+    /** Мост к Верхнему ярусу сейчас перекинут. */
+    public static boolean upperBridgeBuilt(ServerLevel level) {
+        for (int y = BRIDGE_Y; y <= UPPER_FLOOR; y++) {
+            if (!level.getBlockState(new BlockPos(56, y, UPPER_LANE)).isAir()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Пролёт от руин к нижнему ярусу (камерам) сейчас на месте. */
+    public static boolean mainSpanBuilt(ServerLevel level) {
+        return !level.getBlockState(new BlockPos(38, BRIDGE_Y, 50)).isAir();
+    }
+
+    /** Пролёт моста между скалой с камерами и руинами (с провалом посередине). */
+    public static MainSpan mainSpan(ServerLevel level) {
+        LowerPrison prison = new LowerPrison(level);
+        int first = 40;
+        // Первый открытый срез после выемки в скале: по бокам моста — ни камня.
+        for (int z = 30; z < GAP_START; z++) {
+            boolean open = true;
+            for (int y = BRIDGE_Y - 2; y <= BRIDGE_Y + 6 && open; y++) {
+                open = level.getBlockState(new BlockPos(33, y, z)).isAir() && level.getBlockState(new BlockPos(43, y, z)).isAir();
+            }
+            if (open) {
+                first = z;
+                break;
+            }
+        }
+        return prison.new MainSpan(first, UPPER_LANE - 4);
+    }
+
+    /** Пролёт к камерам: строится и разбирается по срезу, от руин к скале. */
+    public final class MainSpan {
+        private final int first;
+        private final int last;
+        private int next;
+
+        private MainSpan(int first, int last) {
+            this.first = first;
+            this.last = last;
+            this.next = last;
+        }
+
+        public int length() {
+            return last - first + 1 - (GAP_END - GAP_START + 1);
+        }
+
+        public Vec3 lastColumn() {
+            return new Vec3(38.5, BRIDGE_Y + 0.5, Math.min(last, next + 1) + 0.5);
+        }
+
+        private int advance() {
+            while (next >= GAP_START && next <= GAP_END) {
+                next--;
+            }
+            return next >= first ? next-- : Integer.MIN_VALUE;
+        }
+
+        public boolean step() {
+            int z = advance();
+            if (z == Integer.MIN_VALUE) {
+                return false;
+            }
+            int mark = connectables.size();
+            spanColumn(z, z > first + 1);
+            for (BlockPos pos : connectables.subList(Math.max(0, mark - 6), connectables.size())) {
+                set(pos, Block.updateFromNeighbourShapes(level.getBlockState(pos), level, pos));
+            }
+            return next >= first;
+        }
+
+        public boolean unstep() {
+            int z = advance();
+            if (z == Integer.MIN_VALUE) {
+                return false;
+            }
+            dismantle(34, 42, BRIDGE_Y - 12, BRIDGE_Y + 3, z, z, BRIDGE_Y);
+            return next >= first;
+        }
+
+        public void finish() {
+            for (BlockPos pos : connectables) {
+                set(pos, Block.updateFromNeighbourShapes(level.getBlockState(pos), level, pos));
+            }
+        }
+    }
+
     /** Постройка моста к Верхнему ярусу по шагам; null — Верхний ярус не найден. */
     public static UpperBridge startUpperBridge(ServerLevel level) {
         LowerPrison prison = new LowerPrison(level);
@@ -888,12 +1010,14 @@ public final class LowerPrison {
             return null;
         }
         int faceX = portalX;
-        while (faceX > 50 && (level.getBlockState(new BlockPos(faceX - 1, UPPER_FLOOR, lane)).is(Blocks.DEEPSLATE_TILES)
-                || level.getBlockState(new BlockPos(faceX - 1, UPPER_FLOOR, lane)).is(Blocks.CRACKED_DEEPSLATE_TILES)
-                || level.getBlockState(new BlockPos(faceX - 1, UPPER_FLOOR, lane)).is(Blocks.DEEPSLATE_TILE_STAIRS))) {
-            faceX--;
+        for (int x = 60; x < portalX; x++) {
+            if (prison.rockAcrossX(x)) {
+                faceX = x;
+                break;
+            }
         }
-        return prison.new UpperBridge(portalX, 44, faceX - 1);
+        // Пролёт кончается у обломка, торчащего из скалы (4 блока до её края).
+        return prison.new UpperBridge(portalX, 44, faceX - 5);
     }
 
     /** Мост к Верхнему ярусу: каждый {@link #step()} кладёт один поперечный пролёт. */
@@ -962,6 +1086,39 @@ public final class LowerPrison {
                 set(pos, Block.updateFromNeighbourShapes(level.getBlockState(pos), level, pos));
             }
             return next <= endX;
+        }
+
+        /** Обратно: снять следующий пролёт, начиная от Верхнего яруса; false — снят весь. */
+        public boolean unstep() {
+            if (next < startX) {
+                return false;
+            }
+            int x = next--;
+            int y = deckY(x);
+            dismantle(x, x, y - 12, y + 3, UPPER_LANE - 4, UPPER_LANE + 4, y);
+            return next >= startX;
+        }
+
+        /** Пролёт снят — решётка опускается, у руин снова торчит обломок. */
+        public void finishRemoval() {
+            for (int z = UPPER_LANE - 1; z <= UPPER_LANE + 1; z++) {
+                for (int yy = UPPER_FLOOR + 1; yy <= UPPER_FLOOR + 3; yy++) {
+                    connectable(new BlockPos(portalX, yy, z), Blocks.IRON_BARS.defaultBlockState());
+                }
+            }
+            for (int dz = -1; dz <= 1; dz++) {
+                fill(44, BRIDGE_Y, UPPER_LANE + dz, 44 + 2 - Math.abs(dz) - (dz == 1 ? 1 : 0), BRIDGE_Y, UPPER_LANE + dz,
+                        Blocks.CRACKED_DEEPSLATE_TILES.defaultBlockState());
+            }
+            for (BlockPos pos : connectables) {
+                set(pos, Block.updateFromNeighbourShapes(level.getBlockState(pos), level, pos));
+            }
+        }
+
+        /** Для разборки — начать с дальнего конца уже построенного моста. */
+        public UpperBridge fromEnd() {
+            next = endX;
+            return this;
         }
 
         /** Мост дошёл до скалы — решётка на входе поднимается. */

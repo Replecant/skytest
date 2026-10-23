@@ -109,6 +109,10 @@
   "dialogue.skytest.regulator.larpi.4": "Я обещал, и я помню. Пути изменятся.",
   "dialogue.skytest.regulator.larpi.5": "Видишь рычаги? Сейчас... вот этот. И этот. Держись крепче.",
   "dialogue.skytest.regulator.larpi.6": "Мост к Верхнему ярусу снова на месте. Иди. Только помни: наверху держат тех, кого мы внизу побаивались.",
-  "dialogue.skytest.regulator.after.1": "Ларпи довольна. Значит, и я доволен.",
-  "dialogue.skytest.regulator.after.2": "Мост к Верхнему ярусу держится. Пока я держу рычаги — держится."
+  "dialogue.skytest.regulator.to_lower.1": "Ларпи довольна. Значит, и я доволен.",
+  "dialogue.skytest.regulator.to_lower.2": "Хочешь обратно, вниз, к камерам? Мост туда сейчас разобран: держит только одну дорогу за раз.",
+  "dialogue.skytest.regulator.to_lower.3": "Ничего. Сейчас поверну. А захочешь наверх — приходи, поверну снова.",
+  "dialogue.skytest.regulator.to_upper.1": "Снова наверх? Ларпи говорит, ты неплохо там смотрелся.",
+  "dialogue.skytest.regulator.to_upper.2": "Пролёт к камерам я уберу — мост держит только одну дорогу за раз.",
+  "dialogue.skytest.regulator.to_upper.3": "Держись. Сейчас поверну."
 }
