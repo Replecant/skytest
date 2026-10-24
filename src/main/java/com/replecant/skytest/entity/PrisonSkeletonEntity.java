@@ -85,9 +85,18 @@ public class PrisonSkeletonEntity extends Skeleton implements ParryReactive {
     public void reassessWeaponGoal() {
     }
 
-    /** Узники тюрьмы не горят на свету из проломов. */
+    /** Узники тюрьмы не горят на свету из проломов: огонь гасится сразу, урона нет. */
     @Override
-    public void igniteForSeconds(float seconds) {
+    public void aiStep() {
+        super.aiStep();
+        if (getRemainingFireTicks() > 0 && !isInLava()) {
+            clearFire();
+        }
+    }
+
+    @Override
+    public boolean fireImmune() {
+        return true;
     }
 
     private void setState(State next) {
