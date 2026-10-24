@@ -34,12 +34,10 @@ final class SmokeTest {
         check(failures, level.getBlockState(new BlockPos(38, 57, 21)).is(Blocks.DEEPSLATE_BRICK_STAIRS), "descent stairs");
         check(failures, level.getBlockState(new BlockPos(38, 58, 30)).isAir(), "tunnel to the bridge");
         check(failures, !level.getBlockState(new BlockPos(38, 56, 50)).isAir(), "bridge deck");
-        check(failures, level.getBlockState(new BlockPos(38, 56, 61)).isAir(), "gap in the bridge");
+        check(failures, !level.getBlockState(new BlockPos(38, 56, 61)).isAir(), "no gap in the bridge");
         check(failures, level.getBiome(new BlockPos(2, 65, 2)).is(ModBiomes.LOWER_PRISON), "prison biome in the cell");
         check(failures, level.getBiome(new BlockPos(38, 58, 50)).is(ModBiomes.SKY_ABYSS), "sky biome over the bridge");
         check(failures, level.getBlockState(new BlockPos(0, LowerPrison.FLOOR, 5)).is(Blocks.IRON_BARS), "cell bars");
-        check(failures, chestHas(level, new BlockPos(8, LowerPrison.FLOOR, 13), ModItems.CIRCUS_BOOTS.get()), "boots chest");
-        check(failures, chestHas(level, new BlockPos(45, LowerPrison.FLOOR + 2, 7), ModItems.GRAPPLING_HOOK.get()), "hook chest");
         AABB area = new AABB(-12, 52, -16, 56, 94, 27);
         int keepers = level.getEntitiesOfClass(LamplighterEntity.class, area).size();
         check(failures, keepers == 1, "exactly one lamplighter (found " + keepers + ")");
@@ -69,9 +67,6 @@ final class SmokeTest {
         int holes = 0;
         int blocked = 0;
         for (int z = 38; z <= 80; z++) {
-            if (z >= 60 && z <= 62) {
-                continue;
-            }
             if (level.getBlockState(new BlockPos(38, 56, z)).isAir()) {
                 holes++;
             }

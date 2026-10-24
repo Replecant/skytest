@@ -63,7 +63,8 @@ public final class LowerPrison {
     public static final AABB END_ROOM = new AABB(30, 74, -12, 39, 85, -5);
     /** Зал: при входе сюда с игроком заговаривает Незнакомец. */
     public static final AABB HALL = new AABB(31, 63, 0, 48, 71, 15);
-    public static final Vec3 STRANGER_POS = new Vec3(45.5, FLOOR + 2, 9.5);
+    /** Незнакомец вещает из пролома в восточной стене зала, над головой у игрока. */
+    public static final Vec3 STRANGER_POS = new Vec3(48.5, FLOOR + 2, 10.5);
     public static final float STRANGER_YAW = 90.0F;
     /** Проход в восточной стене, куда убегает Незнакомец. */
     public static final Vec3 STRANGER_EXIT = new Vec3(51.5, FLOOR + 2, 10.5);
@@ -103,8 +104,9 @@ public final class LowerPrison {
     private static final int UPPER_HALL_X1 = 104;
     public static final AABB UPPER_HALL = new AABB(87, 73, 61, 106, 86, 82);
     private static final AABB UPPER_BIOME = new AABB(86, 70, 60, 108, 88, 84);
-    private static final int GAP_START = 60;
-    private static final int GAP_END = 62;
+    /** Провала в мосте больше нет (диапазон пуст); перила посередине всё равно побиты. */
+    private static final int GAP_START = 61;
+    private static final int GAP_END = 60;
     private static final AABB WHOLE_AREA = new AABB(-40, -10, -40, 132, 130, 160);
     /** Всё, что внутри этой коробки, — биом тюрьмы (тёмный туман); снаружи — небо над бездной. */
     private static final AABB PRISON_BIOME = new AABB(-22, 48, -20, 60, 99, 26);
@@ -284,7 +286,6 @@ public final class LowerPrison {
         set(new BlockPos(12, FLOOR + 2, 0), Blocks.COBBLED_DEEPSLATE.defaultBlockState());
         set(new BlockPos(16, FLOOR + 3, 4), Blocks.HANGING_ROOTS.defaultBlockState());
         // Открытая камера S2 — сапоги циркача.
-        chest(8, FLOOR, 13, Direction.NORTH, new ItemStack(ModItems.CIRCUS_BOOTS.get()));
         set(new BlockPos(6, FLOOR, 14), Blocks.SKELETON_SKULL.defaultBlockState().setValue(BlockStateProperties.ROTATION_16, 6));
         fill(9, FLOOR, 14, 10, FLOOR, 14, Blocks.RED_CARPET.defaultBlockState());
     }
@@ -302,12 +303,8 @@ public final class LowerPrison {
     }
 
     private void decorateHall() {
-        // Уступ в 2 блока: обычным прыжком не забраться, двойным — можно.
-        fill(41, FLOOR, 0, 47, FLOOR + 1, 14, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
-        fill(41, FLOOR + 1, 0, 41, FLOOR + 1, 14, Blocks.DEEPSLATE_TILES.defaultBlockState());
-        chest(45, FLOOR + 2, 7, Direction.WEST, new ItemStack(ModItems.GRAPPLING_HOOK.get()));
-        set(new BlockPos(44, FLOOR + 2, 3), Blocks.SOUL_LANTERN.defaultBlockState());
-        set(new BlockPos(44, FLOOR + 2, 11), Blocks.SOUL_LANTERN.defaultBlockState());
+        set(new BlockPos(44, FLOOR, 3), Blocks.SOUL_LANTERN.defaultBlockState());
+        set(new BlockPos(44, FLOOR, 11), Blocks.SOUL_LANTERN.defaultBlockState());
 
         // Балкон под потолком: добраться только крюком.
         fill(31, 72, 0, 40, 73, 3, Blocks.DEEPSLATE_BRICKS.defaultBlockState());

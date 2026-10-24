@@ -107,9 +107,6 @@ public final class GameEvents {
         if (!com.replecant.skytest.Config.PROLOGUE_ENABLED.get() && LowerPrison.CELL_BLOCK.contains(pos)) {
             showAreaOnce(player, "lower_prison");
         }
-        if (LowerPrison.UPPER_HALL.contains(pos)) {
-            showAreaOnce(player, "upper_tier");
-        }
     }
 
     private static void showAreaOnce(ServerPlayer player, String area) {
