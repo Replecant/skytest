@@ -21,6 +21,9 @@ public final class ModCreativeTabs {
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.GRAPPLING_HOOK.get());
                         output.accept(ModItems.CIRCUS_BOOTS.get());
+                        output.accept(ModItems.WARDEN_TURBAN.get());
+                        output.accept(ModItems.WARDEN_CHESTPLATE.get());
+                        output.accept(ModItems.WARDEN_LEGGINGS.get());
                         output.accept(ModItems.DULL_SWORD.get());
                         output.accept(ModItems.RAW_RAT_MEAT.get());
                         output.accept(ModItems.PRISON_GATE.get());

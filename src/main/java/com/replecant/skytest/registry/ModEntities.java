@@ -5,6 +5,7 @@ import com.replecant.skytest.entity.GrapplingHookEntity;
 import com.replecant.skytest.entity.LamplighterEntity;
 import com.replecant.skytest.entity.LightningArcEntity;
 import com.replecant.skytest.entity.SerpentEntity;
+import com.replecant.skytest.entity.PrisonSkeletonEntity;
 import com.replecant.skytest.entity.PrisonWardenEntity;
 import com.replecant.skytest.entity.RatCatcherEntity;
 import com.replecant.skytest.entity.RatEntity;
@@ -115,7 +116,17 @@ public final class ModEntities {
                     .clientTrackingRange(10)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
 
+    /** Скелет-узник: ржавый меч, замах с сигналом к парированию. */
+    public static final DeferredHolder<EntityType<?>, EntityType<PrisonSkeletonEntity>> PRISON_SKELETON =
+            ENTITY_TYPES.register("prison_skeleton", id -> EntityType.Builder
+                    .<PrisonSkeletonEntity>of(PrisonSkeletonEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.99F)
+                    .eyeHeight(1.74F)
+                    .clientTrackingRange(8)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, id)));
+
     public static void registerAttributes(EntityAttributeCreationEvent event) {
+        event.put(PRISON_SKELETON.get(), PrisonSkeletonEntity.createAttributes().build());
         event.put(RAT_CATCHER.get(), RatCatcherEntity.createAttributes().build());
         event.put(REGULATOR.get(), RegulatorEntity.createAttributes().build());
         event.put(RAT.get(), RatEntity.createAttributes().build());

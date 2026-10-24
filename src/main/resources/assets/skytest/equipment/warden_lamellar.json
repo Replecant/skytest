@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "skytest:warden_lamellar"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "skytest:warden_lamellar"
+      }
+    ]
+  }
+}

@@ -117,5 +117,9 @@
   "dialogue.skytest.regulator.to_upper.3": "Hold on. Turning it now.",
   "dialogue.skytest.rat_catcher.idle.4": "The far cell by the wall held the Digger. Scratched and scratched all night... then one night he stopped. They say he got out.",
   "dialogue.skytest.rat_catcher.waiting.4": "And another thing. The far cell by the wall held the Digger. Scratched and scratched all night... then one night he stopped. They say he got out.",
-  "dialogue.skytest.rat_catcher.after.3": "The far cell by the wall held the Digger. Scratched and scratched all night... then one night he stopped. They say he got out."
+  "dialogue.skytest.rat_catcher.after.3": "The far cell by the wall held the Digger. Scratched and scratched all night... then one night he stopped. They say he got out.",
+  "entity.skytest.prison_skeleton": "Prisoner Skeleton",
+  "item.skytest.warden_turban": "Warden's Turban",
+  "item.skytest.warden_chestplate": "Warden's Lamellar Cuirass",
+  "item.skytest.warden_leggings": "Warden's Lamellar Greaves"
 }

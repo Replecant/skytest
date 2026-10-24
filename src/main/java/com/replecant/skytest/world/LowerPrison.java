@@ -94,6 +94,18 @@ public final class LowerPrison {
     /** Тайник Копателя: высота лаза и область, где «тайник найден». */
     public static final int DIG_Y = 47;
     public static final AABB DIGGERS_STASH = new AABB(12, DIG_Y - 1, 29, 17, DIG_Y + 3, 42);
+    /** Разрушенный ярус (дополнительный): атриум, заросший этаж, затопленный этаж. */
+    public static final int ATRIUM_Y = 48;
+    public static final int GARDEN_Y = 38;
+    public static final int FLOODED_Y = 29;
+    public static final int TIER_X0 = -38;
+    public static final int TIER_X1 = -16;
+    public static final int TIER_Z0 = 54;
+    public static final int TIER_Z1 = 74;
+    public static final AABB RUINED_TIER = new AABB(-52, 20, 40, -4, 66, 88);
+    private static final AABB ATRIUM_BIOME = new AABB(TIER_X0, ATRIUM_Y - 1, TIER_Z0, TIER_X1 + 1, ATRIUM_Y + 13, TIER_Z1 + 1);
+    private static final AABB GARDEN_BIOME = new AABB(TIER_X0 - 1, GARDEN_Y - 2, TIER_Z0 - 1, TIER_X1 + 2, GARDEN_Y + 7, TIER_Z1 + 2);
+    private static final AABB FLOODED_BIOME = new AABB(TIER_X0 - 1, FLOODED_Y - 2, TIER_Z0 - 1, TIER_X1 + 2, FLOODED_Y + 7, TIER_Z1 + 2);
     public static final AABB RAT_ROOM = new AABB(20, 54, 4, 32, 60, 20);
     public static final Vec3 RAT_CATCHER_POS = new Vec3(28.5, LOWER_FLOOR, 15.5);
     private static final int NEST_RATS = 11;
@@ -107,7 +119,7 @@ public final class LowerPrison {
     /** Провала в мосте больше нет (диапазон пуст); перила посередине всё равно побиты. */
     private static final int GAP_START = 61;
     private static final int GAP_END = 60;
-    private static final AABB WHOLE_AREA = new AABB(-40, -10, -40, 132, 130, 160);
+    private static final AABB WHOLE_AREA = new AABB(-62, -10, -40, 132, 130, 160);
     /** Всё, что внутри этой коробки, — биом тюрьмы (тёмный туман); снаружи — небо над бездной. */
     private static final AABB PRISON_BIOME = new AABB(-22, 48, -20, 60, 99, 26);
     private static final AABB REGULATOR_BIOME = new AABB(10, 40, 96, 66, 95, 146);
@@ -151,6 +163,7 @@ public final class LowerPrison {
         buildIsland(-12, 56, -16, 27, 52, 94, 0);
         buildIsland(14, 62, 92, 140, 50, 88, 10);
         buildIsland(88, 104, 61, 81, 70, 96, 20, 28.0);
+        buildIsland(-44, -14, 50, 78, 22, 66, 30, 32.0);
         set(MARKER, Blocks.BARRIER.defaultBlockState());
 
         // Камеры и коридор.
@@ -172,6 +185,7 @@ public final class LowerPrison {
 
         buildDescent();
         buildLowerCells();
+        buildRuinedTier();
         buildBridge();
         buildRegulatorHall();
         buildUpperTier();
@@ -460,6 +474,352 @@ public final class LowerPrison {
                     net.minecraft.world.item.Items.POTION, net.minecraft.world.item.alchemy.Potions.HEALING));
         }
         SkyTest.LOGGER.info("Digger's tunnel reaches the cliff at z={}", face);
+    }
+
+    // ---------------------------------------------------------------- разрушенный ярус
+
+    /**
+     * Дополнительный ярус в четвёртой скале, к югу от нижних камер. Три этажа:
+     * <ol>
+     *   <li>Атриум — высокий зал, боковые стены обвалились (видно небо и бездну), скелеты,
+     *       балкончики на высоте, куда можно забраться по обломкам; на одном — тюрбан стража.</li>
+     *   <li>Заросший этаж — мох, цветы, азалии, ягоды, светящиеся лозы, дыры в полу; нагрудник стража.</li>
+     *   <li>Затопленный этаж — вода, лёд, иней, пусто; в затопленной камере — поножи стража.</li>
+     * </ol>
+     * Вход — из площадки у лестницы в нижние камеры: ход на юг сквозь скалу и мост над пропастью.
+     */
+    private void buildRuinedTier() {
+        int ay = ATRIUM_Y;
+        room(TIER_X0, ay, TIER_Z0, TIER_X1, ay + 12, TIER_Z1);
+        room(TIER_X0, GARDEN_Y, TIER_Z0, TIER_X1, GARDEN_Y + 5, TIER_Z1);
+        room(TIER_X0, FLOODED_Y, TIER_Z0, TIER_X1, FLOODED_Y + 5, TIER_Z1);
+        buildTierEntrance();
+        buildAtrium();
+        buildGarden();
+        buildFlooded();
+        buildTierStairs();
+    }
+
+    /** Ход от площадки нижних камер на юг, к краю скалы, и мостик к атриуму. */
+    private void buildTierEntrance() {
+        int y = LOWER_FLOOR;
+        // Пролом в южной стене площадки.
+        fill(-17, y, 13, -16, y + 2, 14, Blocks.AIR.defaultBlockState());
+        set(new BlockPos(-15, y, 14), Blocks.COBBLED_DEEPSLATE.defaultBlockState());
+        // Ход на юг, сначала ровно, потом ступенями вниз до уровня атриума.
+        int faceZ = -1;
+        for (int z = 15; z < 50; z++) {
+            int drop = Math.max(0, Math.min(LOWER_FLOOR - ATRIUM_Y, z - 18));
+            int floor = y - drop;
+            boolean open = true;
+            for (int x = -18; x <= -15 && open; x++) {
+                for (int yy = floor; yy <= floor + 3 && open; yy++) {
+                    open = level.getBlockState(new BlockPos(x, yy, z)).isAir();
+                }
+            }
+            if (open && z > 20) {
+                faceZ = z;
+                break;
+            }
+            room(-17, floor, z, -16, floor + 2, z);
+            if (z > 18 && z - 18 <= LOWER_FLOOR - ATRIUM_Y) {
+                fill(-17, floor, z, -16, floor, z, Blocks.DEEPSLATE_BRICK_STAIRS.defaultBlockState()
+                        .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
+            }
+            if (z % 6 == 0) {
+                hangingLantern(-16, floor + 2, z, 0);
+            }
+        }
+        if (faceZ < 0) {
+            SkyTest.LOGGER.warn("Ruined tier: no cliff face south of the lower cells");
+            return;
+        }
+        // Узкий каменный мостик через пропасть до северной стены атриума.
+        int deck = ATRIUM_Y - 1;
+        for (int z = faceZ; z < TIER_Z0; z++) {
+            fill(-18, deck + 1, z, -15, deck + 4, z, Blocks.AIR.defaultBlockState());
+            fill(-17, deck, z, -16, deck, z, pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.35F));
+            if (level.getBlockState(new BlockPos(-18, deck - 1, z)).isAir()) {
+                // Над пропастью: перила и цепи вниз.
+                set(new BlockPos(-18, deck, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+                set(new BlockPos(-15, deck, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+                if (random.nextFloat() < 0.75F) {
+                    connectable(new BlockPos(-18, deck + 1, z), Blocks.DEEPSLATE_TILE_WALL.defaultBlockState());
+                }
+                if (random.nextFloat() < 0.75F) {
+                    connectable(new BlockPos(-15, deck + 1, z), Blocks.DEEPSLATE_TILE_WALL.defaultBlockState());
+                }
+                if (z % 4 == 0) {
+                    chain(random.nextBoolean() ? -18 : -15, deck - 1, z, 3 + random.nextInt(6));
+                }
+            }
+        }
+        // Вход в атриум: арка в северной стене.
+        fill(-18, ATRIUM_Y, TIER_Z0 - 1, -15, ATRIUM_Y + 3, TIER_Z0 - 1, Blocks.AIR.defaultBlockState());
+        set(new BlockPos(-16, ATRIUM_Y + 4, TIER_Z0 - 1), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
+    }
+
+    /** Атриум: колонны, обломки, проломы в боковых стенах, балкончики и паркур по обломкам. */
+    private void buildAtrium() {
+        int y = ATRIUM_Y;
+        for (int x = TIER_X0; x <= TIER_X1; x++) {
+            for (int z = TIER_Z0; z <= TIER_Z1; z++) {
+                set(new BlockPos(x, y - 1, z), pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.35F));
+            }
+        }
+        // Обвалившиеся стены: рваные проломы наружу — видно небо и бездну.
+        breach(TIER_X0 - 1, y + 1, 59, -1, 0, 3, 4, 41);
+        breach(TIER_X0 - 1, y + 2, 68, -1, 0, 4, 3, 42);
+        breach(TIER_X1 + 1, y + 2, 64, 1, 0, 4, 4, 43);
+        breach(-27, y + 2, TIER_Z1 + 1, 0, 1, 3, 3, 44);
+        // Колонны, часть — обломана.
+        for (int x : new int[] {-33, -21}) {
+            for (int z : new int[] {58, 64, 70}) {
+                int height = random.nextFloat() < 0.4F ? 2 + random.nextInt(5) : 12;
+                fill(x, y, z, x, y + height, z, Blocks.POLISHED_DEEPSLATE.defaultBlockState());
+                if (height < 12) {
+                    set(new BlockPos(x + (random.nextBoolean() ? 1 : -1), y, z + (random.nextBoolean() ? 1 : -1)),
+                            Blocks.COBBLED_DEEPSLATE.defaultBlockState());
+                }
+            }
+        }
+        // Обломки у проломов.
+        for (int i = 0; i < 26; i++) {
+            int x = TIER_X0 + random.nextInt(TIER_X1 - TIER_X0 + 1);
+            int z = TIER_Z0 + 2 + random.nextInt(TIER_Z1 - TIER_Z0 - 3);
+            BlockPos pos = new BlockPos(x, y, z);
+            if (level.getBlockState(pos).isAir() && (x < TIER_X0 + 4 || x > TIER_X1 - 3 || z > TIER_Z1 - 3)) {
+                set(pos, random.nextBoolean() ? Blocks.COBBLED_DEEPSLATE_SLAB.defaultBlockState() : Blocks.COBBLED_DEEPSLATE.defaultBlockState());
+            }
+        }
+        // Балкон на северо-западе: по обломкам колонн вверх, на балконе — тюрбан стража.
+        balcony(TIER_X0, TIER_Z0, TIER_X0 + 3, TIER_Z0 + 2, y + 5);
+        int[][] hops = {{-26, 57}, {-28, 56}, {-30, 57}, {-32, 56}, {-34, 56}};
+        for (int i = 0; i < hops.length; i++) {
+            fill(hops[i][0], y, hops[i][1], hops[i][0], y + i, hops[i][1], pick(Blocks.CRACKED_DEEPSLATE_BRICKS, Blocks.POLISHED_DEEPSLATE, 0.5F));
+        }
+        chest(TIER_X0, y + 6, TIER_Z0, Direction.SOUTH, new ItemStack(ModItems.WARDEN_TURBAN.get()));
+        set(new BlockPos(TIER_X0 + 3, y + 6, TIER_Z0), Blocks.SOUL_LANTERN.defaultBlockState());
+        // Балкон на юго-востоке, повыше: пустой, только череп и вид в пролом.
+        balcony(TIER_X1 - 3, 70, TIER_X1, TIER_Z1, y + 7);
+        int[][] hops2 = {{-22, 65}, {-20, 66}, {-22, 67}, {-20, 68}, {-21, 69}, {-22, 69}};
+        for (int i = 0; i < hops2.length; i++) {
+            fill(hops2[i][0], y, hops2[i][1], hops2[i][0], y + i, hops2[i][1], Blocks.CRACKED_DEEPSLATE_BRICKS.defaultBlockState());
+        }
+        set(new BlockPos(TIER_X1 - 1, y + 8, TIER_Z1 - 1), Blocks.SKELETON_SKULL.defaultBlockState()
+                .setValue(BlockStateProperties.ROTATION_16, 4));
+        // Свет и цепи.
+        for (int i = 0; i < 14; i++) {
+            int x = TIER_X0 + 2 + random.nextInt(TIER_X1 - TIER_X0 - 3);
+            int z = TIER_Z0 + 3 + random.nextInt(TIER_Z1 - TIER_Z0 - 5);
+            chain(x, y + 12, z, 2 + random.nextInt(6));
+        }
+        hangingLantern(-27, y + 12, 61, 5);
+        hangingLantern(-24, y + 12, 68, 4);
+        cobweb(TIER_X0, y + 12, TIER_Z1);
+        cobweb(TIER_X1, y + 12, TIER_Z0);
+    }
+
+    /** Балкончик на стене: площадка в 2 блока толщиной, с перилами по открытому краю. */
+    private void balcony(int x0, int z0, int x1, int z1, int top) {
+        fill(x0, top - 1, z0, x1, top, z1, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        for (int x = x0; x <= x1; x++) {
+            for (int z = z0; z <= z1; z++) {
+                boolean edge = (x == x0 && x0 > TIER_X0) || (x == x1 && x1 < TIER_X1) || (z == z0 && z0 > TIER_Z0) || (z == z1 && z1 < TIER_Z1);
+                if (edge && random.nextFloat() < 0.6F) {
+                    connectable(new BlockPos(x, top + 1, z), Blocks.DEEPSLATE_BRICK_WALL.defaultBlockState());
+                }
+            }
+        }
+    }
+
+    /**
+     * Рваный пролом сквозь стену наружу: от точки на стене идём по оси (dx, dz),
+     * вырезая неровное сечение (полуширина hw, полувысота hh).
+     */
+    private void breach(int x, int y, int z, int dx, int dz, int hw, int hh, int seed) {
+        for (int step = 0; step < 24; step++) {
+            int cx = x + dx * step;
+            int cz = z + dz * step;
+            for (int u = -hw - 1; u <= hw + 1; u++) {
+                for (int v = -hh - 1; v <= hh + 2; v++) {
+                    double n = noise(u + step * 3, v + step * 5, 2.0, seed);
+                    if (Math.abs(u) > hw - 1 + n * 2.0 || Math.abs(v) > hh - 1 + n * 2.0 || y + v < y - 1) {
+                        continue;
+                    }
+                    BlockPos pos = dx != 0 ? new BlockPos(cx, y + v, cz + u) : new BlockPos(cx + u, y + v, cz);
+                    level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
+                }
+            }
+        }
+    }
+
+    /** Заросший этаж: мох, цветы, азалии, ягоды, лозы; полуобвалившиеся камеры; дыры в полу. */
+    private void buildGarden() {
+        int y = GARDEN_Y;
+        for (int x = TIER_X0; x <= TIER_X1; x++) {
+            for (int z = TIER_Z0; z <= TIER_Z1; z++) {
+                double n = noise(x, z, 4.0, 51);
+                set(new BlockPos(x, y - 1, z), n > 0.45 ? Blocks.MOSS_BLOCK.defaultBlockState()
+                        : pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.4F));
+            }
+        }
+        // Остатки камер вдоль стен: перегородки и погнутые решётки.
+        for (int x = TIER_X0 + 4; x <= TIER_X1 - 2; x += 5) {
+            fill(x, y, TIER_Z0, x, y + 2 + random.nextInt(3), TIER_Z0 + 3, Blocks.CRACKED_DEEPSLATE_BRICKS.defaultBlockState());
+            fill(x, y, TIER_Z1 - 3, x, y + 1 + random.nextInt(4), TIER_Z1, Blocks.CRACKED_DEEPSLATE_BRICKS.defaultBlockState());
+        }
+        for (int x = TIER_X0; x <= TIER_X1; x++) {
+            for (int z : new int[] {TIER_Z0 + 4, TIER_Z1 - 4}) {
+                if (random.nextFloat() < 0.55F) {
+                    int top = y + 1 + random.nextInt(3);
+                    for (int yy = y; yy <= top; yy++) {
+                        connectable(new BlockPos(x, yy, z), Blocks.IRON_BARS.defaultBlockState());
+                    }
+                }
+            }
+        }
+        // Дыры в полу — вниз, в затопленный этаж.
+        for (int[] h : new int[][] {{-30, 63, 2}, {-22, 61, 1}, {-25, 67, 1}}) {
+            for (int dx = -h[2]; dx <= h[2]; dx++) {
+                for (int dz = -h[2]; dz <= h[2]; dz++) {
+                    if (Math.abs(dx) + Math.abs(dz) <= h[2] + 1) {
+                        fill(h[0] + dx, FLOODED_Y + 6, h[1] + dz, h[0] + dx, y - 1, h[1] + dz, Blocks.AIR.defaultBlockState());
+                    }
+                }
+            }
+        }
+        // Зелень: на мху — цветы, азалии, кусты ягод; с потолка — светящиеся лозы, по стенам — вьюнок.
+        Block[] flowers = {Blocks.POPPY, Blocks.DANDELION, Blocks.CORNFLOWER, Blocks.AZURE_BLUET, Blocks.OXEYE_DAISY};
+        for (int x = TIER_X0; x <= TIER_X1; x++) {
+            for (int z = TIER_Z0; z <= TIER_Z1; z++) {
+                BlockPos pos = new BlockPos(x, y, z);
+                if (!level.getBlockState(pos).isAir() || !level.getBlockState(pos.below()).is(Blocks.MOSS_BLOCK)) {
+                    continue;
+                }
+                float r = random.nextFloat();
+                if (r < 0.06F) {
+                    set(pos, Blocks.SWEET_BERRY_BUSH.defaultBlockState().setValue(BlockStateProperties.AGE_3, 3));
+                } else if (r < 0.12F) {
+                    set(pos, (random.nextBoolean() ? Blocks.FLOWERING_AZALEA : Blocks.AZALEA).defaultBlockState());
+                } else if (r < 0.28F) {
+                    set(pos, flowers[random.nextInt(flowers.length)].defaultBlockState());
+                } else if (r < 0.5F) {
+                    set(pos, Blocks.MOSS_CARPET.defaultBlockState());
+                }
+            }
+        }
+        for (int i = 0; i < 22; i++) {
+            int x = TIER_X0 + random.nextInt(TIER_X1 - TIER_X0 + 1);
+            int z = TIER_Z0 + random.nextInt(TIER_Z1 - TIER_Z0 + 1);
+            int length = 1 + random.nextInt(4);
+            for (int k = 0; k < length; k++) {
+                BlockPos pos = new BlockPos(x, y + 5 - k, z);
+                if (!level.getBlockState(pos).isAir()) {
+                    break;
+                }
+                boolean end = k == length - 1;
+                set(pos, (end ? Blocks.CAVE_VINES : Blocks.CAVE_VINES_PLANT).defaultBlockState()
+                        .setValue(BlockStateProperties.BERRIES, random.nextFloat() < 0.5F));
+            }
+        }
+        for (int i = 0; i < 40; i++) {
+            boolean xWall = random.nextBoolean();
+            int x = xWall ? (random.nextBoolean() ? TIER_X0 : TIER_X1) : TIER_X0 + random.nextInt(TIER_X1 - TIER_X0 + 1);
+            int z = xWall ? TIER_Z0 + random.nextInt(TIER_Z1 - TIER_Z0 + 1) : (random.nextBoolean() ? TIER_Z0 : TIER_Z1);
+            Direction face = x == TIER_X0 ? Direction.WEST : x == TIER_X1 ? Direction.EAST : z == TIER_Z0 ? Direction.NORTH : Direction.SOUTH;
+            int length = 2 + random.nextInt(3);
+            for (int k = 0; k < length; k++) {
+                BlockPos pos = new BlockPos(x, y + 5 - k, z);
+                if (level.getBlockState(pos).isAir()) {
+                    set(pos, Blocks.VINE.defaultBlockState().setValue(net.minecraft.world.level.block.VineBlock.getPropertyForFace(face), true));
+                }
+            }
+        }
+        // Нагрудник стража — в дальней обвалившейся камере, за азалиями.
+        BlockPos chestPos = new BlockPos(TIER_X0 + 1, y, TIER_Z1 - 1);
+        chest(chestPos.getX(), y, chestPos.getZ(), Direction.EAST, new ItemStack(ModItems.WARDEN_CHESTPLATE.get()));
+        set(chestPos.above(), Blocks.AIR.defaultBlockState());
+        for (BlockPos pos : new BlockPos[] {chestPos.east(), chestPos.north(), chestPos.east().north()}) {
+            set(pos.below(), Blocks.MOSS_BLOCK.defaultBlockState());
+            set(pos, Blocks.FLOWERING_AZALEA.defaultBlockState());
+        }
+    }
+
+    /** Затопленный этаж: вода по пояс, лёд, иней, пустые камеры; в одной на дне — поножи стража. */
+    private void buildFlooded() {
+        int y = FLOODED_Y;
+        for (int x = TIER_X0; x <= TIER_X1; x++) {
+            for (int z = TIER_Z0; z <= TIER_Z1; z++) {
+                set(new BlockPos(x, y - 1, z), pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.5F));
+            }
+        }
+        // Затопленные камеры у южной стены: перегородки и решётки с дырами.
+        for (int x = TIER_X0 + 5; x <= TIER_X1 - 1; x += 5) {
+            fill(x, y, TIER_Z1 - 4, x, y + 4, TIER_Z1, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+        }
+        for (int x = TIER_X0; x <= TIER_X1; x++) {
+            boolean broken = (x - TIER_X0) % 5 == 2;
+            for (int yy = y + (broken ? 2 : 0); yy <= y + 3; yy++) {
+                set(new BlockPos(x, yy, TIER_Z1 - 5), Blocks.IRON_BARS.defaultBlockState()
+                        .setValue(BlockStateProperties.WATERLOGGED, yy <= y + 1));
+                connectables.add(new BlockPos(x, yy, TIER_Z1 - 5));
+            }
+        }
+        // Вода по пояс, местами схвачена льдом.
+        for (int x = TIER_X0; x <= TIER_X1; x++) {
+            for (int z = TIER_Z0; z <= TIER_Z1; z++) {
+                for (int yy = y; yy <= y + 1; yy++) {
+                    BlockPos pos = new BlockPos(x, yy, z);
+                    if (level.getBlockState(pos).isAir()) {
+                        boolean ice = yy == y + 1 && noise(x, z, 3.0, 61) > 0.62;
+                        set(pos, ice ? Blocks.ICE.defaultBlockState() : Blocks.WATER.defaultBlockState());
+                    }
+                }
+            }
+        }
+        // Иней на стенах и потолке.
+        for (BlockPos pos : BlockPos.betweenClosed(TIER_X0 - 1, y - 1, TIER_Z0 - 1, TIER_X1 + 1, y + 6, TIER_Z1 + 1)) {
+            if (level.getBlockState(pos).is(Blocks.DEEPSLATE_BRICKS) && random.nextFloat() < 0.18F) {
+                set(pos, random.nextBoolean() ? Blocks.PACKED_ICE.defaultBlockState() : Blocks.BLUE_ICE.defaultBlockState());
+            }
+        }
+        // Поножи стража — на дне средней затопленной камеры.
+        BlockPos chestPos = new BlockPos(-27, y, TIER_Z1 - 1);
+        set(chestPos, Blocks.CHEST.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH)
+                .setValue(BlockStateProperties.WATERLOGGED, true));
+        if (level.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
+            chest.setItem(13, new ItemStack(ModItems.WARDEN_LEGGINGS.get()));
+        }
+        set(new BlockPos(-25, y + 2, TIER_Z1 - 2), Blocks.SKELETON_SKULL.defaultBlockState()
+                .setValue(BlockStateProperties.ROTATION_16, 10));
+        // Лестница обратно наверх, в заросший этаж.
+        for (int yy = y; yy <= GARDEN_Y - 1; yy++) {
+            set(new BlockPos(TIER_X0, yy, 64), Blocks.LADDER.defaultBlockState()
+                    .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST)
+                    .setValue(BlockStateProperties.WATERLOGGED, yy <= y + 1));
+        }
+    }
+
+    /** Лестница из атриума вниз, в заросший этаж (вдоль южной стены, сквозь пол). */
+    private void buildTierStairs() {
+        for (int i = 0; i <= 9; i++) {
+            int x = TIER_X1 - 1 - i;
+            room(x, ATRIUM_Y - 1 - i, TIER_Z1 - 1, x, ATRIUM_Y + 2 - i, TIER_Z1);
+        }
+        for (int i = 0; i <= 9; i++) {
+            int x = TIER_X1 - 1 - i;
+            fill(x, ATRIUM_Y - 2 - i, TIER_Z1 - 1, x, ATRIUM_Y - 2 - i, TIER_Z1, Blocks.DEEPSLATE_BRICK_STAIRS.defaultBlockState()
+                    .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));
+        }
+    }
+
+    private void spawnRuinedTier() {
+        Vec3[] spots = {new Vec3(-30.5, ATRIUM_Y, 65.5), new Vec3(-24.5, ATRIUM_Y, 60.5), new Vec3(-20.5, ATRIUM_Y, 71.5),
+                new Vec3(-30.5, GARDEN_Y, 59.5), new Vec3(-20.5, GARDEN_Y, 64.5), new Vec3(-34.5, GARDEN_Y, 68.5)};
+        for (Vec3 pos : spots) {
+            spawn(ModEntities.PRISON_SKELETON.get().create(level, EntitySpawnReason.STRUCTURE), pos, random.nextFloat() * 360.0F);
+        }
     }
 
     /** Решётка нижней камеры по линии z с воротами посередине. */
@@ -1336,6 +1696,7 @@ public final class LowerPrison {
         var biomes = level.registryAccess().lookupOrThrow(Registries.BIOME);
         Holder<Biome> prison = biomes.getOrThrow(ModBiomes.LOWER_PRISON);
         Holder<Biome> abyss = biomes.getOrThrow(ModBiomes.SKY_ABYSS);
+        Holder<Biome> flooded = biomes.getOrThrow(ModBiomes.FLOODED_TIER);
         int minChunkX = SectionPos.blockToSectionCoord((int) WHOLE_AREA.minX);
         int maxChunkX = SectionPos.blockToSectionCoord((int) WHOLE_AREA.maxX);
         int minChunkZ = SectionPos.blockToSectionCoord((int) WHOLE_AREA.minZ);
@@ -1345,8 +1706,14 @@ public final class LowerPrison {
                 ChunkAccess chunk = level.getChunk(cx, cz);
                 chunk.fillBiomesFromNoise((qx, qy, qz, sampler) -> {
                     Vec3 center = new Vec3(QuartPos.toBlock(qx) + 2, QuartPos.toBlock(qy) + 2, QuartPos.toBlock(qz) + 2);
+                    if (FLOODED_BIOME.contains(center)) {
+                        return flooded;
+                    }
+                    if (ATRIUM_BIOME.contains(center)) {
+                        return abyss;
+                    }
                     return PRISON_BIOME.contains(center) || REGULATOR_BIOME.contains(center) || UPPER_BIOME.contains(center)
-                            ? prison : abyss;
+                            || GARDEN_BIOME.contains(center) ? prison : abyss;
                 }, level.getChunkSource().randomState().sampler());
                 chunk.markUnsaved();
             }
@@ -1432,10 +1799,13 @@ public final class LowerPrison {
         spawn(ModEntities.STRANGER.get().create(level, EntitySpawnReason.STRUCTURE), STRANGER_POS, STRANGER_YAW);
         spawn(ModEntities.PRISON_WARDEN.get().create(level, EntitySpawnReason.STRUCTURE), WARDEN_POS, 180.0F);
         spawn(ModEntities.REGULATOR.get().create(level, EntitySpawnReason.STRUCTURE), REGULATOR_POS, 180.0F);
+        level.getEntitiesOfClass(com.replecant.skytest.entity.PrisonSkeletonEntity.class, WHOLE_AREA)
+                .forEach(com.replecant.skytest.entity.PrisonSkeletonEntity::discard);
         level.getEntitiesOfClass(com.replecant.skytest.entity.RatCatcherEntity.class, WHOLE_AREA)
                 .forEach(com.replecant.skytest.entity.RatCatcherEntity::discard);
         RatSpawner.populate(level);
         spawnRatRoom();
+        spawnRuinedTier();
     }
 
     private void spawn(Mob mob, Vec3 pos, float yaw) {

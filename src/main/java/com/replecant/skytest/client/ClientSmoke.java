@@ -86,7 +86,7 @@ public final class ClientSmoke {
             if (t >= 100) {
                 magicTest(mc, t - 100);
             }
-            if (t == 1100) {
+            if (t == 1250) {
                 SkyTest.LOGGER.info("SKYTEST CLIENT SMOKE DONE");
                 mc.stop();
             }
@@ -280,7 +280,19 @@ public final class ClientSmoke {
             case 930 -> shot("39b_digger_tunnel");
             case 934 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(14.5, 47, 31.5), 0.0F, 25.0F);
             case 948 -> shot("39c_digger_stash");
-            case 960 -> server.execute(() -> SkyTest.LOGGER.info("SKYTEST BRIDGE main={} upper={}",
+            // Разрушенный ярус: мостик, атриум, сад, затопленный этаж.
+            case 952 -> mc.player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 600, 0, false, false));
+            case 955 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-16.0, 48, 40.5), 0.0F, 0.0F);
+            case 968 -> shot("40_tier_bridge");
+            case 972 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-17.5, 48, 56.5), 125.0F, -12.0F);
+            case 985 -> shot("41_atrium");
+            case 988 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-36.5, 54, 55.5), -60.0F, 10.0F);
+            case 1000 -> shot("41b_atrium_balcony");
+            case 1004 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-18.5, 38, 57.5), 120.0F, 0.0F);
+            case 1018 -> shot("42_garden");
+            case 1022 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-19.5, 29, 57.5), 130.0F, 5.0F);
+            case 1036 -> shot("43_flooded");
+            case 1060 -> server.execute(() -> SkyTest.LOGGER.info("SKYTEST BRIDGE main={} upper={}",
                     com.replecant.skytest.world.LowerPrison.mainSpanBuilt(server.overworld()),
                     com.replecant.skytest.world.LowerPrison.upperBridgeBuilt(server.overworld())));
             default -> { }

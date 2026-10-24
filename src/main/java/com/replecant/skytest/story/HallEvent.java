@@ -100,12 +100,11 @@ public final class HallEvent {
 
     private static void spawnSkeleton(ServerPlayer player) {
         ServerLevel level = (ServerLevel) player.level();
-        Skeleton skeleton = EntityType.SKELETON.create(level, EntitySpawnReason.EVENT);
+        Skeleton skeleton = com.replecant.skytest.registry.ModEntities.PRISON_SKELETON.get().create(level, EntitySpawnReason.EVENT);
         if (skeleton == null) {
             return;
         }
         Vec3 pos = LowerPrison.DESCENT_BOTTOM;
-        // Без finalizeSpawn скелет не получает лук и дерётся вблизи.
         skeleton.snapTo(pos.x, pos.y, pos.z, 180.0F, 0.0F);
         skeleton.setPersistenceRequired();
         skeleton.addTag(PRISONER_TAG);

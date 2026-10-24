@@ -110,6 +110,23 @@ final class SmokeTest {
             }
         }
         check(failures, stash, "digger's stash: 2 potions and bread");
+        // Разрушенный ярус: три этажа, броня стража в тайниках, скелеты-узники.
+        check(failures, level.getBlockState(new BlockPos(-27, LowerPrison.ATRIUM_Y + 3, 64)).isAir()
+                && level.getBlockState(new BlockPos(-27, LowerPrison.GARDEN_Y + 2, 60)).isAir(), "ruined tier is hollow");
+        check(failures, level.getBlockState(new BlockPos(-20, LowerPrison.FLOODED_Y, 58)).is(Blocks.WATER), "flooded floor has water");
+        java.util.Set<net.minecraft.world.item.Item> armor = new java.util.HashSet<>();
+        AABB tier = LowerPrison.RUINED_TIER;
+        for (BlockPos pos : BlockPos.betweenClosed((int) tier.minX, (int) tier.minY, (int) tier.minZ, (int) tier.maxX, (int) tier.maxY, (int) tier.maxZ)) {
+            if (level.getBlockEntity(pos) instanceof net.minecraft.world.level.block.entity.ChestBlockEntity chest) {
+                for (int i = 0; i < chest.getContainerSize(); i++) {
+                    armor.add(chest.getItem(i).getItem());
+                }
+            }
+        }
+        check(failures, armor.contains(ModItems.WARDEN_TURBAN.get()) && armor.contains(ModItems.WARDEN_CHESTPLATE.get())
+                && armor.contains(ModItems.WARDEN_LEGGINGS.get()), "warden armor stashed in the ruined tier");
+        int skeletons = level.getEntitiesOfClass(com.replecant.skytest.entity.PrisonSkeletonEntity.class, tier).size();
+        check(failures, skeletons == 6, "prisoner skeletons in the ruined tier (found " + skeletons + ")");
         int strangers = level.getEntitiesOfClass(StrangerEntity.class, area).size();
         check(failures, strangers == 1, "exactly one stranger (found " + strangers + ")");
 

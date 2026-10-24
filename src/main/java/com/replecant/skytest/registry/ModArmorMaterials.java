@@ -28,6 +28,21 @@ public final class ModArmorMaterials {
             ItemTags.REPAIRS_LEATHER_ARMOR,
             CIRCUS_ASSET);
 
+    /** Points to assets/skytest/equipment/warden_lamellar.json. */
+    public static final ResourceKey<EquipmentAsset> WARDEN_ASSET =
+            ResourceKey.create(EquipmentAssets.ROOT_ID, Identifier.fromNamespaceAndPath(SkyTest.MODID, "warden_lamellar"));
+
+    /** Ламеллярный доспех стража — по защите и прочности как кожаная броня. */
+    public static final ArmorMaterial WARDEN_LAMELLAR = new ArmorMaterial(
+            5,
+            defense(1, 2, 3, 1, 3),
+            15,
+            SoundEvents.ARMOR_EQUIP_CHAIN,
+            0.0F,
+            0.0F,
+            ItemTags.REPAIRS_LEATHER_ARMOR,
+            WARDEN_ASSET);
+
     private static EnumMap<ArmorType, Integer> defense(int boots, int leggings, int chestplate, int helmet, int body) {
         EnumMap<ArmorType, Integer> map = new EnumMap<>(ArmorType.class);
         map.put(ArmorType.BOOTS, boots);

@@ -11,6 +11,8 @@ import net.minecraft.world.level.biome.Biome;
 public final class ModBiomes {
     /** Внутри скалы: густой тёмный туман, мрачная музыка. */
     public static final ResourceKey<Biome> LOWER_PRISON = key("lower_prison");
+    /** Затопленный этаж разрушенного яруса: холодный голубоватый туман. */
+    public static final ResourceKey<Biome> FLOODED_TIER = key("flooded_tier");
     /** Снаружи: открытое небо, облака далеко внизу, бездна. */
     public static final ResourceKey<Biome> SKY_ABYSS = key("sky_abyss");
 

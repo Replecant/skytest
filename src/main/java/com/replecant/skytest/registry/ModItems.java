@@ -59,6 +59,18 @@ public final class ModItems {
                     .stacksTo(1)
                     .rarity(Rarity.RARE)));
 
+    /** Ламеллярный доспех стража: тюрбан, нагрудник, поножи (как кожаная броня). */
+    public static final DeferredItem<Item> WARDEN_TURBAN = wardenPiece("warden_turban", ArmorType.HELMET);
+    public static final DeferredItem<Item> WARDEN_CHESTPLATE = wardenPiece("warden_chestplate", ArmorType.CHESTPLATE);
+    public static final DeferredItem<Item> WARDEN_LEGGINGS = wardenPiece("warden_leggings", ArmorType.LEGGINGS);
+
+    private static DeferredItem<Item> wardenPiece(String name, ArmorType type) {
+        return ITEMS.register(name, id -> new Item(new Item.Properties()
+                .setId(ResourceKey.create(Registries.ITEM, id))
+                .humanoidArmor(ModArmorMaterials.WARDEN_LAMELLAR, type)
+                .rarity(Rarity.UNCOMMON)));
+    }
+
     /** Сапоги циркача: дают двойной прыжок. */
     public static final DeferredItem<Item> CIRCUS_BOOTS = ITEMS.register("circus_boots",
             id -> new Item(new Item.Properties()
