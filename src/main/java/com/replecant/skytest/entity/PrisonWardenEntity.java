@@ -184,11 +184,9 @@ public class PrisonWardenEntity extends PathfinderMob implements ParryReactive {
             case PATROL -> patrol();
             case GUARD -> guard(target);
             case WINDUP -> {
-                // До вспышки ещё доворачивается за игроком, после — удар уже не изменить.
+                // В начале замаха ещё доворачивается за игроком, в конце — удар уже не изменить.
+                // Подсказки нет: момент удара читается по самому замаху.
                 stop(target, stateTicks < State.WINDUP.duration - PARRY_CUE ? TURN_WINDUP : TURN_COMMITTED);
-                if (stateTicks == State.WINDUP.duration - PARRY_CUE) {
-                    parryCue(level);
-                }
                 if (stateTicks >= State.WINDUP.duration) {
                     setState(State.STRIKE);
                     lunge(0.45);
@@ -311,15 +309,6 @@ public class PrisonWardenEntity extends PathfinderMob implements ParryReactive {
         Vec3 forward = Vec3.directionFromRotation(0.0F, getYRot()).scale(strength);
         setDeltaMovement(getDeltaMovement().add(forward.x, 0.0, forward.z));
         hurtMarked = true;
-    }
-
-    /** Вспышка на клинке и звон — игрок понимает, что пора парировать. */
-    private void parryCue(ServerLevel level) {
-        Vec3 right = Vec3.directionFromRotation(0.0F, yBodyRot - 90.0F);
-        Vec3 blade = position().add(right.scale(0.4)).add(0.0, 2.9, 0.0);
-        level.sendParticles(ParticleTypes.END_ROD, blade.x, blade.y, blade.z, 6, 0.05, 0.25, 0.05, 0.01);
-        level.sendParticles(ParticleTypes.ELECTRIC_SPARK, blade.x, blade.y, blade.z, 10, 0.1, 0.3, 0.1, 0.05);
-        playSound(SoundEvents.NOTE_BLOCK_BELL.value(), 1.0F, 1.8F);
     }
 
     @Override

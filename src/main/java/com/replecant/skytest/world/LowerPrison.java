@@ -500,80 +500,73 @@ public final class LowerPrison {
         buildTierStairs();
     }
 
-    /** Ход от площадки нижних камер на юг, к краю скалы, и мостик к атриуму. */
+    /**
+     * Ход от площадки нижних камер на юг до атриума. Строится явно, срез за срезом:
+     * внутри скалы — облицованный кирпичом коридор (сначала ступени вниз), снаружи —
+     * открытый мостик с перилами над пропастью. Ни дыр в полу, ни завалов.
+     */
     private void buildTierEntrance() {
-        int y = LOWER_FLOOR;
         // Пролом в южной стене площадки.
-        fill(-17, y, 13, -16, y + 2, 14, Blocks.AIR.defaultBlockState());
-        set(new BlockPos(-15, y, 14), Blocks.COBBLED_DEEPSLATE.defaultBlockState());
-        // Ход на юг, сначала ровно, потом ступенями вниз до уровня атриума.
-        int faceZ = -1;
-        for (int z = 15; z < 50; z++) {
-            int drop = Math.max(0, Math.min(LOWER_FLOOR - ATRIUM_Y, z - 18));
-            int floor = y - drop;
-            boolean open = true;
-            for (int x = -18; x <= -15 && open; x++) {
-                for (int yy = floor; yy <= floor + 3 && open; yy++) {
-                    open = level.getBlockState(new BlockPos(x, yy, z)).isAir();
+        fill(-17, LOWER_FLOOR, 13, -16, LOWER_FLOOR + 2, 14, Blocks.AIR.defaultBlockState());
+        set(new BlockPos(-15, LOWER_FLOOR, 14), Blocks.COBBLED_DEEPSLATE.defaultBlockState());
+        int stepsFrom = 19;
+        int drop = LOWER_FLOOR - ATRIUM_Y;
+        boolean wasOpen = false;
+        for (int z = 14; z < TIER_Z0; z++) {
+            // Высота пола: ровно, затем по ступени на каждый блок вниз до уровня атриума.
+            int stand = LOWER_FLOOR - Math.max(0, Math.min(drop, z - stepsFrom + 1));
+            boolean step = z >= stepsFrom && z < stepsFrom + drop;
+            boolean inRock = isRock(new BlockPos(-19, stand + 1, z)) || isRock(new BlockPos(-14, stand + 1, z))
+                    || isRock(new BlockPos(-16, stand + 4, z));
+            fill(-17, stand, z, -16, stand + 2, z, Blocks.AIR.defaultBlockState());
+            BlockState floor = step
+                    ? Blocks.DEEPSLATE_BRICK_STAIRS.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH)
+                    : pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.3F);
+            if (step) {
+                // Ступень стоит на уровне ступающего, под ней — кладка.
+                set(new BlockPos(-17, stand, z), floor);
+                set(new BlockPos(-16, stand, z), floor);
+                fill(-17, stand + 1, z, -16, stand + 3, z, Blocks.AIR.defaultBlockState());
+                fill(-17, stand - 1, z, -16, stand - 1, z, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+            } else {
+                fill(-17, stand - 1, z, -16, stand - 1, z, floor);
+            }
+            int top = step ? stand + 4 : stand + 3;
+            if (inRock || z < 20) {
+                // Коридор: кирпичные стены и свод.
+                for (int yy = stand - 1; yy <= top; yy++) {
+                    set(new BlockPos(-18, yy, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+                    set(new BlockPos(-15, yy, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
                 }
-            }
-            if (open && z > 20) {
-                faceZ = z;
-                break;
-            }
-            room(-17, floor, z, -16, floor + 2, z);
-            if (z > 18 && z - 18 <= LOWER_FLOOR - ATRIUM_Y) {
-                fill(-17, floor, z, -16, floor, z, Blocks.DEEPSLATE_BRICK_STAIRS.defaultBlockState()
-                        .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
-            }
-            if (z % 6 == 0) {
-                hangingLantern(-16, floor + 2, z, 0);
-            }
-        }
-        if (faceZ < 0) {
-            SkyTest.LOGGER.warn("Ruined tier: no cliff face south of the lower cells");
-            return;
-        }
-        // Узкий каменный мостик через пропасть до северной стены атриума.
-        int deck = ATRIUM_Y - 1;
-        for (int z = faceZ; z < TIER_Z0; z++) {
-            fill(-18, deck + 1, z, -15, deck + 4, z, Blocks.AIR.defaultBlockState());
-            fill(-17, deck, z, -16, deck, z, pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.35F));
-            if (level.getBlockState(new BlockPos(-18, deck - 1, z)).isAir()) {
-                // Над пропастью: перила и цепи вниз.
-                set(new BlockPos(-18, deck, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
-                set(new BlockPos(-15, deck, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
-                if (random.nextFloat() < 0.75F) {
-                    connectable(new BlockPos(-18, deck + 1, z), Blocks.DEEPSLATE_TILE_WALL.defaultBlockState());
+                fill(-17, top, z, -16, top, z, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+                if (z % 6 == 0) {
+                    hangingLantern(-16, top - 1, z, 0);
                 }
-                if (random.nextFloat() < 0.75F) {
-                    connectable(new BlockPos(-15, deck + 1, z), Blocks.DEEPSLATE_TILE_WALL.defaultBlockState());
+                if (wasOpen) {
+                    // Арка там, где мостик уходит в скалу.
+                    set(new BlockPos(-17, top, z), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
                 }
+                wasOpen = false;
+            } else {
+                // Мостик: бортики, перила, над головой — ничего лишнего, вниз свисают цепи.
+                fill(-18, stand, z, -15, stand + 4, z, Blocks.AIR.defaultBlockState());
+                set(new BlockPos(-18, stand - 1, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+                set(new BlockPos(-15, stand - 1, z), Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+                connectable(new BlockPos(-18, stand, z), Blocks.DEEPSLATE_TILE_WALL.defaultBlockState());
+                connectable(new BlockPos(-15, stand, z), Blocks.DEEPSLATE_TILE_WALL.defaultBlockState());
                 if (z % 4 == 0) {
-                    chain(random.nextBoolean() ? -18 : -15, deck - 1, z, 3 + random.nextInt(6));
+                    chain(z % 8 == 0 ? -18 : -15, stand - 2, z, 3 + random.nextInt(6));
                 }
+                wasOpen = true;
             }
         }
-        // Там, где мостик уходит в скалу яруса, — коридор, обложенный кирпичом, с аркой на входе.
-        int tunnelStart = -1;
-        for (int z = faceZ + 1; z < TIER_Z0; z++) {
-            if (!level.getBlockState(new BlockPos(-19, deck + 2, z)).isAir()
-                    && !level.getBlockState(new BlockPos(-14, deck + 2, z)).isAir()) {
-                tunnelStart = z;
-                break;
-            }
-        }
-        if (tunnelStart > 0) {
-            room(-17, ATRIUM_Y, tunnelStart, -16, ATRIUM_Y + 2, TIER_Z0 - 2);
-            fill(-17, deck, tunnelStart, -16, deck, TIER_Z0 - 2, pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.35F));
-            fill(-18, deck, tunnelStart, -15, deck + 4, tunnelStart, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
-            fill(-17, ATRIUM_Y, tunnelStart, -16, ATRIUM_Y + 2, tunnelStart, Blocks.AIR.defaultBlockState());
-            set(new BlockPos(-17, ATRIUM_Y + 3, tunnelStart), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
-            hangingLantern(-16, ATRIUM_Y + 2, (tunnelStart + TIER_Z0) / 2, 0);
-        }
-        // Вход в атриум: арка в северной стене.
-        fill(-18, ATRIUM_Y, TIER_Z0 - 1, -15, ATRIUM_Y + 3, TIER_Z0 - 1, Blocks.AIR.defaultBlockState());
-        set(new BlockPos(-16, ATRIUM_Y + 4, TIER_Z0 - 1), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
+        // Вход в атриум: проём в северной стене.
+        fill(-17, ATRIUM_Y, TIER_Z0 - 1, -16, ATRIUM_Y + 2, TIER_Z0 - 1, Blocks.AIR.defaultBlockState());
+    }
+
+    private boolean isRock(BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
+        return state.is(Blocks.DEEPSLATE) || state.is(Blocks.COBBLED_DEEPSLATE) || state.is(Blocks.TUFF);
     }
 
     /** Атриум: колонны, обломки, проломы в боковых стенах, балкончики и паркур по обломкам. */

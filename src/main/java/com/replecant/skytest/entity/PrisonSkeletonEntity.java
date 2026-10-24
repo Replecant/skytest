@@ -30,8 +30,8 @@ import net.minecraft.world.phys.Vec3;
 /**
  * Скелет-узник: вместо лука — ржавый меч, и дерётся по правилам боёвки мода.
  * <pre>
- *  CHASE ──близко──▶ WINDUP (замах; на пике — вспышка: сигнал к парированию) ─▶ STRIKE (шаг и удар)
- *                                                          ─▶ RECOVERY (открыт) ─▶ CHASE
+ *  CHASE (кружит боком) ──близко──▶ WINDUP (короткий замах, без подсказки) ─▶ STRIKE (шаг и удар)
+ *                        ─▶ иногда сразу второй удар (замах ещё короче) ─▶ RECOVERY (короткая отдышка) ─▶ CHASE
  *  парирование ─▶ PARRIED (шатается, долго открыт — время для рипоста)
  *  добивание комбо / удар с разгона ─▶ STAGGER (сбит с ног)
  * </pre>
@@ -40,20 +40,26 @@ import net.minecraft.world.phys.Vec3;
 public class PrisonSkeletonEntity extends Skeleton implements ParryReactive {
     private enum State { CHASE, WINDUP, STRIKE, RECOVERY, STAGGER, PARRIED }
 
-    private static final int WINDUP_TICKS = 14;
-    private static final int PARRY_CUE = 4;
-    private static final int STRIKE_TICKS = 5;
-    private static final int RECOVERY_TICKS = 18;
-    private static final int WHIFF_BONUS = 10;
-    private static final int STAGGER_TICKS = 26;
-    private static final int PARRIED_TICKS = 40;
+    private static final int WINDUP_TICKS = 10;
+    /** Второй удар серии — замах короче. */
+    private static final int FOLLOWUP_WINDUP_TICKS = 6;
+    private static final int STRIKE_TICKS = 4;
+    private static final int RECOVERY_TICKS = 7;
+    private static final int WHIFF_BONUS = 6;
+    private static final int STAGGER_TICKS = 24;
+    private static final int PARRIED_TICKS = 36;
     private static final double STRIKE_RANGE = 2.7;
     private static final float STRIKE_DAMAGE = 4.0F;
+    private static final float FOLLOWUP_CHANCE = 0.45F;
 
     private State state = State.CHASE;
     private int stateTicks;
     private int cooldown;
     private boolean landed;
+    /** Сейчас идёт второй удар серии. */
+    private boolean followup;
+    private int strafeDir = 1;
+    private int strafeTicks;
 
     public PrisonSkeletonEntity(EntityType<? extends PrisonSkeletonEntity> type, Level level) {
         super(type, level);
@@ -121,31 +127,38 @@ public class PrisonSkeletonEntity extends Skeleton implements ParryReactive {
                     return;
                 }
                 getLookControl().setLookAt(target, 40.0F, 30.0F);
+                turnTowards(target, 25.0F);
                 double distance = distanceTo(target);
-                if (distance > STRIKE_RANGE - 0.6) {
-                    getNavigation().moveTo(target, 1.1);
+                if (cooldown > 0 && distance < 4.0) {
+                    // Между атаками не стоит, а кружит боком, держа дистанцию.
+                    getNavigation().stop();
+                    if (--strafeTicks <= 0) {
+                        strafeTicks = 15 + random.nextInt(20);
+                        strafeDir = random.nextBoolean() ? 1 : -1;
+                    }
+                    getMoveControl().strafe(distance < 2.0 ? -0.6F : 0.0F, strafeDir * 0.8F);
+                } else if (distance > STRIKE_RANGE - 0.6) {
+                    getNavigation().moveTo(target, 1.2);
                 } else {
                     getNavigation().stop();
                 }
                 if (cooldown <= 0 && distance < STRIKE_RANGE && hasLineOfSight(target)) {
+                    followup = false;
                     setState(State.WINDUP);
-                    playSound(SoundEvents.SKELETON_AMBIENT, 1.0F, 0.6F);
+                    playSound(SoundEvents.SKELETON_AMBIENT, 0.8F, 0.6F);
                 }
             }
             case WINDUP -> {
                 getNavigation().stop();
-                if (target != null && stateTicks < WINDUP_TICKS - PARRY_CUE) {
-                    turnTowards(target, 20.0F);
+                int windup = followup ? FOLLOWUP_WINDUP_TICKS : WINDUP_TICKS;
+                // Доворачивается за игроком почти до самого удара — увернуться надо в последний момент.
+                if (target != null && stateTicks < windup - 2) {
+                    turnTowards(target, 30.0F);
                 }
-                if (stateTicks == WINDUP_TICKS - PARRY_CUE) {
-                    Vec3 blade = position().add(0.0, 2.1, 0.0);
-                    level.sendParticles(ParticleTypes.ELECTRIC_SPARK, blade.x, blade.y, blade.z, 6, 0.1, 0.2, 0.1, 0.04);
-                    playSound(SoundEvents.NOTE_BLOCK_BELL.value(), 0.7F, 1.9F);
-                }
-                if (stateTicks >= WINDUP_TICKS) {
+                if (stateTicks >= windup) {
                     setState(State.STRIKE);
                     swing(net.minecraft.world.InteractionHand.MAIN_HAND);
-                    Vec3 forward = Vec3.directionFromRotation(0.0F, getYRot()).scale(0.35);
+                    Vec3 forward = Vec3.directionFromRotation(0.0F, getYRot()).scale(0.4);
                     setDeltaMovement(getDeltaMovement().add(forward.x, 0.0, forward.z));
                     hurtMarked = true;
                     playSound(SoundEvents.PLAYER_ATTACK_SWEEP, 0.8F, 1.2F);
@@ -157,20 +170,26 @@ public class PrisonSkeletonEntity extends Skeleton implements ParryReactive {
                     strike(level, target);
                 }
                 if (stateTicks >= STRIKE_TICKS) {
-                    setState(State.RECOVERY);
+                    if (!followup && engaged && random.nextFloat() < FOLLOWUP_CHANCE) {
+                        // Серия: сразу второй удар, с коротким замахом.
+                        followup = true;
+                        setState(State.WINDUP);
+                    } else {
+                        setState(State.RECOVERY);
+                    }
                 }
             }
             case RECOVERY -> {
                 getNavigation().stop();
                 if (stateTicks >= RECOVERY_TICKS + (landed ? 0 : WHIFF_BONUS)) {
-                    cooldown = 10 + random.nextInt(20);
+                    cooldown = 4 + random.nextInt(10);
                     setState(State.CHASE);
                 }
             }
             case STAGGER, PARRIED -> {
                 getNavigation().stop();
                 if (stateTicks >= (state == State.STAGGER ? STAGGER_TICKS : PARRIED_TICKS)) {
-                    cooldown = 8;
+                    cooldown = 6;
                     setState(State.CHASE);
                 }
             }
@@ -221,6 +240,10 @@ public class PrisonSkeletonEntity extends Skeleton implements ParryReactive {
         } else if (state == State.WINDUP && amount >= 4.0F) {
             // Сильный удар в замах сбивает атаку.
             setState(State.RECOVERY);
+        } else if (state == State.CHASE && source.getEntity() != null && distanceTo(source.getEntity()) < STRIKE_RANGE) {
+            // Получив удар вблизи, тут же огрызается, не дожидаясь паузы.
+            followup = false;
+            setState(State.WINDUP);
         }
         return super.hurtServer(level, source, amount);
     }

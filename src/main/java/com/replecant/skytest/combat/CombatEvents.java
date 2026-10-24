@@ -62,8 +62,9 @@ public final class CombatEvents {
     private static final float[] COMBO_DAMAGE = {1.0F, 1.0F, 1.15F, 1.6F};
     private static final int FINISHER_HITSTOP_TICKS = 6;
     /** Окно парирования после ПКМ (тики) и перезарядка между попытками. */
-    public static final int PARRY_WINDOW = 8;
-    public static final int PARRY_COOLDOWN = 18;
+    /** Окно парирования — около четверти секунды: надо попасть в сам удар, а не жать заранее. */
+    public static final int PARRY_WINDOW = 5;
+    public static final int PARRY_COOLDOWN = 26;
     private static final int RIPOSTE_TICKS = 40;
     private static final float RIPOSTE_DAMAGE = 1.5F;
 

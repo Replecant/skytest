@@ -455,14 +455,14 @@ public final class ClientSmoke {
         // Во время замаха Стража не бьём, а уклоняемся рывком назад перед самым ударом.
         if (target instanceof com.replecant.skytest.entity.PrisonWardenEntity warden
                 && warden.state() == com.replecant.skytest.entity.PrisonWardenEntity.State.WINDUP) {
-            if (!parryTried && warden.stateTime(0.0F) >= 10.0F) {
+            if (!parryTried && warden.stateTime(0.0F) >= 11.0F) {
                 parryTried = true;
                 dodgeHealth = player.getHealth();
                 dodgeTick = clientTicks;
                 var result = mc.gameMode.useItem(player, net.minecraft.world.InteractionHand.MAIN_HAND);
                 SkyTest.LOGGER.info("SKYTEST PARRY attempt {} holding {} hp={}", result,
                         player.getMainHandItem().getItem(), dodgeHealth);
-            } else if (parryTried && clientTicks - dodgeTick > 40 && !dodgeTried && warden.stateTime(0.0F) >= 10.0F) {
+            } else if (parryTried && clientTicks - dodgeTick > 40 && !dodgeTried && warden.stateTime(0.0F) >= 11.0F) {
                 dodgeTried = true;
                 dodgeHealth = player.getHealth();
                 dodgeTick = clientTicks;
