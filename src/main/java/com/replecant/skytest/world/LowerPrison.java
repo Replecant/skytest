@@ -64,7 +64,7 @@ public final class LowerPrison {
     /** Зал: при входе сюда с игроком заговаривает Незнакомец. */
     public static final AABB HALL = new AABB(31, 63, 0, 48, 71, 15);
     /** Незнакомец вещает с балкона под потолком зала и оттуда же бросает меч. */
-    public static final Vec3 STRANGER_POS = new Vec3(37.5, FLOOR + 10, 2.3);
+    public static final Vec3 STRANGER_POS = new Vec3(37.5, FLOOR + 10, 3.5);
     public static final float STRANGER_YAW = 0.0F;
     /** Ход с балкона в стене зала, куда убегает Незнакомец. */
     public static final Vec3 STRANGER_EXIT = new Vec3(34.5, FLOOR + 10, -3.5);
@@ -313,6 +313,8 @@ public final class LowerPrison {
             connectables.add(new BlockPos(x, 74, 3));
         }
         set(new BlockPos(32, 74, 1), Blocks.SOUL_LANTERN.defaultBlockState());
+        // Пролёт в перилах — отсюда, с самого края, вещает Незнакомец.
+        fill(36, 74, 3, 38, 74, 3, Blocks.AIR.defaultBlockState());
 
         // Колонны и свет.
         for (int z : new int[] {0, 14}) {
