@@ -427,6 +427,15 @@ public final class ClientSmoke {
         if (player == null || mc.level == null || mc.screen != null) {
             return;
         }
+        // В бою — с мечом в руке (подобранные вещи могли занять выбранный слот).
+        if (!player.getMainHandItem().is(com.replecant.skytest.registry.ModItems.DULL_SWORD.get())) {
+            for (int i = 0; i < 9; i++) {
+                if (player.getInventory().getItem(i).is(com.replecant.skytest.registry.ModItems.DULL_SWORD.get())) {
+                    player.getInventory().setSelectedSlot(i);
+                    break;
+                }
+            }
+        }
         if (dodgeTick >= 0 && clientTicks == dodgeTick + 20) {
             SkyTest.LOGGER.info("SKYTEST {} result hp {} -> {}", dodgeTried ? "DODGE" : "PARRY", dodgeHealth, player.getHealth());
         }
