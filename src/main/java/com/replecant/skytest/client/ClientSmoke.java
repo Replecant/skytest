@@ -281,6 +281,19 @@ public final class ClientSmoke {
             case 934 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(14.5, 47, 31.5), 0.0F, 25.0F);
             case 948 -> shot("39c_digger_stash");
             // Разрушенный ярус: мостик, атриум, сад, затопленный этаж.
+            case 950 -> server.execute(() -> {
+                var level = server.overworld();
+                for (int yy : new int[] {47, 49, 52}) {
+                    StringBuilder row = new StringBuilder();
+                    for (int z = 12; z <= 56; z++) {
+                        var st = level.getBlockState(new net.minecraft.core.BlockPos(-16, yy, z));
+                        row.append(st.isAir() ? '.' : st.is(net.minecraft.world.level.block.Blocks.DEEPSLATE)
+                                || st.is(net.minecraft.world.level.block.Blocks.COBBLED_DEEPSLATE)
+                                || st.is(net.minecraft.world.level.block.Blocks.TUFF) ? '#' : 'x');
+                    }
+                    SkyTest.LOGGER.info("SKYTEST PROFILE x=-16 y={} z12..56 {}", yy, row);
+                }
+            });
             case 952 -> mc.player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 600, 0, false, false));
             case 955 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-16.0, 48, 40.5), 0.0F, 0.0F);
             case 968 -> shot("40_tier_bridge");
