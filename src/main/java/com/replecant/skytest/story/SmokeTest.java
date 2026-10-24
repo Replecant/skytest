@@ -110,6 +110,15 @@ final class SmokeTest {
             }
         }
         check(failures, stash, "digger's stash: 2 potions and bread");
+        for (int yy : new int[] {47, 49, 52}) {
+            StringBuilder row = new StringBuilder();
+            for (int z = 12; z <= 56; z++) {
+                var st = level.getBlockState(new BlockPos(-16, yy, z));
+                row.append(st.isAir() ? '.' : st.is(Blocks.DEEPSLATE) || st.is(Blocks.COBBLED_DEEPSLATE) || st.is(Blocks.TUFF) ? '#'
+                        : st.is(Blocks.DEEPSLATE_BRICKS) ? 'B' : 'x');
+            }
+            SkyTest.LOGGER.info("SKYTEST PROFILE x=-16 y={} z12..56 {}", yy, row);
+        }
         // Разрушенный ярус: три этажа, броня стража в тайниках, скелеты-узники.
         check(failures, level.getBlockState(new BlockPos(-27, LowerPrison.ATRIUM_Y + 3, 64)).isAir()
                 && level.getBlockState(new BlockPos(-27, LowerPrison.GARDEN_Y + 2, 60)).isAir(), "ruined tier is hollow");

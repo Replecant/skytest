@@ -284,13 +284,13 @@ public final class ClientSmoke {
             case 952 -> mc.player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 600, 0, false, false));
             case 955 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-16.0, 48, 40.5), 0.0F, 0.0F);
             case 968 -> shot("40_tier_bridge");
-            case 972 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-17.5, 48, 56.5), 125.0F, -12.0F);
+            case 972 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-17.5, 48, 55.5), 50.0F, -14.0F);
             case 985 -> shot("41_atrium");
             case 988 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-36.5, 54, 55.5), -60.0F, 10.0F);
             case 1000 -> shot("41b_atrium_balcony");
-            case 1004 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-18.5, 38, 57.5), 120.0F, 0.0F);
+            case 1004 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-19.5, 38, 59.5), 55.0F, 8.0F);
             case 1018 -> shot("42_garden");
-            case 1022 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-19.5, 29, 57.5), 130.0F, 5.0F);
+            case 1022 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-19.5, 29, 57.5), 50.0F, 5.0F);
             case 1036 -> shot("43_flooded");
             case 1060 -> server.execute(() -> SkyTest.LOGGER.info("SKYTEST BRIDGE main={} upper={}",
                     com.replecant.skytest.world.LowerPrison.mainSpanBuilt(server.overworld()),
