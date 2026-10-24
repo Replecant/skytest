@@ -295,8 +295,11 @@ public final class ClientSmoke {
                 }
             });
             case 952 -> mc.player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 600, 0, false, false));
-            case 955 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-16.0, 48, 40.5), 0.0F, 0.0F);
-            case 968 -> shot("40_tier_bridge");
+            case 955 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-16.0, 48, 34.5), 10.0F, -8.0F);
+            case 968 -> {
+                shot("40_tier_bridge");
+                SkyTest.LOGGER.info("SKYTEST TIER bridge shot at {}", mc.player.position());
+            }
             case 972 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-17.5, 48, 55.5), 50.0F, -14.0F);
             case 985 -> shot("41_atrium");
             case 988 -> tourTo(server, uuid, new net.minecraft.world.phys.Vec3(-36.5, 54, 55.5), -60.0F, 10.0F);

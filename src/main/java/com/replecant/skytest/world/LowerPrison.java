@@ -554,6 +554,23 @@ public final class LowerPrison {
                 }
             }
         }
+        // Там, где мостик уходит в скалу яруса, — коридор, обложенный кирпичом, с аркой на входе.
+        int tunnelStart = -1;
+        for (int z = faceZ + 1; z < TIER_Z0; z++) {
+            if (!level.getBlockState(new BlockPos(-19, deck + 2, z)).isAir()
+                    && !level.getBlockState(new BlockPos(-14, deck + 2, z)).isAir()) {
+                tunnelStart = z;
+                break;
+            }
+        }
+        if (tunnelStart > 0) {
+            room(-17, ATRIUM_Y, tunnelStart, -16, ATRIUM_Y + 2, TIER_Z0 - 2);
+            fill(-17, deck, tunnelStart, -16, deck, TIER_Z0 - 2, pick(Blocks.DEEPSLATE_TILES, Blocks.CRACKED_DEEPSLATE_TILES, 0.35F));
+            fill(-18, deck, tunnelStart, -15, deck + 4, tunnelStart, Blocks.DEEPSLATE_BRICKS.defaultBlockState());
+            fill(-17, ATRIUM_Y, tunnelStart, -16, ATRIUM_Y + 2, tunnelStart, Blocks.AIR.defaultBlockState());
+            set(new BlockPos(-17, ATRIUM_Y + 3, tunnelStart), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
+            hangingLantern(-16, ATRIUM_Y + 2, (tunnelStart + TIER_Z0) / 2, 0);
+        }
         // Вход в атриум: арка в северной стене.
         fill(-18, ATRIUM_Y, TIER_Z0 - 1, -15, ATRIUM_Y + 3, TIER_Z0 - 1, Blocks.AIR.defaultBlockState());
         set(new BlockPos(-16, ATRIUM_Y + 4, TIER_Z0 - 1), Blocks.CHISELED_DEEPSLATE.defaultBlockState());
