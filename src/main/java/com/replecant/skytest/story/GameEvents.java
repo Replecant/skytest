@@ -110,21 +110,6 @@ public final class GameEvents {
         if (LowerPrison.UPPER_HALL.contains(pos)) {
             showAreaOnce(player, "upper_tier");
         }
-        checkSecret(player, pos);
-    }
-
-    /** Тайник найден — тихий звон и надпись над хотбаром, один раз. */
-    private static void checkSecret(ServerPlayer player, Vec3 pos) {
-        if (LowerPrison.DIGGERS_STASH.contains(pos) && !HallEvent.hasFlag(player, "secret_diggers_stash")) {
-            HallEvent.setFlag(player, "secret_diggers_stash");
-            player.displayClientMessage(Component.translatable("secret.skytest.found",
-                    Component.translatable("secret.skytest.diggers_stash")).withStyle(ChatFormatting.GOLD), true);
-            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_RESONATE, net.minecraft.sounds.SoundSource.PLAYERS, 1.0F, 0.8F);
-            if (SmokeTour.ENABLED) {
-                SkyTest.LOGGER.info("SKYTEST SECRET diggers_stash found");
-            }
-        }
     }
 
     private static void showAreaOnce(ServerPlayer player, String area) {

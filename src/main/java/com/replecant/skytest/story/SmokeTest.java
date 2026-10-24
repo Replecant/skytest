@@ -97,8 +97,9 @@ final class SmokeTest {
         long larpis = nest.stream().filter(com.replecant.skytest.entity.RatEntity::isLarpi).count();
         check(failures, larpis == 1 && nest.size() >= 10, "rat room: " + nest.size() + " rats, larpi " + larpis);
         check(failures, level.getBlockState(new BlockPos(18, LowerPrison.LOWER_FLOOR, 14)).isAir()
-                && level.getBlockState(new BlockPos(16, LowerPrison.LOWER_FLOOR - 1, 17)).is(Blocks.SPRUCE_TRAPDOOR),
-                "digger's cell: bent bars and a trapdoor");
+                && level.getBlockState(new BlockPos(16, LowerPrison.LOWER_FLOOR - 1, 17)).is(Blocks.SPRUCE_TRAPDOOR)
+                && level.getBlockState(new BlockPos(16, LowerPrison.LOWER_FLOOR, 17)).is(Blocks.BROWN_CARPET),
+                "digger's cell: bent bars and a trapdoor hidden under the bedroll");
         boolean stash = false;
         for (BlockPos pos : BlockPos.betweenClosed((int) LowerPrison.DIGGERS_STASH.minX, (int) LowerPrison.DIGGERS_STASH.minY,
                 (int) LowerPrison.DIGGERS_STASH.minZ, (int) LowerPrison.DIGGERS_STASH.maxX, (int) LowerPrison.DIGGERS_STASH.maxY,

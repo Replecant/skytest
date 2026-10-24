@@ -390,7 +390,7 @@ public final class LowerPrison {
 
     /**
      * Тайник «Подкоп Копателя». Крайняя южная камера заперта, но в углу решётки
-     * не хватает двух прутьев. Внутри — щебень и люк в полу; под ним шахта
+     * не хватает двух прутьев. Внутри — щебень и лежанка, под ней люк; под ним шахта
      * с лестницей и извилистый лаз до самого края скалы, где в стене дыра
      * в небо. Там — давние кости и сундучок: два зелья лечения и хлеб.
      */
@@ -403,13 +403,13 @@ public final class LowerPrison {
         set(new BlockPos(14, y, 16), Blocks.COBBLED_DEEPSLATE_SLAB.defaultBlockState());
         set(new BlockPos(15, y, 15), Blocks.COBBLED_DEEPSLATE_SLAB.defaultBlockState());
         set(new BlockPos(14, y + 1, 15), Blocks.COBBLED_DEEPSLATE_SLAB.defaultBlockState());
-        fill(17, y, 17, 18, y, 18, Blocks.BROWN_CARPET.defaultBlockState());
-        // Люк вровень с полом, под ним шахта с лестницей.
+        // Люк вровень с полом — под лежанкой из ковра: снаружи просто подстилка.
         int shaftX = 16;
         int shaftZ = 17;
         set(new BlockPos(shaftX, y - 1, shaftZ), Blocks.SPRUCE_TRAPDOOR.defaultBlockState()
                 .setValue(BlockStateProperties.HALF, net.minecraft.world.level.block.state.properties.Half.TOP)
                 .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
+        fill(15, y, 16, 17, y, 18, Blocks.BROWN_CARPET.defaultBlockState());
         int bottom = DIG_Y;
         // Лестница держится за северную стенку шахты; внизу — пусто, спрыгнуть два блока.
         fill(shaftX, bottom, shaftZ, shaftX, bottom + 1, shaftZ, Blocks.AIR.defaultBlockState());
@@ -449,10 +449,8 @@ public final class LowerPrison {
         fill(cx - 1, bottom, face - 4, cx + 1, bottom + 2, face - 2, Blocks.AIR.defaultBlockState());
         fill(cx, bottom, face - 1, cx, bottom + 1, face - 1, Blocks.AIR.defaultBlockState());
         cobweb(cx + 1, bottom + 2, face - 4);
-        // Кости Копателя: лежит головой к дыре.
+        // От Копателя остался только череп — смотрит на дыру в небо.
         set(new BlockPos(cx, bottom, face - 2), Blocks.SKELETON_SKULL.defaultBlockState().setValue(BlockStateProperties.ROTATION_16, 8));
-        set(new BlockPos(cx, bottom, face - 3), Blocks.BONE_BLOCK.defaultBlockState().setValue(BlockStateProperties.AXIS, Direction.Axis.Z));
-        set(new BlockPos(cx - 1, bottom, face - 3), Blocks.BONE_BLOCK.defaultBlockState().setValue(BlockStateProperties.AXIS, Direction.Axis.X));
         set(new BlockPos(cx - 1, bottom, face - 4), Blocks.CANDLE.defaultBlockState());
         BlockPos chestPos = new BlockPos(cx + 1, bottom, face - 4);
         set(chestPos, Blocks.CHEST.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST));
