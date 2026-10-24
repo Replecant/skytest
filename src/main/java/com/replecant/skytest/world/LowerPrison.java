@@ -63,11 +63,11 @@ public final class LowerPrison {
     public static final AABB END_ROOM = new AABB(30, 74, -12, 39, 85, -5);
     /** Зал: при входе сюда с игроком заговаривает Незнакомец. */
     public static final AABB HALL = new AABB(31, 63, 0, 48, 71, 15);
-    /** Незнакомец вещает из пролома в восточной стене зала, над головой у игрока. */
-    public static final Vec3 STRANGER_POS = new Vec3(48.5, FLOOR + 2, 10.5);
-    public static final float STRANGER_YAW = 90.0F;
-    /** Проход в восточной стене, куда убегает Незнакомец. */
-    public static final Vec3 STRANGER_EXIT = new Vec3(51.5, FLOOR + 2, 10.5);
+    /** Незнакомец вещает с балкона под потолком зала и оттуда же бросает меч. */
+    public static final Vec3 STRANGER_POS = new Vec3(37.5, FLOOR + 10, 2.3);
+    public static final float STRANGER_YAW = 0.0F;
+    /** Ход с балкона в стене зала, куда убегает Незнакомец. */
+    public static final Vec3 STRANGER_EXIT = new Vec3(34.5, FLOOR + 10, -3.5);
     /** Низ спуска, откуда поднимается скелет. */
     public static final Vec3 DESCENT_BOTTOM = new Vec3(38.5, 57, 23.5);
     /** Начало моста над бездной — сюда возвращает падение в пропасть. */
@@ -172,7 +172,6 @@ public final class LowerPrison {
 
         buildDescent();
         buildLowerCells();
-        buildStrangerExit();
         buildBridge();
         buildRegulatorHall();
         buildUpperTier();
@@ -1381,15 +1380,6 @@ public final class LowerPrison {
         return r < 0.70F ? Blocks.DEEPSLATE.defaultBlockState()
                 : r < 0.85F ? Blocks.COBBLED_DEEPSLATE.defaultBlockState()
                 : Blocks.TUFF.defaultBlockState();
-    }
-
-    /** Проход в восточной стене зала на уровне уступа. Дальше — обвал: зал «сдвинулся». */
-    private void buildStrangerExit() {
-        fill(48, FLOOR + 2, 9, 53, FLOOR + 4, 11, Blocks.AIR.defaultBlockState());
-        fill(48, FLOOR + 1, 9, 53, FLOOR + 1, 11, Blocks.DEEPSLATE_TILES.defaultBlockState());
-        fill(53, FLOOR + 2, 9, 53, FLOOR + 4, 11, Blocks.COBBLED_DEEPSLATE.defaultBlockState());
-        fill(52, FLOOR + 2, 9, 52, FLOOR + 2, 11, Blocks.COBBLED_DEEPSLATE_SLAB.defaultBlockState());
-        cobweb(51, FLOOR + 4, 9);
     }
 
     private void remains(int x, int z) {
